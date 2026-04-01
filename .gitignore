@@ -46,3 +46,6 @@ Thumbs.db
 .envrc
 
 /references/
+
+# Node
+node_modules/

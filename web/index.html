@@ -33,7 +33,7 @@
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="assets/style.css?v=dev-placeholder" />
+    <link rel="stylesheet" href="assets/style.css" />
     <script type="importmap">
     {
       "imports": {
@@ -48,7 +48,7 @@
       }
     }
     </script>
-    <script src="assets/libs/jszip.min.js"></script>
+    <script src="libs/jszip.min.js"></script>
     <script
       type="module"
       src="assets/modules/core/app.js?v=dev-placeholder"
@@ -525,19 +525,9 @@
       </div>
     </div>
 
-    <script>
-      if (
-        "serviceWorker" in navigator &&
-        window.location.protocol.startsWith("http")
-      ) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("./sw.js")
-            .then((reg) => console.log("SW registered!", reg.scope))
-            .catch((err) => console.log("SW registration failed:", err));
-        });
-      } else {
-        console.log("Service Worker skipped (file:// protocol or unsupported)");
+  </body>
+</html>
+tocol or unsupported)");
       }
     </script>
     <script>

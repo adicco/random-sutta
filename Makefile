@@ -133,48 +133,36 @@ mini:
 
 build: data re
 
-# Chỉ chạy Release System (không chạy lại Data Processor)
+# Chỉ chạy Vite Build (không chạy lại Data Processor)
 re:
-	@echo "🔨 Running Release System..."
-	$(PYTHON) -m src.release_system
+	@echo "🔨 Running Vite Build..."
+	npm run build
 
 # ==============================================================================
 # 🌍 SERVERS & PREVIEW
 # ==============================================================================
-# Server cho Source Code (web/) - Port 8000
 dev:
-	@echo "🌍 Starting SOURCE Server..."
-	@echo "   👉 http://localhost:8000/"
-	$(PYTHON) -m http.server 8000 --directory web
+	@echo "🌍 Starting Vite Dev Server..."
+	npm run dev
 
 live:
 	$(PYTHON) src/live_server.py
 
 serve:
-	$(PYTHON) src/multi_server.py
+	@echo "🌍 Starting Vite Preview Server..."
+	npm run preview
 
-# Preview bản PWA Build (Web/Standard)
-view-pwa:
-	@echo "🌍 Starting PWA Build Preview..."
-	@echo "   👉 http://localhost:8001/"
-	$(PYTHON) -m http.server 8001 --directory build/pwa
-
-# Preview bản Serverless Build (Standalone)
-view-sl:
-	@echo "📂 Opening SERVERLESS Build (file://)..."
-	open build/serverless/index.html
+view:
+	@echo "🌍 Starting Vite Preview Server..."
+	npm run preview
 
 # ==============================================================================
 # 🚀 RELEASE ACTIONS
 # ==============================================================================
 
-# Tạo Zip (Serverless Build)
-zip:
-	$(PYTHON) -m src.release_system --zip
-
-# Deploy Web (PWA Build -> GH Pages)
+# Deploy Web (GH Pages via Vite plugin / npm script)
 deploy:
-	$(PYTHON) -m src.release_system --web
+	npm run deploy
 
 # Publish Pre-release
 beta:
