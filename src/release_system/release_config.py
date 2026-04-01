@@ -21,7 +21,7 @@ APP_NAME = "random-sutta"
 ENTRY_POINT = "assets/modules/core/app.js"
 
 CRITICAL_ASSETS = [
-    "assets/db/uid_index.json", 
+    "public/assets/db/uid_index.json", 
     "assets/modules/data/constants.js"
 ]
 

@@ -35,9 +35,9 @@ Thumbs.db
 .pcode.toml
 
 # Generated Data Assets
-/web/assets/books/*
+/web/public/assets/books/*
 /web/assets/sutta/
-/web/assets/db/
+/web/public/assets/db/
 
 .env_aliases
 

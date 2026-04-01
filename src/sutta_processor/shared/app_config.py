@@ -22,9 +22,9 @@ MISSING_LINKS_FIX_FILE = FIX_DATA_DIR / "missing_links_fixed.tsv"
 STAGE_PROCESSED_DIR = _DATA_BASE / "processed"
 
 # --- 3. DISTRIBUTION OUTPUTS ---
-DIST_DB_DIR = _ASSETS_BASE / "db"
+DIST_DB_DIR = _WEB_BASE / "public" / "assets" / "db"
 DIST_JS_MODULES_DIR = _ASSETS_BASE / "modules"
-LEGACY_DIST_BOOKS_DIR = _ASSETS_BASE / "books"
+LEGACY_DIST_BOOKS_DIR = _WEB_BASE / "public" / "assets" / "books"
 
 # --- 4. DEV TOOLS ---
 DEV_MIRROR_DB_DIR = _DATA_BASE / "db_mirror"

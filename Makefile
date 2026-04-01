@@ -176,7 +176,7 @@ publish:
 clean:
 	@echo "🧹 Cleaning up..."
 	rm -rf build/ dist/ release/ tmp/
-	rm -rf web/assets/db/ web/assets/modules/data/constants.js
+	rm -rf web/public/assets/db/ web/assets/modules/data/constants.js
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 	@echo "✅ Clean complete."

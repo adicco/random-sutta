@@ -9,7 +9,7 @@ class BuilderConfig:
     
     # Output Directories
     LOCAL_OUTPUT_DIR: Path = PROJECT_ROOT / "data" / "dpd"
-    WEB_OUTPUT_DIR: Path = PROJECT_ROOT / "web" / "assets" / "db" / "dictionaries"
+    WEB_OUTPUT_DIR: Path = PROJECT_ROOT / "web" / "public" / "assets" / "db" / "dictionaries"
     
     TEMPLATES_DIR: Path = Path(__file__).parent / "templates"
 
