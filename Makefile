@@ -1,5 +1,5 @@
 # Path: Makefile
-.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev live serve view-pwa view-sl release zip deploy beta official publish clean noedit undo mini
+.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini
 
 # Python command (sử dụng môi trường hiện tại do direnv quản lý)
 PYTHON := python3
@@ -33,18 +33,16 @@ help:
 	@echo "  make mini {word} - Search 'word' in Mini DB (Open CSV)"
 	@echo ""
 	@echo "🏗️  BUILD & PREVIEW:"
-	@echo "  make build          - Run Full Build (Data + Release)"
-	@echo "  make re             - Quick Re-build (Release Only)"
-	@echo "  make dev            - Live Source Server (port 8000)"
-	@echo "  make serve          - Multi-port Server (Source/PWA/Serverless)"
-	@echo "  make view-pwa       - Preview 'PWA' Build (port 8001)"
-	@echo "  make view-sl        - Preview 'Serverless' Build (file://)"
+	@echo "  make build          - Run Full Build (Data + Vite)"
+	@echo "  make re             - Quick Re-build (Vite Only)"
+	@echo "  make dev            - Vite Dev Server with HMR"
+	@echo "  make view           - Preview Vite Production Build"
 	@echo ""
 	@echo "🚀 RELEASE & DEPLOY:"
-	@echo "  make zip            - Build & Create Zip Artifact"
-	@echo "  make deploy         - Build & Deploy 'PWA' to GH-Pages"
+	@echo "  make deploy         - Build & Deploy Web to GH-Pages"
 	@echo "  make beta           - Publish Pre-release (Commit -> Push -> GH Release)"
-	@echo "  make publish        - Publish OFFICIAL (Commit -> Push -> GH Release -> Deploy)"
+	@echo "  make official       - Publish OFFICIAL (Commit -> Push -> GH Release)"
+	@echo "  make publish        - Publish OFFICIAL and Deploy"
 	@echo ""
 	@echo "🧹 MAINTENANCE:"
 	@echo "  make clean          - Remove all build artifacts & cache"
@@ -144,13 +142,6 @@ re:
 dev:
 	@echo "🌍 Starting Vite Dev Server..."
 	npm run dev
-
-live:
-	$(PYTHON) src/live_server.py
-
-serve:
-	@echo "🌍 Starting Vite Preview Server..."
-	npm run preview
 
 view:
 	@echo "🌍 Starting Vite Preview Server..."
