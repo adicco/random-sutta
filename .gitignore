@@ -44,3 +44,5 @@ Thumbs.db
 # Direnv
 .direnv/
 .envrc
+
+/references/
