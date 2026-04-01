@@ -22,8 +22,7 @@ ENTRY_POINT = "assets/modules/core/app.js"
 
 CRITICAL_ASSETS = [
     "assets/db/uid_index.json", 
-    "assets/modules/data/constants.js",
-    "sw.js"
+    "assets/modules/data/constants.js"
 ]
 
 VERSION_PLACEHOLDER = "dev-placeholder"
