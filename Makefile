@@ -140,12 +140,12 @@ re:
 # 🌍 SERVERS & PREVIEW
 # ==============================================================================
 dev:
-	@echo "🌍 Starting Vite Dev Server..."
-	npm run dev
+	@echo "🌍 Starting Vite Dev Server on port 8000..."
+	npm run dev -- --port 8000
 
 view:
-	@echo "🌍 Starting Vite Preview Server..."
-	npm run preview
+	@echo "🌍 Starting Vite Preview Server on port 8001..."
+	npm run preview -- --port 8001
 
 # ==============================================================================
 # 🚀 RELEASE ACTIONS
