@@ -198,7 +198,7 @@ apk:
 	@echo "🔄 Đồng bộ với dự án Android (Capacitor)..."
 	npx cap sync
 	@echo "📦 Đang tạo file APK (Debug)..."
-	export JAVA_HOME="/Library/Java/JavaVirtualMachines/microsoft-25.jdk/Contents/Home" && \
+	export JAVA_HOME="/Library/Java/JavaVirtualMachines/temurin-17.jdk/Contents/Home" && \
 	cd android && ./gradlew assembleDebug
 	@echo "✅ XONG! File APK của bạn nằm tại:"
 	@echo "📍 android/app/build/outputs/apk/debug/app-debug.apk"
