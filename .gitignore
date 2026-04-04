@@ -49,3 +49,15 @@ Thumbs.db
 
 # Node
 node_modules/
+
+# Capacitor / Android Build artifacts
+android/local.properties
+android/.gradle/
+android/app/build/
+android/.idea/
+android/app/.cxx/
+android/app/release/
+android/app/debug/
+capacitor.config.json.tmp
+android/app/*.apk
+*.apk

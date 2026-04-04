@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Random Sutta</string>
+    <string name="title_activity_main">Random Sutta</string>
+    <string name="package_name">com.randomsutta.app</string>
+    <string name="custom_url_scheme">com.randomsutta.app</string>
+</resources>

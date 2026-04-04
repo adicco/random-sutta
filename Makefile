@@ -186,3 +186,27 @@ noedit:
 	@git add . && git commit --amend --no-edit
 undo:
 	@git reset --soft HEAD~1
+
+# ==============================================================================
+# 📱 ANDROID / APK COMMANDS
+# ==============================================================================
+
+# Biên dịch web cho APK và xuất file APK ngay lập tức
+apk:
+	@echo "🚀 Đang biên dịch mã nguồn cho APK (Offline mode)..."
+	APK_BUILD=true npm run build
+	@echo "🔄 Đồng bộ với dự án Android (Capacitor)..."
+	npx cap sync
+	@echo "📦 Đang tạo file APK (Debug)..."
+	export JAVA_HOME="/Library/Java/JavaVirtualMachines/microsoft-25.jdk/Contents/Home" && \
+	cd android && ./gradlew assembleDebug
+	@echo "✅ XONG! File APK của bạn nằm tại:"
+	@echo "📍 android/app/build/outputs/apk/debug/app-debug.apk"
+
+# Mở dự án Android bằng Android Studio
+open-apk:
+	npx cap open android
+
+# Dọn dẹp cache Android
+clean-apk:
+	cd android && ./gradlew clean
