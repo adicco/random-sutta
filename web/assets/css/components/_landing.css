@@ -16,7 +16,7 @@
   background-color: var(--bg-body);
   z-index: 2000; /* Higher than everything else */
   
-  padding: 20px;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 20px 20px 20px;
   text-align: center;
   
   /* Transition for Fade Out */

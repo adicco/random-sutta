@@ -36,6 +36,7 @@
 /* --- DRAWER MAIN SHELL --- */
 #filter-drawer {
   padding: 15px;
+  padding-top: calc(15px + env(safe-area-inset-top, 0px));
   /* border-radius: var(--radius-md); */
   animation: slideDown 0.3s ease-out;
   /* background-color: var(--bg-drawer); */

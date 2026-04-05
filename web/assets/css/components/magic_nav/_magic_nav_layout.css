@@ -1,7 +1,7 @@
 /* Path: web/assets/css/components/magic_nav/_magic_nav_layout.css */
 #magic-nav-wrapper {
   position: fixed;
-  top: 10px;
+  top: calc(10px + env(safe-area-inset-top, 0px));
   left: 10px;
   z-index: 1100;
   display: flex;

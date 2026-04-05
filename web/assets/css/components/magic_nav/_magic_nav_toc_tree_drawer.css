@@ -3,7 +3,7 @@
 /* --- 1. DRAWER CONTAINER --- */
 #magic-toc-drawer {
   position: fixed;
-  top: 55px;
+  top: calc(55px + env(safe-area-inset-top, 0px));
   left: 15px;
   width: 320px;
   max-height: 70vh;

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#8b4513" />
     <title>Random Sutta Reader</title>
 
     <link
@@ -50,7 +51,7 @@
     </script>
     <script>
       // [CACHE BUSTER] Force clear cache if version changed
-      const APP_VERSION = "1.0.2";
+      const APP_VERSION = "1.0.3";
       if (localStorage.getItem("app_version") !== APP_VERSION) {
         if ("caches" in window) {
           caches.keys().then((names) => {

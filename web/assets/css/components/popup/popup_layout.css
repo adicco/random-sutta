@@ -3,7 +3,7 @@
 /* --- SHARED STYLES --- */
 :root {
   --popup-comment-height: 40vh;
-  --popup-quicklook-top: 70px;
+  --popup-quicklook-top: calc(70px + env(safe-area-inset-top, 0px));
 }
 
 /* [REMOVED] TTS Popup Offset Logic - TTS is now at Top */

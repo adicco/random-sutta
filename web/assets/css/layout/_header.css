@@ -1,6 +1,7 @@
 /* Path: web/assets/css/layout/_header.css */
 header {
   text-align: center;
+  padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: 10px;
 }
 
