@@ -12,6 +12,7 @@ import {
   ThemeManager,
   FontSizeManager,
   GestureManager,
+  BookmarkManager,
 } from "ui/managers/index.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";

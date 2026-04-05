@@ -210,7 +210,14 @@
     </div>
 
     <div id="magic-toc-drawer">
-      <div id="magic-toc-content"></div>
+      <div id="magic-toc-tabs" class="lookup-header-tabs">
+        <button id="tab-magic-toc" class="lookup-tab active">Contents</button>
+        <button id="tab-magic-bookmarks" class="lookup-tab">Bookmarks</button>
+      </div>
+      <div id="magic-toc-content" class="magic-tab-content active"></div>
+      <div id="magic-bookmarks-content" class="magic-tab-content hidden">
+        <div id="bookmarks-list"></div>
+      </div>
     </div>
     <div id="magic-backdrop" class="hidden"></div>
 
@@ -235,6 +242,13 @@
       </button>
 
       <div id="filter-drawer" class="hidden">
+        <div id="drawer-header">
+          <span class="drawer-title">Controls</span>
+          <button id="btn-save-bookmark" class="icon-trigger" title="Save Bookmark" style="opacity: 1; padding: 0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+
         <p class="filter-label">Select books to randomize from:</p>
         <div id="primary-filters"></div>
 

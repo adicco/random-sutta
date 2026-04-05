@@ -171,6 +171,9 @@ export const SuttaController = {
     if (this.isRestoring) {
         setTimeout(() => { this.isRestoring = false; }, 500);
     }
+    
+    // [NEW] Update Bookmark Star
+    BookmarkManager.updateButtonState(suttaId);
   },
 
   /**

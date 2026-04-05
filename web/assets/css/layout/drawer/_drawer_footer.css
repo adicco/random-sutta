@@ -142,8 +142,8 @@
 /* [NEW] Vertical Sepia Panel (Drop Down) */
 #sepia-control-panel {
   position: absolute;
-  /* Đẩy xuống dưới nút theme */
-  top: 100%; 
+  /* Nổi lên trên thay vì đùn xuống dưới để không làm giãn drawer */
+  bottom: calc(100% + 10px); 
   /* Căn giữa so với nút theme (giả định nút 32px, panel 40px -> lệch -4px) */
   right: 6px;
   width: 30px;

@@ -72,6 +72,48 @@
   scrollbar-width: thin;
 }
 
+/* --- DRAWER HEADER --- */
+#drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.drawer-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+}
+
+#btn-save-bookmark {
+  color: var(--text-light);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+#btn-save-bookmark:hover {
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+#btn-save-bookmark svg {
+  fill: none;
+  transition: fill 0.2s ease, color 0.2s ease;
+}
+
+#btn-save-bookmark svg[fill="currentColor"] {
+  color: var(--primary-color);
+}
+
 @media (max-width: 600px) {
   #filter-drawer {
     width: 350px;
