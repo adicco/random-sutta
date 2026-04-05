@@ -9,6 +9,8 @@ export const GestureManager = {
         let touchStartTime = 0;
         const swipeThreshold = 80; // min distance px
         const timeThreshold = 300; // max time ms
+        const edgeTapThreshold = 50; // px from edge for taps
+        const tapTimeThreshold = 250; // max time for a tap
 
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return; // Ignore multi-touch
@@ -40,7 +42,33 @@ export const GestureManager = {
             const deltaX = touchEndX - touchStartX;
             const deltaY = touchEndY - touchStartY;
             const deltaTime = touchEndTime - touchStartTime;
+            const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
+            const windowWidth = window.innerWidth;
+
+            // [NEW] 1. Quick Tap on Edges -> Navigate Next/Prev Sutta
+            if (deltaTime < tapTimeThreshold && dist < 10) {
+                // Left Edge Tap -> Prev
+                if (touchStartX <= edgeTapThreshold) {
+                    const btnPrev = document.getElementById("nav-prev");
+                    if (btnPrev && !btnPrev.disabled) {
+                        logger.debug("EdgeTap", "Triggering Prev Sutta");
+                        btnPrev.click();
+                        return;
+                    }
+                }
+                // Right Edge Tap -> Next
+                if (touchStartX >= windowWidth - edgeTapThreshold) {
+                    const btnNext = document.getElementById("nav-next");
+                    if (btnNext && !btnNext.disabled) {
+                        logger.debug("EdgeTap", "Triggering Next Sutta");
+                        btnNext.click();
+                        return;
+                    }
+                }
+            }
+
+            // 2. Quick Swipe -> History Navigation
             // Must be a quick swipe
             if (deltaTime > timeThreshold) return;
 
