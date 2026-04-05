@@ -3,8 +3,8 @@
 /* --- 1. FAB & WRAPPER --- */
 #toh-wrapper {
   position: fixed;
-  top: calc(15px + env(safe-area-inset-top, 0px));
-  right: 55px;
+  top: calc(57px + env(safe-area-inset-top, 0px));
+  right: 15px;
   z-index: 1000;
   display: flex;
   flex-direction: column;
