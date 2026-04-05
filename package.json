@@ -1,6 +1,6 @@
 {
   "name": "random-sutta",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Random Sutta Reader",
   "main": "index.js",
   "scripts": {

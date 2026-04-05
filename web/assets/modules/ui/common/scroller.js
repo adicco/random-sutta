@@ -35,12 +35,14 @@ export const Scroller = {
 
     restoreScrollTop: function(y) {
         if (typeof y !== 'number') return;
-        // Dùng instant để tránh scroll chạy từ từ
+        // Dùng timeout kết hợp requestAnimationFrame để đảm bảo layout đã ổn định
         setTimeout(() => {
-            document.documentElement.style.scrollBehavior = 'auto';
-            window.scrollTo({ top: y, behavior: 'instant' });
-            setTimeout(() => { document.documentElement.style.scrollBehavior = ''; }, 50);
-        }, 0);
+            requestAnimationFrame(() => {
+                document.documentElement.style.scrollBehavior = 'auto';
+                window.scrollTo({ top: y, behavior: 'instant' });
+                setTimeout(() => { document.documentElement.style.scrollBehavior = ''; }, 100);
+            });
+        }, 100);
     },
 
     /**

@@ -157,7 +157,9 @@ export const SuttaController = {
     }
     
     // Final save after all scrolls are done
-    this._saveProgress(suttaId);
+    // If we are restoring a specific scroll position, use it.
+    // Otherwise, let it read from DOM.
+    this._saveProgress(suttaId, (scrollY > 0 && !scrollTarget) ? scrollY : undefined);
   },
 
   /**
