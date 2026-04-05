@@ -59,8 +59,11 @@ export const BookmarkManager = {
 
     toggleCurrentSutta() {
         const params = new URLSearchParams(window.location.search);
-        const currentId = params.get("q");
+        let currentId = params.get("q");
         if (!currentId) return;
+        
+        // Strip any hash
+        currentId = currentId.split('#')[0];
 
         // Try to get title from #nav-main-title
         const titleEl = document.getElementById("nav-main-title");
@@ -83,14 +86,20 @@ export const BookmarkManager = {
     },
 
     updateButtonState(currentId) {
-        if (!this.btnSave) return;
+        if (!this.btnSave || !currentId) return;
+        const baseId = currentId.split('#')[0];
         const bookmarks = this.getBookmarks();
-        const isSaved = bookmarks.some(b => b.id === currentId);
+        const isSaved = bookmarks.some(b => b.id === baseId);
         
         if (isSaved) {
             this.btnSave.classList.add("saved");
+            // Also force SVG fill just in case CSS doesn't take priority
+            const svg = this.btnSave.querySelector("svg");
+            if (svg) svg.setAttribute("fill", "currentColor");
         } else {
             this.btnSave.classList.remove("saved");
+            const svg = this.btnSave.querySelector("svg");
+            if (svg) svg.setAttribute("fill", "none");
         }
     },
 

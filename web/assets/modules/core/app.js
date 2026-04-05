@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   ThemeManager.init();
   FontSizeManager.init();
   GestureManager.init();
+  BookmarkManager.init();
 
   FilterComponent.init();
   initPopupSystem();
