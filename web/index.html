@@ -49,6 +49,18 @@
       }
     }
     </script>
+    <div id="sepia-control-panel" class="hidden">
+      <input
+        type="range"
+        id="sepia-slider"
+        min="0"
+        max="100"
+        value="0"
+        step="1"
+        title="Adjust Sepia Tone"
+      />
+    </div>
+
     <script>
       // [CACHE BUSTER] Force clear cache if version changed
       const APP_VERSION = "__APP_VERSION__";
@@ -243,8 +255,7 @@
 
       <div id="filter-drawer" class="hidden">
         <div id="drawer-header">
-          <span class="drawer-title">Controls</span>
-          <button id="btn-save-bookmark" class="icon-trigger" title="Save Bookmark" style="opacity: 1; padding: 0;">
+          <button id="btn-save-bookmark" class="icon-trigger" title="Save Bookmark" style="opacity: 1; padding: 0; margin-left: auto;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
           </button>
         </div>
@@ -343,18 +354,6 @@
           </div>
 
           <div class="theme-toggle-group">
-            <div id="sepia-control-panel" class="hidden">
-              <input
-                type="range"
-                id="sepia-slider"
-                min="0"
-                max="100"
-                value="0"
-                step="1"
-                title="Adjust Sepia Tone"
-              />
-            </div>
-
             <button
               id="btn-theme-toggle"
               title="Toggle Theme (Double-tap for Sepia)"

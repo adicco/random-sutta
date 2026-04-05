@@ -10,6 +10,7 @@ export const UIManager = {
             bar: document.getElementById("magic-breadcrumb-bar"),
             drawer: document.getElementById("magic-toc-drawer"),
             tocContent: document.getElementById("magic-toc-content"),
+            bookmarksContent: document.getElementById("magic-bookmarks-content"),
             backdrop: document.getElementById("magic-backdrop"),
         };
 

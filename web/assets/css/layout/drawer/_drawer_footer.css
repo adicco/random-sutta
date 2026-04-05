@@ -141,21 +141,18 @@
 
 /* [NEW] Vertical Sepia Panel (Drop Down) */
 #sepia-control-panel {
-  position: absolute;
-  /* Nổi lên trên thay vì đùn xuống dưới để không làm giãn drawer */
-  bottom: calc(100% + 10px); 
-  /* Căn giữa so với nút theme (giả định nút 32px, panel 40px -> lệch -4px) */
-  right: 6px;
+  position: fixed;
+  /* Kích thước */
   width: 30px;
   height: 140px; /* Chiều cao đủ cho slider dọc */
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: 20px; /* Bo tròn hình viên thuốc */
-  box-shadow: var(--shadow-soft); /* Đổ bóng đậm hơn để nổi bật */
+  box-shadow: var(--shadow-card); /* Đổ bóng nổi bật */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100; /* Đè lên các thành phần khác */
+  z-index: 1200; /* Đè lên tất cả drawer */
   
   /* Hiệu ứng trượt xuống */
   transform-origin: top center;

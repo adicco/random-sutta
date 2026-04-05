@@ -44,19 +44,21 @@ export const ThemeManager = {
                 sepiaPanel.classList.remove("hidden");
                 if (sepiaIndicator) sepiaIndicator.classList.add("panel-open");
 
-                // Calculate Position
+                // Calculate Position based on viewport
                 if (sepiaIndicator) {
-                    // Ensure panel has dimensions (browser might need a frame if display:none just removed)
                     requestAnimationFrame(() => {
-                        sepiaPanel.style.right = "auto"; // Reset right
-                        
-                        const indicatorLeft = sepiaIndicator.offsetLeft;
-                        const indicatorWidth = sepiaIndicator.offsetWidth;
+                        const rect = sepiaIndicator.getBoundingClientRect();
                         const panelWidth = sepiaPanel.offsetWidth;
+                        const panelHeight = sepiaPanel.offsetHeight;
                         
-                        // Center align: Left = IndicatorLeft + (IndicatorWidth/2) - (PanelWidth/2)
-                        const centeredLeft = indicatorLeft + (indicatorWidth / 2) - (panelWidth / 2);
+                        // Center align horizontally relative to indicator
+                        const centeredLeft = rect.left + (rect.width / 2) - (panelWidth / 2);
+                        
+                        // Position above the indicator with some gap
+                        const topPosition = rect.top - panelHeight - 10;
+                        
                         sepiaPanel.style.left = `${centeredLeft}px`;
+                        sepiaPanel.style.top = `${topPosition}px`;
                     });
                 }
             } else {
