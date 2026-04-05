@@ -16,6 +16,11 @@ export class TTSWebSpeechEngine {
         this.currentUtterance = null;
         this.isReady = false;
 
+        if (!this.synth) {
+            logger.warn("Init", "window.speechSynthesis is not supported in this environment.");
+            return;
+        }
+
         // [CRITICAL] Bind event properly
         if (this.synth.onvoiceschanged !== undefined) {
             this.synth.onvoiceschanged = () => {

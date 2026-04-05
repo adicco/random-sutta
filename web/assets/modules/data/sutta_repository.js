@@ -176,8 +176,5 @@ export const SuttaRepository = {
             `${DB_PATH}/`, 
             onProgress
         );
-        
-        const extraCache = await caches.open(CACHE_NAME);
-        await extraCache.add('assets/modules/data/constants.js');
     }
 };
