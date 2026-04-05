@@ -74,4 +74,4 @@ Khi phát triển hoặc refactor mã JavaScript cho Frontend, bạn bắt buộ
 
 ## 6\. LƯU Ý SAU KHI CHỈNH SỬA CODE
 
-- Sau mỗi lần bạn chỉnh sửa code, bạn **phải** cung cấp một câu lệnh `git add` cho những files đã thay đổi, và một lệnh `git commit -m "nội dung commit"` khớp với những sửa đổi đó, trước khi bạn tiếp tục trao đổi thêm.
+- Sau khi hoàn thành chỉnh sửa code, bạn **phải** chạy `git add` cho những files đã thay đổi, và `git commit -m "nội dung commit"` khớp với những sửa đổi đó, trước khi bạn tiếp tục trao đổi thêm.

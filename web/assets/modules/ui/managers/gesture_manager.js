@@ -7,9 +7,8 @@ export const GestureManager = {
         let touchStartX = 0;
         let touchStartY = 0;
         let touchStartTime = 0;
-        const edgeThreshold = 35; // px from edge
-        const swipeThreshold = 50; // min distance px
-        const timeThreshold = 400; // max time ms
+        const swipeThreshold = 80; // min distance px
+        const timeThreshold = 300; // max time ms
 
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return; // Ignore multi-touch
@@ -34,22 +33,20 @@ export const GestureManager = {
             if (deltaTime > timeThreshold) return;
 
             // Must be primarily horizontal
-            if (Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return;
+            if (Math.abs(deltaX) < Math.abs(deltaY) * 2) return;
 
             // Must cover minimum distance
             if (Math.abs(deltaX) < swipeThreshold) return;
 
-            const windowWidth = window.innerWidth;
-
-            // 1. Swipe Right from Left Edge -> Go Back
-            if (deltaX > 0 && touchStartX <= edgeThreshold) {
-                logger.debug("EdgeSwipe", "Navigating Back");
+            // 1. Swipe Right -> Go Back
+            if (deltaX > swipeThreshold) {
+                logger.debug("Gesture", "Navigating Back");
                 window.history.back();
             }
 
-            // 2. Swipe Left from Right Edge -> Go Forward
-            if (deltaX < 0 && touchStartX >= windowWidth - edgeThreshold) {
-                logger.debug("EdgeSwipe", "Navigating Forward");
+            // 2. Swipe Left -> Go Forward
+            if (deltaX < -swipeThreshold) {
+                logger.debug("Gesture", "Navigating Forward");
                 window.history.forward();
             }
         }, { passive: true });
