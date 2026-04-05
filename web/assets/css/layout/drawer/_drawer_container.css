@@ -2,49 +2,72 @@
 
 /* --- TRIGGER BUTTON --- */
 #filter-container {
-  margin-bottom: 15px;
+  position: fixed;
+  top: calc(15px + env(safe-area-inset-top, 0px));
+  right: 15px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
 }
 
+/* Floating Toggle Button */
 .icon-trigger {
-  background: transparent;
-  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
   color: var(--text-light);
-  padding: 5px 15px;
-  opacity: 0.2;
-  display: inline-flex;
+  padding: 0;
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
+  pointer-events: auto;
 }
 
 .icon-trigger:hover,
 .icon-trigger.open {
   color: var(--primary-color);
   opacity: 1;
+  background-color: var(--bg-hover);
+  border-color: var(--primary-color);
   transform: scale(1.1);
-}
-
-.icon-trigger.open {
-  transform: rotate(180deg);
 }
 
 .icon-trigger svg {
   width: 20px;
   height: 20px;
+  display: block;
 }
 
-/* --- DRAWER MAIN SHELL --- */
+/* --- DRAWER MAIN SHELL (Fixed Dropdown) --- */
 #filter-drawer {
-  padding: 15px;
-  padding-top: calc(15px + env(safe-area-inset-top, 0px));
-  /* border-radius: var(--radius-md); */
-  animation: slideDown 0.3s ease-out;
-  /* background-color: var(--bg-drawer); */
-  /* border: 1px solid var(--border-light); */
-  /* box-shadow: var(--shadow-soft); */
+  margin-top: 5px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-light);
   
-  /* Cần relative để các thành phần con định vị nếu cần */
-  position: relative;
+  width: 320px;
+  max-height: 80vh;
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  
+  padding: 15px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: slideDown 0.2s ease-out;
+  pointer-events: auto;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 600px) {
+  #filter-drawer {
+    width: 280px;
+  }
 }
 
 @keyframes slideDown {

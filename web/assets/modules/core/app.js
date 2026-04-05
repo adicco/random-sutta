@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const switchView = (viewName) => {
     const landing = document.getElementById("landing-view");
     const reader = document.getElementById("reader-view");
+    const filter = document.getElementById("filter-container");
     
     if (viewName === 'reader') {
         landing.classList.add("hidden");
@@ -66,11 +67,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         setTimeout(() => {
              landing.style.display = 'none'; // Ensure clicks pass through
              reader.classList.remove("hidden");
+             if (filter) filter.classList.remove("hidden");
         }, 300); // Match CSS transition
     } else {
         landing.style.display = 'flex';
         landing.classList.remove("hidden");
         reader.classList.add("hidden");
+        if (filter) filter.classList.add("hidden");
     }
   };
 
