@@ -166,7 +166,6 @@ export const SuttaRepository = {
         }
 
         logger.info("Sync", "Starting Bundle Download...");
-        if (typeof JSZip === 'undefined') throw new Error("JSZip missing");
         
         const CACHE_NAME = (await caches.keys()).find(k => k.startsWith('sutta-cache-')) || 'sutta-cache-temp';
         

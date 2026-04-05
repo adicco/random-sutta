@@ -1,5 +1,6 @@
 // Path: web/assets/modules/data/zip_loader.js
 import { getLogger } from 'utils/logger.js';
+import JSZip from 'jszip';
 
 const logger = getLogger("ZipLoader");
 
@@ -13,12 +14,7 @@ export const ZipLoader = {
      * @returns {Promise<void>}
      */
     async importBundleToCache(zipUrl, targetCacheName, pathPrefix = "", onProgress) {
-        // 1. Kiểm tra thư viện
-        if (typeof JSZip === 'undefined') {
-            throw new Error("Critical: JSZip library is missing.");
-        }
-
-        // 2. Tải file Zip
+        // 2. Tải file ZIP
         logger.info("Import", `Fetching bundle: ${zipUrl}`);
         const response = await fetch(zipUrl);
         if (!response.ok) {

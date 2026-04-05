@@ -1,6 +1,7 @@
 // Path: web/assets/modules/services/sqlite_connection.js
 import { getLogger } from 'utils/logger.js';
 import { initSQLite, withExistDB, useIdbStorage } from './sqlite_helper.js';
+import JSZip from 'jszip';
 
 const logger = getLogger("SqliteConnection");
 

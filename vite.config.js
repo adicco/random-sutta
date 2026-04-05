@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
         build: {
             outDir: '../dist', 
             emptyOutDir: true,
-            target: 'esnext', 
+            target: 'es2022', 
             minify: 'esbuild',
             cssMinify: true,
             sourcemap: !isProd,
