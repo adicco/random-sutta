@@ -89,6 +89,19 @@ document.addEventListener("DOMContentLoaded", async () => {
     SuttaController.loadRandomSutta(true)
   );
 
+  // [NEW] Save progress on scroll (debounced)
+  let scrollSaveTimer = null;
+  window.addEventListener("scroll", () => {
+    if (scrollSaveTimer) clearTimeout(scrollSaveTimer);
+    scrollSaveTimer = setTimeout(() => {
+        SuttaController._saveProgress();
+    }, 1500);
+  }, { passive: true });
+
+  window.addEventListener("beforeunload", () => {
+    SuttaController._saveProgress();
+  });
+
   // [NEW] Landing Random Button
   if (landingRandomBtn) {
       landingRandomBtn.addEventListener("click", async () => {
@@ -118,15 +131,47 @@ document.addEventListener("DOMContentLoaded", async () => {
       
       let loadId = initialParams.q;
       if (window.location.hash) loadId += window.location.hash;
+      
+      // [NEW] Check if this is the last read sutta to restore scroll position
+      let restoreScroll = 0;
+      try {
+          const saved = localStorage.getItem("last_read_sutta");
+          if (saved) {
+              const progress = JSON.parse(saved);
+              if (progress && progress.id === loadId.split('#')[0]) {
+                  restoreScroll = progress.scrollY;
+              }
+          }
+      } catch (e) {}
+
       console.time("⏱️ Direct Load Total");
-      await SuttaController.loadSutta(loadId, true);
+      await SuttaController.loadSutta(loadId, true, restoreScroll);
       console.timeEnd("⏱️ Direct Load Total");
 
       RandomBuffer.startBackgroundWork();
     } else {
-      // Root access -> Go to Landing
-      switchView('landing');
-      // Pre-fetch randoms in background while user stares at the landing page
+      // Root access -> Try restore last read or go to Landing
+      const savedProgress = localStorage.getItem("last_read_sutta");
+      let restored = false;
+      
+      if (savedProgress) {
+          try {
+              const progress = JSON.parse(savedProgress);
+              if (progress && progress.id) {
+                  switchView('reader');
+                  await SuttaController.loadSutta(progress.id, true, progress.scrollY);
+                  restored = true;
+              }
+          } catch (e) {
+              console.warn("Restore failed", e);
+          }
+      }
+
+      if (!restored) {
+          switchView('landing');
+      }
+      
+      // Pre-fetch randoms in background while user stares at the landing page (or is reading restored sutta)
       RandomBuffer.startBackgroundWork();
     }
 

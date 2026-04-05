@@ -111,6 +111,7 @@ export const SuttaController = {
         if (success && shouldUpdateUrl) {
              const bookParam = FilterComponent.generateBookParam();
              Router.updateURL(suttaId, bookParam, false, scrollTarget ? `#${scrollTarget}` : null, currentScroll);
+             this._saveProgress(suttaId, currentScroll);
         }
         
         logger.timerEnd(`Render: ${suttaId}`);
@@ -128,6 +129,7 @@ export const SuttaController = {
             // DOM đã có, container đang hidden. Jump ngay lập tức.
             Scroller.jumpTo(scrollTarget);
             Scroller.highlightElement(scrollTarget);
+            this._saveProgress(suttaId, Scroller.getScrollTop());
 
             // [TELEPORT STEP 3] Reveal
             if (container) {
@@ -152,6 +154,33 @@ export const SuttaController = {
             Scroller.restoreScrollTop(0);
             if (container) container.style.visibility = '';
         }
+    }
+    
+    // Final save after all scrolls are done
+    this._saveProgress(suttaId);
+  },
+
+  /**
+   * [NEW] Save current reading progress to localStorage
+   */
+  _saveProgress: function (id, scrollY) {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const suttaId = id || params.get("q");
+        if (!suttaId) return;
+
+        const currentScroll = (scrollY !== undefined) ? scrollY : Scroller.getScrollTop();
+        
+        const progress = {
+            id: suttaId,
+            scrollY: currentScroll,
+            timestamp: Date.now()
+        };
+        
+        localStorage.setItem("last_read_sutta", JSON.stringify(progress));
+        logger.debug("Progress", `Saved: ${suttaId} at ${currentScroll}`);
+    } catch (e) {
+        console.warn("Could not save progress:", e);
     }
   },
 
