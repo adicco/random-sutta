@@ -48,6 +48,36 @@ export const GestureManager = {
 
             // [NEW] 1. Quick Tap on Edges -> Navigate Next/Prev Sutta
             if (deltaTime < tapTimeThreshold && dist < 10) {
+                // [FIX] Prevent conflict with word lookup or other interactive elements
+                const target = e.target;
+                if (target.closest('a, button, .comment-marker, .lookup-highlight')) return;
+
+                // Check if tapping on a word
+                let isWord = false;
+                try {
+                    let range;
+                    if (document.caretRangeFromPoint) {
+                        range = document.caretRangeFromPoint(touchEndX, touchEndY);
+                    } else if (document.caretPositionFromPoint) {
+                        const pos = document.caretPositionFromPoint(touchEndX, touchEndY);
+                        if (pos) {
+                            range = document.createRange();
+                            range.setStart(pos.offsetNode, pos.offset);
+                        }
+                    }
+                    
+                    if (range && range.startContainer.nodeType === 3) {
+                        const text = range.startContainer.textContent;
+                        const offset = range.startOffset;
+                        // If it's not a whitespace, consider it a word
+                        if (text[offset] && /\S/.test(text[offset])) {
+                            isWord = true;
+                        }
+                    }
+                } catch (err) {}
+
+                if (isWord) return;
+
                 // Left Edge Tap -> Prev
                 if (touchStartX <= edgeTapThreshold) {
                     const btnPrev = document.getElementById("nav-prev");
