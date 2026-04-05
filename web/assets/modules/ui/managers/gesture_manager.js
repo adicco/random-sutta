@@ -1,0 +1,59 @@
+// Path: web/assets/modules/ui/managers/gesture_manager.js
+import { getLogger } from "utils/logger.js";
+const logger = getLogger("GestureManager");
+
+export const GestureManager = {
+    init() {
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        const edgeThreshold = 35; // px from edge
+        const swipeThreshold = 50; // min distance px
+        const timeThreshold = 400; // max time ms
+
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return; // Ignore multi-touch
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+            touchStartTime = Date.now();
+        }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 0) return;
+            const touch = e.changedTouches[0];
+            const touchEndX = touch.clientX;
+            const touchEndY = touch.clientY;
+            const touchEndTime = Date.now();
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const deltaTime = touchEndTime - touchStartTime;
+
+            // Must be a quick swipe
+            if (deltaTime > timeThreshold) return;
+
+            // Must be primarily horizontal
+            if (Math.abs(deltaX) < Math.abs(deltaY) * 1.5) return;
+
+            // Must cover minimum distance
+            if (Math.abs(deltaX) < swipeThreshold) return;
+
+            const windowWidth = window.innerWidth;
+
+            // 1. Swipe Right from Left Edge -> Go Back
+            if (deltaX > 0 && touchStartX <= edgeThreshold) {
+                logger.debug("EdgeSwipe", "Navigating Back");
+                window.history.back();
+            }
+
+            // 2. Swipe Left from Right Edge -> Go Forward
+            if (deltaX < 0 && touchStartX >= windowWidth - edgeThreshold) {
+                logger.debug("EdgeSwipe", "Navigating Forward");
+                window.history.forward();
+            }
+        }, { passive: true });
+        
+        logger.info("Init", "GestureManager initialized.");
+    }
+};

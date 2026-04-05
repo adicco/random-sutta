@@ -32,6 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   OfflineManager.init();
   ThemeManager.init();
   FontSizeManager.init();
+  GestureManager.init();
 
   FilterComponent.init();
   initPopupSystem();
