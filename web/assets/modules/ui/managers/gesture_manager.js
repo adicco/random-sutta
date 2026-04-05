@@ -12,6 +12,17 @@ export const GestureManager = {
 
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return; // Ignore multi-touch
+            
+            // [NEW] Restrict to sutta-container only
+            const target = e.target;
+            const isInsideSutta = target.closest('#sutta-container');
+            const isInsidePopup = target.closest('.popup-container');
+            
+            if (!isInsideSutta || isInsidePopup) {
+                touchStartX = -1; // Invalidate
+                return;
+            }
+
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
@@ -19,6 +30,7 @@ export const GestureManager = {
         }, { passive: true });
 
         document.addEventListener('touchend', (e) => {
+            if (touchStartX === -1) return; // Ignore invalidated starts
             if (e.changedTouches.length === 0) return;
             const touch = e.changedTouches[0];
             const touchEndX = touch.clientX;
