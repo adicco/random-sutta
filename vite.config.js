@@ -37,6 +37,8 @@ aliases['libs'] = path.resolve(webDir, 'assets/libs');
 // Map wa-sqlite cho giống importmap cũ
 aliases['wa-sqlite'] = path.resolve(webDir, 'assets/libs');
 
+const buildVersion = new Date().getTime();
+
 export default defineConfig(({ mode }) => {
     const isProd = mode === 'production';
 
@@ -47,6 +49,10 @@ export default defineConfig(({ mode }) => {
         esbuild: {
             drop: isProd ? ['debugger'] : [],
             legalComments: 'none', 
+        },
+
+        define: {
+            __APP_VERSION__: JSON.stringify(buildVersion),
         },
 
         build: {
@@ -80,6 +86,12 @@ export default defineConfig(({ mode }) => {
         },
         plugins: [
             basicSsl(),
+            {
+                name: 'html-transform',
+                transformIndexHtml(html) {
+                    return html.replace(/__APP_VERSION__/g, buildVersion);
+                }
+            },
             VitePWA({
                 registerType: 'prompt',
                 includeManifestIcons: false, 
