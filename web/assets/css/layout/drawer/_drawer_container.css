@@ -106,12 +106,15 @@
 }
 
 #btn-save-bookmark svg {
-  fill: none;
   transition: fill 0.2s ease, color 0.2s ease;
 }
 
-#btn-save-bookmark svg[fill="currentColor"] {
+#btn-save-bookmark.saved {
   color: var(--primary-color);
+}
+
+#btn-save-bookmark.saved svg {
+  fill: currentColor;
 }
 
 @media (max-width: 600px) {

@@ -41,10 +41,6 @@ export const UIManager = {
             this.elements.backdrop.addEventListener("click", () => this.closeAll());
         }
 
-        if (this.elements.drawer) {
-            this._setupScrollIsolation(this.elements.drawer);
-        }
-
         return this.elements;
     },
 

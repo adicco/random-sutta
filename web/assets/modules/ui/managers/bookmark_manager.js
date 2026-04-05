@@ -87,13 +87,10 @@ export const BookmarkManager = {
         const bookmarks = this.getBookmarks();
         const isSaved = bookmarks.some(b => b.id === currentId);
         
-        const svg = this.btnSave.querySelector("svg");
-        if (svg) {
-            if (isSaved) {
-                svg.setAttribute("fill", "currentColor");
-            } else {
-                svg.setAttribute("fill", "none");
-            }
+        if (isSaved) {
+            this.btnSave.classList.add("saved");
+        } else {
+            this.btnSave.classList.remove("saved");
         }
     },
 
