@@ -33,9 +33,7 @@ export class TTSWebSpeechEngine {
         }
 
         // Initial Load Attempt
-        // Chrome đôi khi trả về rỗng ngay lập tức, phải đợi event.
-        // Firefox/Safari thường trả về ngay.
-        if (this.synth.getVoices().length > 0) {
+        if (this.synth && this.synth.getVoices().length > 0) {
             this._autoSelectVoice();
         }
         
@@ -202,12 +200,12 @@ export class TTSWebSpeechEngine {
         return Promise.resolve();
     }
 
-    pause() { this.synth.pause(); }
-    resume() { this.synth.resume(); }
+    pause() { if (this.synth) this.synth.pause(); }
+    resume() { if (this.synth) this.synth.resume(); }
     
     stop() { 
         try {
-            this.synth.cancel();
+            if (this.synth) this.synth.cancel();
         } catch(e) { /* ignore */ }
         this.currentUtterance = null;
     }
