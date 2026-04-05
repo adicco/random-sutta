@@ -34,7 +34,7 @@ export const Scroller = {
     },
 
     restoreScrollTop: function(y) {
-        if (typeof y !== 'number' || y <= 0) return;
+        if (typeof y !== 'number' || y < 0) return;
         
         let attempts = 0;
         const maxAttempts = 10;
