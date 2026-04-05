@@ -43,6 +43,8 @@
 #magic-nav-corner {
   /* Chỉ cần căn chỉnh lề riêng, còn lại kế thừa từ .magic-btn */
   margin-right: 2px;
+  width: 24px;
+  height: 24px;
   
   /* Đảm bảo nhận sự kiện click */
   pointer-events: auto;
@@ -68,6 +70,8 @@
 }
 
 #magic-nav-corner svg {
+  width: 16px;
+  height: 16px;
   transition: transform 0.2s ease;
 }
 

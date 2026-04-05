@@ -87,6 +87,10 @@
   overflow-x: auto;
   white-space: nowrap;
   
+  /* Prevent scroll chaining to body */
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  
   /* Ẩn scrollbar */
   scrollbar-width: none;
   -ms-overflow-style: none;
