@@ -13,8 +13,14 @@ const logger = getLogger("SuttaController");
 const PopupAPI = initPopupSystem();
 
 export const SuttaController = {
+  isRestoring: false, // [NEW] Guard flag
+
   loadSutta: async function (input, shouldUpdateUrl = true, scrollY = 0, options = {}) {
     const isTransition = options.transition === true;
+    const isInitialRestore = scrollY > 0 && !isTransition;
+    
+    if (isInitialRestore) this.isRestoring = true;
+
     const currentScroll = Scroller.getScrollTop();
     const container = document.getElementById("sutta-container");
 
@@ -160,12 +166,22 @@ export const SuttaController = {
     // If we are restoring a specific scroll position, use it.
     // Otherwise, let it read from DOM.
     this._saveProgress(suttaId, (scrollY > 0 && !scrollTarget) ? scrollY : undefined);
+    
+    // Clear guard after a short delay to allow UI to settle
+    if (this.isRestoring) {
+        setTimeout(() => { this.isRestoring = false; }, 500);
+    }
   },
 
   /**
    * [NEW] Save current reading progress to localStorage
    */
   _saveProgress: function (id, scrollY) {
+    if (this.isRestoring && scrollY === undefined) {
+        logger.debug("Progress", "Save skipped: Restoration in progress");
+        return;
+    }
+    
     try {
         const params = new URLSearchParams(window.location.search);
         const suttaId = id || params.get("q");

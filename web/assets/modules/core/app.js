@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.time("🚀 App Start to Ready");
 
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-  window.scrollTo(0, 0);
 
   const params = new URLSearchParams(window.location.search);
   const isDebug = params.get("debug") === "1" || params.get("debug") === "true";

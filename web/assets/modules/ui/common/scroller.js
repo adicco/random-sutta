@@ -34,15 +34,32 @@ export const Scroller = {
     },
 
     restoreScrollTop: function(y) {
-        if (typeof y !== 'number') return;
-        // Dùng timeout kết hợp requestAnimationFrame để đảm bảo layout đã ổn định
-        setTimeout(() => {
-            requestAnimationFrame(() => {
-                document.documentElement.style.scrollBehavior = 'auto';
-                window.scrollTo({ top: y, behavior: 'instant' });
-                setTimeout(() => { document.documentElement.style.scrollBehavior = ''; }, 100);
-            });
-        }, 100);
+        if (typeof y !== 'number' || y <= 0) return;
+        
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const attemptScroll = () => {
+            const currentHeight = document.documentElement.scrollHeight;
+            const viewportHeight = window.innerHeight;
+            
+            // Nếu chiều cao trang hiện tại chưa đủ để cuộn tới y, và chưa hết lượt thử
+            if (currentHeight < y + viewportHeight && attempts < maxAttempts) {
+                attempts++;
+                setTimeout(() => requestAnimationFrame(attemptScroll), 100);
+                return;
+            }
+
+            document.documentElement.style.scrollBehavior = 'auto';
+            window.scrollTo({ top: y, behavior: 'instant' });
+            
+            // Giữ fixed cho đến khi ổn định
+            setTimeout(() => { 
+                document.documentElement.style.scrollBehavior = ''; 
+            }, 100);
+        };
+
+        setTimeout(() => requestAnimationFrame(attemptScroll), 50);
     },
 
     /**
