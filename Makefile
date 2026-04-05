@@ -200,8 +200,9 @@ apk:
 	@echo "📦 Đang tạo file APK (Debug)..."
 	export JAVA_HOME="/Library/Java/JavaVirtualMachines/microsoft-25.jdk/Contents/Home" && \
 	cd android && ./gradlew assembleDebug
+	@cp android/app/build/outputs/apk/debug/app-debug.apk randomsutta.apk
 	@echo "✅ XONG! File APK của bạn nằm tại:"
-	@echo "📍 android/app/build/outputs/apk/debug/app-debug.apk"
+	@echo "📍 randomsutta.apk"
 
 # Mở dự án Android bằng Android Studio
 open-apk:
