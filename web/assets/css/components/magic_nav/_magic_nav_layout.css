@@ -58,6 +58,7 @@
   border: 1px solid var(--border-light);
   opacity: 1;
   padding: 6px 8px 6px 12px; 
+  z-index: 1150;
 }
 
 #magic-nav-wrapper:not(.collapsed) #magic-group {

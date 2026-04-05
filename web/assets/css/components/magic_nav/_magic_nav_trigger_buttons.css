@@ -50,14 +50,29 @@
 
 /* Logic ẩn hiện đặc thù của Corner */
 
-/* Khi đóng (Collapsed): Ẩn đi */
+/* Khi đóng (Collapsed): Hiện mờ như một floating button */
 #magic-nav-wrapper.collapsed #magic-nav-corner {
-  display: none; 
+  opacity: 0.3;
 }
 
-/* Khi mở (Expanded): Hiện rõ (Opacity 1 do kế thừa từ .magic-btn, không cần set lại) */
+#magic-nav-wrapper.collapsed:hover #magic-nav-corner {
+  opacity: 1;
+  color: var(--primary-color);
+  background-color: var(--bg-hover);
+}
+
+/* Khi mở (Expanded): Hiện rõ và xoay mũi tên ngược lại */
 #magic-nav-wrapper:not(.collapsed) #magic-nav-corner {
   display: flex;
+  opacity: 1;
+}
+
+#magic-nav-corner svg {
+  transition: transform 0.2s ease;
+}
+
+#magic-nav-wrapper:not(.collapsed) #magic-nav-corner svg {
+  transform: rotate(180deg);
 }
 
 /* --- 3. ICON ANIMATIONS --- */
