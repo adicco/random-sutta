@@ -51,7 +51,8 @@
   background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   
-  width: 320px;
+  width: 450px;
+  max-width: calc(100vw - 30px);
   max-height: 80vh;
   border-radius: 8px;
   box-shadow: var(--shadow-card);
@@ -66,7 +67,7 @@
 
 @media (max-width: 600px) {
   #filter-drawer {
-    width: 280px;
+    width: 350px;
   }
 }
 
