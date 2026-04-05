@@ -123,10 +123,7 @@ export class SqliteConnection {
     }
 
     async _downloadAndUnzip() {
-        if (!window.JSZip) throw new Error("JSZip not loaded");
-        
-        // [FIX] Cache Busting Strategy
-        // 1. Use Hash from localStorage (set by _checkAndApplyUpdate) as version query
+        // [FIX] Cache Busting Strategy        // 1. Use Hash from localStorage (set by _checkAndApplyUpdate) as version query
         // 2. Use cache: 'reload' to force network request
         const currentHash = localStorage.getItem(`${this.dbName}_hash`) || Date.now();
         const safeUrl = `${this.zipUrl}?v=${currentHash}`;

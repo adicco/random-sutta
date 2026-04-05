@@ -33,7 +33,7 @@ export class TTSWebSpeechEngine {
         }
 
         // Initial Load Attempt
-        if (this.synth && this.synth.getVoices().length > 0) {
+        if (this.synth && (this.synth ? this.synth.getVoices() : []).length > 0) {
             this._autoSelectVoice();
         }
         
@@ -44,7 +44,7 @@ export class TTSWebSpeechEngine {
      * Tự động chọn giọng mặc định tốt nhất nếu chưa chọn
      */
     _autoSelectVoice() {
-        const voices = this.synth.getVoices();
+        const voices = (this.synth ? this.synth.getVoices() : []);
         if (voices.length === 0) return;
         this.isReady = true;
 
@@ -86,7 +86,7 @@ export class TTSWebSpeechEngine {
      * Trả về danh sách giọng đã được chuẩn hóa format
      */
     getVoices() {
-        const rawVoices = this.synth.getVoices();
+        const rawVoices = (this.synth ? this.synth.getVoices() : []);
         if (rawVoices.length === 0) return [];
 
         // Lọc giọng tiếng Anh để tránh rác list
@@ -102,7 +102,7 @@ export class TTSWebSpeechEngine {
     }
 
     setVoice(voiceURI) {
-        const voices = this.synth.getVoices();
+        const voices = (this.synth ? this.synth.getVoices() : []);
         // Nếu voices chưa load, lưu tạm vào biến pending để _autoSelectVoice xử lý sau
         if (voices.length === 0) {
             this.pendingVoiceURI = voiceURI;
