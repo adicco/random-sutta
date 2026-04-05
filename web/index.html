@@ -51,7 +51,7 @@
     </script>
     <script>
       // [CACHE BUSTER] Force clear cache if version changed
-      const APP_VERSION = "1.0.6";
+      const APP_VERSION = "1.0.7";
       if (localStorage.getItem("app_version") !== APP_VERSION) {
         if ("caches" in window) {
           caches.keys().then((names) => {
@@ -230,7 +230,7 @@
           stroke-linecap="round"
           stroke-linejoin="round"
         >
-          <path d="M6 15l6-6 6 6" />
+          <path d="M6 9l6 6 6-6" />
         </svg>
       </button>
 

@@ -17,8 +17,8 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
+  background-color: transparent;
+  border: none;
   color: var(--text-light);
   padding: 0;
   opacity: 0.3;
@@ -35,8 +35,15 @@
   color: var(--primary-color);
   opacity: 1;
   background-color: var(--bg-hover);
-  border-color: var(--primary-color);
+}
+
+.icon-trigger:hover {
   transform: scale(1.1);
+}
+
+/* Rotate Up when open (since SVG points down by default) */
+.icon-trigger.open {
+  transform: rotate(180deg) scale(1.1);
 }
 
 .icon-trigger svg {
