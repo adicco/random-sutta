@@ -11,6 +11,7 @@ import {
   OfflineManager,
   ThemeManager,
   FontSizeManager,
+  GestureManager,
 } from "ui/managers/index.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
