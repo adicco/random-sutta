@@ -24,7 +24,7 @@ from .logic.universe_builder import UniverseBuilder
 
 # Output Imports
 from .output.asset_generator import write_book_file
-from .output.zip_generator import create_db_bundle
+from .output.db_finalizer import generate_db_manifest
 from .output.report_writer import ReportWriter
 from .output.sqlite_generator import SqliteGenerator
 from .optimizer import run_optimizer
@@ -175,13 +175,15 @@ class BuildManager:
         run_optimizer(dry_run=self.dry_run)
         
         if not self.dry_run:
-            create_db_bundle()
-            # [NEW] Copy SQLite DB to public assets
+            # [NEW] Copy SQLite DB to public assets FIRST
             sqlite_src = STAGE_PROCESSED_DIR / "sutta_data.db"
             if sqlite_src.exists():
                 DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(sqlite_src, DIST_DB_DIR / "sutta_data.db")
                 logger.info(f"🚀 Copied sutta_data.db to {DIST_DB_DIR}")
+            
+            # [NEW] Then generate manifest based on the copied file
+            generate_db_manifest()
         
         logger.info("✅ All processing tasks completed.")
         

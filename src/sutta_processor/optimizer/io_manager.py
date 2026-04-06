@@ -74,24 +74,18 @@ class IOManager:
     def save_category(self, category: str, filename: str, data: Any) -> None:
         """
         Lưu file vào category tương ứng ('meta', 'content', hoặc 'root').
-        category='root' sẽ lưu trực tiếp vào thư mục db/ (ví dụ uid_index.json).
+        [UPDATED] Disabled production JSON output as it's replaced by SQLite.
+        Only writes to Mirror for debugging purposes.
         """
         # Xác định target path
         mirror_target = None
-        web_target = None
 
         if category == "meta":
             mirror_target = MIRROR_META_DIR / filename
-            web_target = WEB_META_DIR / filename
         elif category == "content":
             mirror_target = MIRROR_CONTENT_DIR / filename
-            web_target = WEB_CONTENT_DIR / filename
-        else: # root (bao gồm cả file index/xxx.json và uid_index.json)
-            # Logic cũ gộp chung root, nhưng giờ có index folder, 
-            # tuy nhiên filename truyền vào đã có prefix "index/" nếu cần (xem orchestrator.py _save_split_indexes)
-            # nên ta chỉ cần nối với DB_DIR gốc là đủ.
+        else: 
             mirror_target = MIRROR_DB_DIR / filename
-            web_target = WEB_DB_DIR / filename
 
         # 1. Write Mirror (Pretty Print - Dễ đọc)
         try:
@@ -103,13 +97,5 @@ class IOManager:
         except Exception as e:
             logger.error(f"❌ Write Mirror Error {filename}: {e}")
 
-        # 2. Write Web (Production - Minified tối đa)
-        if not self.dry_run and web_target:
-            try:
-                if not web_target.parent.exists():
-                    web_target.parent.mkdir(parents=True, exist_ok=True)
-                    
-                with open(web_target, "w", encoding="utf-8") as f:
-                    json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
-            except Exception as e:
-                logger.error(f"❌ Write Web Error {filename}: {e}")
+        # [DISABLED] Production Web write is now handled by SQLite.
+        pass

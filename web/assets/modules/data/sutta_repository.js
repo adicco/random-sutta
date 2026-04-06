@@ -107,7 +107,6 @@ export const SuttaRepository = {
     },
 
     async downloadAll(onProgress) {
-        // Handled entirely by SuttaDB init via fetch & cache.
-        if (onProgress) onProgress(100, 100);
+        return await SuttaDB.init(onProgress);
     }
 };

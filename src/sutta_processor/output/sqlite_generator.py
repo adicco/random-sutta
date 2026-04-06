@@ -176,12 +176,26 @@ class SqliteGenerator:
                 
                 for uid, m in meta_dict.items():
                     nav = m.get("nav", {})
+                    # Use UPSERT style to avoid changing book_id if it already exists
                     cursor.execute("""
-                        INSERT OR REPLACE INTO metadata (
+                        INSERT INTO metadata (
                             uid, book_id, type, acronym, translated_title, original_title,
                             blurb, author_uid, parent_uid, target_uid, hash_id, extract_id,
                             nav_prev, nav_next
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(uid) DO UPDATE SET
+                            type=excluded.type,
+                            acronym=excluded.acronym,
+                            translated_title=excluded.translated_title,
+                            original_title=excluded.original_title,
+                            blurb=excluded.blurb,
+                            author_uid=excluded.author_uid,
+                            parent_uid=excluded.parent_uid,
+                            target_uid=excluded.target_uid,
+                            hash_id=excluded.hash_id,
+                            extract_id=excluded.extract_id,
+                            nav_prev=excluded.nav_prev,
+                            nav_next=excluded.nav_next
                     """, (
                         uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
                         m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),

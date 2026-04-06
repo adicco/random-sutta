@@ -8,13 +8,17 @@ export class SuttaDB {
     static db = null;
     static isInitializing = false;
 
-    static async init() {
-        if (this.db) return true;
+    static async init(onProgress) {
+        if (this.db) {
+            if (onProgress) onProgress(100, 100);
+            return true;
+        }
         if (this.isInitializing) {
             return new Promise(resolve => {
                 const interval = setInterval(() => {
                     if (this.db) {
                         clearInterval(interval);
+                        if (onProgress) onProgress(100, 100);
                         resolve(true);
                     } else if (this.isInitializing === false) {
                         clearInterval(interval);
@@ -36,10 +40,32 @@ export class SuttaDB {
             
             const fetchAndVerify = async (targetUrl) => {
                 logger.info("Init", `Fetching ${DB_NAME} from network...`);
-                const res = await fetch(targetUrl);
-                if (!res.ok) throw new Error(`HTTP ${res.status} when fetching ${targetUrl}`);
+                const response = await fetch(targetUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status} when fetching ${targetUrl}`);
                 
-                const buffer = await res.clone().arrayBuffer();
+                // Track progress
+                const contentLength = response.headers.get('content-length');
+                const total = contentLength ? parseInt(contentLength, 10) : 0;
+                let loaded = 0;
+
+                const reader = response.body.getReader();
+                const chunks = [];
+                
+                while(true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+                    chunks.push(value);
+                    loaded += value.length;
+                    if (onProgress && total) onProgress(loaded, total);
+                }
+
+                const buffer = new Uint8Array(loaded);
+                let pos = 0;
+                for (const chunk of chunks) {
+                    buffer.set(chunk, pos);
+                    pos += chunk.length;
+                }
+
                 if (buffer.byteLength < 16) throw new Error("File too small to be a database");
                 
                 const header = new Uint8Array(buffer.slice(0, 16));
@@ -47,7 +73,11 @@ export class SuttaDB {
                 if (magic !== "SQLite format 3") {
                     throw new Error("File is not a valid SQLite database (Magic header mismatch)");
                 }
-                return res;
+                
+                // Reconstruct response for cache
+                return new Response(buffer, {
+                    headers: response.headers
+                });
             };
 
             if ('caches' in window) {
@@ -62,6 +92,7 @@ export class SuttaDB {
                         const magic = String.fromCharCode(...header.slice(0, 15));
                         if (magic !== "SQLite format 3") throw new Error("Corrupted cache");
                         logger.info("Init", "Loaded valid sutta_data.db from cache.");
+                        if (onProgress) onProgress(100, 100);
                     } catch (e) {
                         logger.warn("Init", "Cache corrupted, redownloading...");
                         await cache.delete(url);
