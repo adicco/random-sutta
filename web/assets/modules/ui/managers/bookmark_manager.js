@@ -1,6 +1,5 @@
 // Path: web/assets/modules/ui/managers/bookmark_manager.js
 import { getLogger } from "utils/logger.js";
-import { SuttaController } from "core/sutta_controller.js";
 
 const logger = getLogger("BookmarkManager");
 
@@ -8,6 +7,7 @@ export const BookmarkManager = {
     STORAGE_KEY: "sutta_bookmarks",
 
     init() {
+        logger.info("Init", "Initializing BookmarkManager...");
         this.btnSave = document.getElementById("btn-save-bookmark");
         this.listContainer = document.getElementById("bookmarks-list");
         this.tabToc = document.getElementById("tab-magic-toc");
@@ -16,19 +16,27 @@ export const BookmarkManager = {
         this.contentBookmarks = document.getElementById("magic-bookmarks-content");
 
         if (this.btnSave) {
-            this.btnSave.addEventListener("click", () => this.toggleCurrentSutta());
+            this.btnSave.onclick = (e) => {
+                e.stopPropagation();
+                this.toggleCurrentSutta();
+            };
         }
 
         if (this.tabToc && this.tabBookmarks) {
-            this.tabToc.addEventListener("click", () => this.switchTab("toc"));
-            this.tabBookmarks.addEventListener("click", () => this.switchTab("bookmarks"));
+            this.tabToc.onclick = () => this.switchTab("toc");
+            this.tabBookmarks.onclick = () => this.switchTab("bookmarks");
         }
 
         // Render initial list
         this.renderList();
+        
+        // Initial state check
+        const params = new URLSearchParams(window.location.search);
+        this.updateButtonState(params.get("q"));
     },
 
     switchTab(tab) {
+        logger.debug("SwitchTab", tab);
         if (tab === "toc") {
             this.tabToc.classList.add("active");
             this.tabBookmarks.classList.remove("active");
@@ -60,24 +68,35 @@ export const BookmarkManager = {
     toggleCurrentSutta() {
         const params = new URLSearchParams(window.location.search);
         let currentId = params.get("q");
-        if (!currentId) return;
+        if (!currentId) {
+            logger.warn("Toggle", "No current Sutta ID found in URL");
+            return;
+        }
         
-        // Strip any hash
+        // Strip hash
         currentId = currentId.split('#')[0];
 
-        // Try to get title from #nav-main-title
-        const titleEl = document.getElementById("nav-main-title");
-        const title = titleEl ? titleEl.textContent : currentId.toUpperCase();
+        // Get info from header
+        const acronymEl = document.getElementById("nav-main-title");
+        const titleEl = document.getElementById("nav-sub-title");
+        
+        const acronym = acronymEl ? acronymEl.textContent.trim() : currentId.toUpperCase();
+        const title = titleEl ? titleEl.textContent.trim() : "";
 
         const bookmarks = this.getBookmarks();
         const index = bookmarks.findIndex(b => b.id === currentId);
 
         if (index > -1) {
             bookmarks.splice(index, 1);
-            logger.info("Removed Bookmark", currentId);
+            logger.info("Toggle", `Removed: ${currentId}`);
         } else {
-            bookmarks.push({ id: currentId, title: title, timestamp: Date.now() });
-            logger.info("Added Bookmark", currentId);
+            bookmarks.push({ 
+                id: currentId, 
+                acronym: acronym, 
+                title: title, 
+                timestamp: Date.now() 
+            });
+            logger.info("Toggle", `Added: ${currentId} (${acronym})`);
         }
 
         this.saveBookmarks(bookmarks);
@@ -93,7 +112,6 @@ export const BookmarkManager = {
         
         if (isSaved) {
             this.btnSave.classList.add("saved");
-            // Also force SVG fill just in case CSS doesn't take priority
             const svg = this.btnSave.querySelector("svg");
             if (svg) svg.setAttribute("fill", "currentColor");
         } else {
@@ -115,33 +133,40 @@ export const BookmarkManager = {
         // Sort by newest first
         bookmarks.sort((a, b) => b.timestamp - a.timestamp);
 
-        this.listContainer.innerHTML = bookmarks.map(b => `
-            <div class="bookmark-item" data-id="${b.id}">
-                <div class="bookmark-info">
-                    <div class="bookmark-title">${b.title}</div>
-                    <div class="bookmark-id">${b.id.toUpperCase()}</div>
+        this.listContainer.innerHTML = bookmarks.map(b => {
+            const displayAcronym = b.acronym || b.id.toUpperCase();
+            const displayTitle = b.title || "";
+
+            return `
+                <div class="bookmark-item" data-id="${b.id}">
+                    <div class="bookmark-info">
+                        <div class="bookmark-title">${displayAcronym}</div>
+                        ${displayTitle ? `<div class="bookmark-id">${displayTitle}</div>` : ''}
+                    </div>
+                    <button class="bookmark-del-btn" title="Remove">✕</button>
                 </div>
-                <button class="bookmark-del-btn" title="Remove">✕</button>
-            </div>
-        `).join("");
+            `;
+        }).join("");
 
         // Add event listeners
         this.listContainer.querySelectorAll(".bookmark-item").forEach(item => {
-            item.addEventListener("click", (e) => {
+            item.onclick = (e) => {
+                const id = item.getAttribute("data-id");
+                
                 if (e.target.closest(".bookmark-del-btn")) {
-                    const id = item.getAttribute("data-id");
+                    e.stopPropagation();
                     const currentBookmarks = this.getBookmarks();
                     this.saveBookmarks(currentBookmarks.filter(b => b.id !== id));
                     this.renderList();
                     
                     const params = new URLSearchParams(window.location.search);
-                    if (params.get("q") === id) this.updateButtonState(id);
+                    if (params.get("q") && params.get("q").split('#')[0] === id) {
+                        this.updateButtonState(id);
+                    }
                     return;
                 }
                 
-                const id = item.getAttribute("data-id");
-                // Use UIManager to close drawer if possible, but UIManager is not imported directly. 
-                // We can just click the magic-nav-corner or use app logic.
+                // Close drawer logic
                 const drawer = document.getElementById("magic-toc-drawer");
                 const backdrop = document.getElementById("magic-backdrop");
                 const wrapper = document.getElementById("magic-nav-wrapper");
@@ -149,8 +174,10 @@ export const BookmarkManager = {
                 if (backdrop) backdrop.classList.add("hidden");
                 if (wrapper) wrapper.classList.add("collapsed");
                 
-                SuttaController.loadSutta(id, true);
-            });
+                if (window.loadSutta) {
+                    window.loadSutta(id, true);
+                }
+            };
         });
     }
 };

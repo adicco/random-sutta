@@ -99,23 +99,47 @@
   background-color: var(--bg-card);
   border-radius: 8px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; /* Crucial: drawer itself shouldn't scroll */
+  
   z-index: 1101;
   opacity: 0;
   transform: translateY(-10px);
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
 #magic-toc-drawer.open {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
 }
+
+#magic-toc-tabs {
+  background: transparent;
+  padding: 8px 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0; /* Header stays at top */
+}
+
+.magic-tab-content {
+  flex: 1; /* Take remaining space */
+  overflow-y: auto; /* Content scrolls independently */
+  min-height: 0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.magic-tab-content.hidden {
+  display: none;
+}
+
 #magic-toc-content {
   padding: 8px 0;
 }
+
 .magic-tab-content::-webkit-scrollbar {
   width: 6px;
 }

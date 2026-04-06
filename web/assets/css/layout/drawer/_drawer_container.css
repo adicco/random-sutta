@@ -111,6 +111,7 @@
 
 #btn-save-bookmark.saved {
   color: var(--primary-color);
+  opacity: 1;
 }
 
 #btn-save-bookmark.saved svg {
