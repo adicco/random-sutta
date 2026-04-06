@@ -20,8 +20,19 @@ class SqliteGenerator:
     def _get_connection(self):
         conn = sqlite3.connect(str(self.db_path))
         conn.execute("PRAGMA busy_timeout = 30000")
-        conn.execute("PRAGMA journal_mode=WAL")
         return conn
+
+    def finalize(self):
+        """Perform final optimizations on the database."""
+        try:
+            with self._get_connection() as conn:
+                conn.execute("PRAGMA journal_mode=DELETE")
+                conn.execute("VACUUM")
+                conn.execute("ANALYZE")
+                conn.commit()
+                logger.info(f"   [SQLite] Database finalized and optimized: {self.db_path}")
+        except Exception as e:
+            logger.error(f"❌ [SQLite] Finalization failed: {e}")
 
     def _init_db(self):
         if not self.db_path.parent.exists():

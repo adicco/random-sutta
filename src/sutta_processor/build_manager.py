@@ -159,13 +159,17 @@ class BuildManager:
         # 4. Generate Reports
         missing_msg = self.reporter.write_missing_report(all_missing_links)
         generated_msg = self.reporter.write_generated_report(self.all_generated_items)
-
         # 5. Post-Processing
         if self.processed_book_ids:
             super_book_data = generate_super_book_data(self.processed_book_ids)
             if super_book_data:
                 write_book_file("super", super_book_data, dry_run=True)
-                self.sqlite_gen.insert_super_book(super_book_data)
+                if self.sqlite_gen:
+                    self.sqlite_gen.insert_super_book(super_book_data)
+
+        # [NEW] Finalize SQLite DB
+        if self.sqlite_gen:
+            self.sqlite_gen.finalize()
 
         logger.info("⚡ Transforming processed data to Optimized DB...")
         run_optimizer(dry_run=self.dry_run)
