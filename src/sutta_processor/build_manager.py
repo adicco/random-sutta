@@ -25,6 +25,7 @@ from .logic.universe_builder import UniverseBuilder
 from .output.asset_generator import write_book_file
 from .output.zip_generator import create_db_bundle
 from .output.report_writer import ReportWriter
+from .output.sqlite_generator import SqliteGenerator
 from .optimizer import run_optimizer
 
 logger = logging.getLogger("SuttaProcessor.BuildManager")
@@ -35,6 +36,7 @@ class BuildManager:
         self.names_map = load_names_map()
         self.fix_map = load_fix_map()
         self.reporter = ReportWriter(PROJECT_ROOT / "tmp")
+        self.sqlite_gen = None
         
         self.buffers: Dict[str, Dict[str, Any]] = {}
         self.book_totals: Dict[str, int] = {}
@@ -52,6 +54,8 @@ class BuildManager:
         if STAGE_PROCESSED_DIR.exists():
             shutil.rmtree(STAGE_PROCESSED_DIR)
         STAGE_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+        
+        self.sqlite_gen = SqliteGenerator(STAGE_PROCESSED_DIR / "sutta_data.db")
         
         if not self.dry_run and LEGACY_DIST_BOOKS_DIR.exists():
              shutil.rmtree(LEGACY_DIST_BOOKS_DIR)
@@ -158,6 +162,7 @@ class BuildManager:
             super_book_data = generate_super_book_data(self.processed_book_ids)
             if super_book_data:
                 write_book_file("super", super_book_data, dry_run=True)
+                self.sqlite_gen.insert_super_book(super_book_data)
 
         logger.info("⚡ Transforming processed data to Optimized DB...")
         run_optimizer(dry_run=self.dry_run)
@@ -166,6 +171,11 @@ class BuildManager:
             create_db_bundle()
         
         logger.info("✅ All processing tasks completed.")
+        
+        if generated_msg:
+            logger.info(generated_msg)
+        if missing_msg:
+            logger.warning(missing_msg)
         
         if generated_msg:
             logger.info(generated_msg)
