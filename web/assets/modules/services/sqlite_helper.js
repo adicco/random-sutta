@@ -15,7 +15,7 @@ const wasmUrl = getWasmUrl();
  * Khởi tạo SQLite Instance với VFS tùy chọn (Memory hoặc OPFS).
  */
 export async function initSQLite(options) {
-    const { path, useMemory = true, file } = options;
+    const { path, useMemory = true, file, beforeOpen } = options;
     
     const sqliteModule = await SQLiteESMFactory({
         locateFile: (file) => {
@@ -31,6 +31,11 @@ export async function initSQLite(options) {
         // [iOS JETSAM SAFE] Dùng cho Core DB nhỏ (< 10MB)
         vfs = await MemoryVFS.create(path, sqliteModule);
         sqlite.vfs_register(vfs, true); 
+
+        // [BACKWARD COMPAT] Support legacy beforeOpen hooks
+        if (beforeOpen) {
+            await beforeOpen(sqlite, vfs, path);
+        }
 
         if (file) {
             const buffer = await file.arrayBuffer();
@@ -76,13 +81,46 @@ export async function initSQLite(options) {
     };
 }
 
+/**
+ * [BACKWARD COMPAT] Helper for existing DB hydration
+ */
+export function withExistDB(file) {
+    return {
+        beforeOpen: async (sqlite, memoryVfs, dbPath) => {
+            const buffer = await file.arrayBuffer();
+            const data = new Uint8Array(buffer);
+            const fileId = 12345; 
+            const pOutFlags = new DataView(new ArrayBuffer(4));
+            
+            const openResult = await memoryVfs.jOpen(dbPath, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
+            
+            if (openResult === SQLiteConstants.SQLITE_OK) {
+                await memoryVfs.jTruncate(fileId, 0);
+                await memoryVfs.jWrite(fileId, data, 0);
+                await memoryVfs.jClose(fileId);
+                console.log(`✅ Legacy database ${dbPath} hydrated.`);
+            }
+        }
+    };
+}
+
+/**
+ * [BACKWARD COMPAT] Helper for IndexedDB storage (wraps as MemoryVFS for now)
+ */
+export function useIdbStorage(dbName, options = {}) {
+    return {
+        path: dbName,
+        useMemory: true,
+        ...options
+    };
+}
+
 async function run(core, sql, params) {
     const { sqlite, db } = core;
     const results = [];
     try {
         for await (const stmt of sqlite.statements(db, sql)) {
             if (params) {
-                // Hỗ trợ cả array và object params
                 if (Array.isArray(params)) {
                     sqlite.bind_collection(stmt, params);
                 } else {
