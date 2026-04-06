@@ -119,6 +119,30 @@ export const SuttaService = {
         const { tree: finalTree, contextMeta: finalContextMeta } = 
             await StructureStrategy.resolveContext(bookMeta, uid, shouldMergeTree);
         const currentNode = findNodeInTree(finalTree, uid);
+
+        // [NEW] Cứu vãn metadata cho các con trực tiếp của Branch
+        if (currentNode && currentNode !== "LEAF") {
+            const childIds = [];
+            const collectDirectChildren = (node) => {
+                if (Array.isArray(node)) {
+                    node.forEach(c => {
+                        if (typeof c === 'string') childIds.push(c);
+                        else if (typeof c === 'object') childIds.push(Object.keys(c)[0]);
+                    });
+                } else if (typeof node === 'object') {
+                    childIds.push(...Object.keys(node));
+                }
+            };
+            collectDirectChildren(currentNode);
+
+            const missingChildIds = childIds.filter(id => !finalContextMeta[id] && !bookMeta.meta[id]);
+            if (missingChildIds.length > 0) {
+                logger.debug("loadSutta", `Fetching missing metadata for ${missingChildIds.length} children of ${uid}`);
+                const extraMeta = await SuttaRepository.fetchMetaList(missingChildIds);
+                Object.assign(finalContextMeta, extraMeta);
+            }
+        }
+
         const singleChildTarget = getSingleChildTarget(currentNode);
 
         if (singleChildTarget && singleChildTarget !== uid) {

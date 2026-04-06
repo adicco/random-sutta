@@ -56,17 +56,14 @@ def _flatten_keys(node: Any, collected_keys: Set[str]):
 
 def _load_super_metadata(valid_keys: Set[str]) -> Dict[str, Any]:
     merged_meta = {}
-    target_files = ["sutta.json", "vinaya.json", "abhidhamma.json"]
     
+    # 1. Thử load từ các file meta chính (tốc độ cao)
+    target_files = ["sutta.json", "vinaya.json", "abhidhamma.json"]
     for fname in target_files:
         fpath = RAW_SUPER_META_DIR / fname
-        if not fpath.exists():
-            continue
-            
+        if not fpath.exists(): continue
         raw_data = _load_json(fpath)
-        if not raw_data or not isinstance(raw_data, list):
-            continue
-            
+        if not raw_data or not isinstance(raw_data, list): continue
         for item in raw_data:
             uid = item.get("uid")
             if uid in valid_keys:
@@ -78,6 +75,29 @@ def _load_super_metadata(valid_keys: Set[str]) -> Dict[str, Any]:
                     "original_title": item.get("original_title", ""),
                     "blurb": item.get("blurb", None)
                 }
+
+    # 2. Kiểm tra những key còn thiếu và thử tìm trong RAW_API_JSON_DIR (Deep Search)
+    missing_keys = valid_keys - set(merged_meta.keys())
+    if missing_keys:
+        logger.info(f"   🔍 Searching for {len(missing_keys)} missing meta entries in API data...")
+        from ..shared.app_config import RAW_API_JSON_DIR
+        for uid in missing_keys:
+            # Tìm file JSON tương ứng với UID (vd: dn.json)
+            # Lưu ý: Các branch node thường có file JSON riêng hoặc nằm trong file cha
+            potential_file = RAW_API_JSON_DIR / f"{uid}.json"
+            if potential_file.exists():
+                data = _load_json(potential_file)
+                if data and isinstance(data, list) and len(data) > 0:
+                    item = data[0] # Lấy entry đầu tiên thường là của chính nó
+                    merged_meta[uid] = {
+                        "uid": uid,
+                        "type": item.get("type", "branch"),
+                        "acronym": item.get("acronym", ""),
+                        "translated_title": item.get("translated_title", ""),
+                        "original_title": item.get("original_title", ""),
+                        "blurb": item.get("blurb", None)
+                    }
+    
     return merged_meta
 
 def precalculate_super_navigation(available_book_ids: List[str]) -> Dict[str, Dict[str, str]]:

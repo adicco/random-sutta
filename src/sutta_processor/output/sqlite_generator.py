@@ -3,7 +3,8 @@ import sqlite3
 import json
 import logging
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
+from collections import defaultdict
 
 from ..shared.app_config import STAGE_PROCESSED_DIR
 
@@ -53,6 +54,7 @@ class SqliteGenerator:
                 author_uid TEXT,
                 parent_uid TEXT,
                 target_uid TEXT,
+                children TEXT,
                 hash_id TEXT,
                 extract_id TEXT,
                 nav_prev TEXT,
@@ -96,6 +98,34 @@ class SqliteGenerator:
         conn.close()
         logger.info(f"Normalized SQLite Database initialized at {self.db_path}")
 
+    def _extract_all_children_from_tree(self, node: Any, result: Dict[str, List[str]]):
+        """Duyệt cây cấu trúc để lấy danh sách con (UID) của từng node."""
+        if isinstance(node, dict):
+            for uid, content in node.items():
+                child_uids = []
+                if isinstance(content, list):
+                    for item in content:
+                        if isinstance(item, str):
+                            child_uids.append(item)
+                        elif isinstance(item, dict):
+                            keys = list(item.keys())
+                            child_uids.extend(keys)
+                            self._extract_all_children_from_tree(item, result)
+                elif isinstance(content, dict):
+                    keys = list(content.keys())
+                    child_uids.extend(keys)
+                    self._extract_all_children_from_tree(content, result)
+                
+                # Cập nhật kết quả: dùng set để tránh duplicate
+                existing_set = set(result[uid])
+                for cid in child_uids:
+                    if cid not in existing_set:
+                        result[uid].append(cid)
+                        existing_set.add(cid)
+        elif isinstance(node, list):
+            for item in node:
+                self._extract_all_children_from_tree(item, result)
+
     def insert_book(self, book_obj: Dict[str, Any]):
         book_id = book_obj.get("id")
         if not book_id:
@@ -106,6 +136,10 @@ class SqliteGenerator:
         meta_dict = book_obj.get("meta", {})
         content_dict = book_obj.get("content", {})
         random_pool = book_obj.get("random_pool", [])
+        
+        # [NEW] Pre-extract children map
+        children_map = defaultdict(list)
+        self._extract_all_children_from_tree(structure, children_map)
         
         try:
             with self._get_connection() as conn:
@@ -128,17 +162,18 @@ class SqliteGenerator:
                 # 3. Metadata
                 for uid, m in meta_dict.items():
                     nav = m.get("nav", {})
+                    children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                     cursor.execute("""
                         INSERT OR REPLACE INTO metadata (
                             uid, book_id, type, acronym, translated_title, original_title,
-                            blurb, author_uid, parent_uid, target_uid, hash_id, extract_id,
-                            nav_prev, nav_next
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            blurb, author_uid, parent_uid, target_uid, children,
+                            hash_id, extract_id, nav_prev, nav_next
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
                         uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
                         m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
-                        m.get("parent_uid"), m.get("target_uid"), m.get("hash_id"),
-                        m.get("extract_id"), nav.get("prev"), nav.get("next")
+                        m.get("parent_uid"), m.get("target_uid"), children_json,
+                        m.get("hash_id"), m.get("extract_id"), nav.get("prev"), nav.get("next")
                     ))
                     
                 # 4. Content
@@ -165,6 +200,10 @@ class SqliteGenerator:
         structure = super_book_data.get("structure", [])
         meta_dict = super_book_data.get("meta", {})
         
+        # [NEW] Pre-extract children map
+        children_map = defaultdict(list)
+        self._extract_all_children_from_tree(structure, children_map)
+
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -176,13 +215,14 @@ class SqliteGenerator:
                 
                 for uid, m in meta_dict.items():
                     nav = m.get("nav", {})
+                    children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                     # Use UPSERT style to avoid changing book_id if it already exists
                     cursor.execute("""
                         INSERT INTO metadata (
                             uid, book_id, type, acronym, translated_title, original_title,
-                            blurb, author_uid, parent_uid, target_uid, hash_id, extract_id,
-                            nav_prev, nav_next
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            blurb, author_uid, parent_uid, target_uid, children,
+                            hash_id, extract_id, nav_prev, nav_next
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         ON CONFLICT(uid) DO UPDATE SET
                             type=excluded.type,
                             acronym=excluded.acronym,
@@ -192,6 +232,7 @@ class SqliteGenerator:
                             author_uid=excluded.author_uid,
                             parent_uid=excluded.parent_uid,
                             target_uid=excluded.target_uid,
+                            children=excluded.children,
                             hash_id=excluded.hash_id,
                             extract_id=excluded.extract_id,
                             nav_prev=excluded.nav_prev,
@@ -199,8 +240,8 @@ class SqliteGenerator:
                     """, (
                         uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
                         m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
-                        m.get("parent_uid"), m.get("target_uid"), m.get("hash_id"),
-                        m.get("extract_id"), nav.get("prev"), nav.get("next")
+                        m.get("parent_uid"), m.get("target_uid"), children_json,
+                        m.get("hash_id"), m.get("extract_id"), nav.get("prev"), nav.get("next")
                     ))
                     
                 conn.commit()
