@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => {
         base: './', // Sử dụng relative path để hỗ trợ mở file trực tiếp (nếu được) hoặc deploy github pages
         
         esbuild: {
-            drop: isProd ? ['debugger'] : [],
+            drop: isProd ? ['debugger', 'console'] : [],
             legalComments: 'none', 
         },
 
