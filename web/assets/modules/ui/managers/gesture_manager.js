@@ -54,28 +54,40 @@ export const GestureManager = {
                 // If user clicks a button, link or specific interactive item, let it pass
                 if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item')) return;
 
+                // [NEW] Detect if tapping exactly on empty margin/padding
+                let isEdgeMargin = false;
+                const hitElement = document.elementFromPoint(touchEndX, touchEndY);
+                if (hitElement) {
+                    const tag = hitElement.tagName.toLowerCase();
+                    if (tag === 'body' || tag === 'html' || hitElement.id === 'sutta-container') {
+                        isEdgeMargin = true;
+                    }
+                }
+
                 // Check if tapping on a word (Pali lookup)
                 let isWord = false;
-                try {
-                    let range;
-                    if (document.caretRangeFromPoint) {
-                        range = document.caretRangeFromPoint(touchEndX, touchEndY);
-                    } else if (document.caretPositionFromPoint) {
-                        const pos = document.caretPositionFromPoint(touchEndX, touchEndY);
-                        if (pos) {
-                            range = document.createRange();
-                            range.setStart(pos.offsetNode, pos.offset);
+                if (!isEdgeMargin) {
+                    try {
+                        let range;
+                        if (document.caretRangeFromPoint) {
+                            range = document.caretRangeFromPoint(touchEndX, touchEndY);
+                        } else if (document.caretPositionFromPoint) {
+                            const pos = document.caretPositionFromPoint(touchEndX, touchEndY);
+                            if (pos) {
+                                range = document.createRange();
+                                range.setStart(pos.offsetNode, pos.offset);
+                            }
                         }
-                    }
-                    
-                    if (range && range.startContainer.nodeType === 3) {
-                        const text = range.startContainer.textContent;
-                        const offset = range.startOffset;
-                        if (text[offset] && /\S/.test(text[offset])) {
-                            isWord = true;
+                        
+                        if (range && range.startContainer.nodeType === 3) {
+                            const text = range.startContainer.textContent;
+                            const offset = range.startOffset;
+                            if (text[offset] && /\S/.test(text[offset])) {
+                                isWord = true;
+                            }
                         }
-                    }
-                } catch (err) {}
+                    } catch (err) {}
+                }
 
                 if (isWord) return;
 

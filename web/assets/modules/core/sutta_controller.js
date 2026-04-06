@@ -209,27 +209,20 @@ export const SuttaController = {
   loadRandomSutta: async function (shouldUpdateUrl = true) {
     const btn = document.getElementById("btn-random");
     const landingBtn = document.getElementById("btn-landing-random");
-    
-    // Immediate Visual Feedback
-    if (btn) btn.classList.add("processing");
-    if (landingBtn) landingBtn.classList.add("processing");
 
     PopupAPI.hideAll();
     logger.timer('Random Process Total');
 
     const filters = FilterComponent.getActiveFilters();
     const payload = await RandomBuffer.getPayload(filters);
-    if (!payload) {
-      alert("Database loading or no suttas found.");
-      logger.timerEnd('Random Process Total');
+
+    if (!payload || !payload.uid) {
+      logger.warn('Random Process Total', 'Payload empty');
       return;
     }
-    
+
     logger.info('loadRandom', `Selected: ${payload.uid}`);
     await this.loadSutta(payload, shouldUpdateUrl, 0, { transition: false });
-    
-    if (btn) btn.classList.remove("processing");
-    if (landingBtn) landingBtn.classList.remove("processing");
 
     logger.timerEnd('Random Process Total');
   }
