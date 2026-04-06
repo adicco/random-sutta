@@ -77,37 +77,41 @@ class SqliteGenerator:
         content_dict = book_obj.get("content", {})
         random_pool = book_obj.get("random_pool", [])
         
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            
-            # 1. Structure
-            cursor.execute(
-                "INSERT OR REPLACE INTO structure (book_id, json_data) VALUES (?, ?)",
-                (book_id, json.dumps(structure, ensure_ascii=False))
-            )
-            
-            # 2. Config (Random Pool)
-            if random_pool:
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 1. Structure
                 cursor.execute(
-                    "INSERT OR REPLACE INTO config (key, json_data) VALUES (?, ?)",
-                    (f"{book_id}_random_pool", json.dumps(random_pool, ensure_ascii=False))
-                )
-            
-            # 3. Metadata
-            for uid, meta_val in meta_dict.items():
-                cursor.execute(
-                    "INSERT OR REPLACE INTO metadata (uid, json_data) VALUES (?, ?)",
-                    (uid, json.dumps(meta_val, ensure_ascii=False))
+                    "INSERT OR REPLACE INTO structure (book_id, json_data) VALUES (?, ?)",
+                    (book_id, json.dumps(structure, ensure_ascii=False))
                 )
                 
-            # 4. Content
-            for uid, content_val in content_dict.items():
-                cursor.execute(
-                    "INSERT OR REPLACE INTO content (uid, json_data) VALUES (?, ?)",
-                    (uid, json.dumps(content_val, ensure_ascii=False))
-                )
+                # 2. Config (Random Pool)
+                if random_pool:
+                    cursor.execute(
+                        "INSERT OR REPLACE INTO config (key, json_data) VALUES (?, ?)",
+                        (f"{book_id}_random_pool", json.dumps(random_pool, ensure_ascii=False))
+                    )
                 
-            conn.commit()
+                # 3. Metadata
+                for uid, meta_val in meta_dict.items():
+                    cursor.execute(
+                        "INSERT OR REPLACE INTO metadata (uid, json_data) VALUES (?, ?)",
+                        (uid, json.dumps(meta_val, ensure_ascii=False))
+                    )
+                    
+                # 4. Content
+                for uid, content_val in content_dict.items():
+                    cursor.execute(
+                        "INSERT OR REPLACE INTO content (uid, json_data) VALUES (?, ?)",
+                        (uid, json.dumps(content_val, ensure_ascii=False))
+                    )
+                    
+                conn.commit()
+                logger.info(f"   [SQLite] Inserted {book_id} with {len(meta_dict)} meta, {len(content_dict)} content.")
+        except Exception as e:
+            logger.error(f"❌ [SQLite] Failed to insert book {book_id}: {e}")
             
     def insert_super_book(self, super_book_data: Dict[str, Any]):
         book_id = super_book_data.get("id", "super")

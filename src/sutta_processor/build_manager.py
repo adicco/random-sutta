@@ -90,6 +90,8 @@ class BuildManager:
             self.processed_book_ids.append(book_obj["id"])
 
         write_book_file(group, book_obj, dry_run=True) 
+        if self.sqlite_gen:
+            self.sqlite_gen.insert_book(book_obj)
 
     def run(self) -> None:
         self._prepare_environment()
