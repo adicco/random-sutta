@@ -120,24 +120,53 @@ export const SuttaService = {
             await StructureStrategy.resolveContext(bookMeta, uid, shouldMergeTree);
         const currentNode = findNodeInTree(finalTree, uid);
 
-        // [NEW] Cứu vãn metadata cho các con trực tiếp của Branch
+        // [NEW] Cứu vãn metadata cho các con trực tiếp của Branch và các node trong chuỗi gộp (Hoisting)
         if (currentNode && currentNode !== "LEAF") {
             const childIds = [];
+            const idsToDeepCheck = [];
+
             const collectDirectChildren = (node) => {
                 if (Array.isArray(node)) {
                     node.forEach(c => {
-                        if (typeof c === 'string') childIds.push(c);
-                        else if (typeof c === 'object') childIds.push(Object.keys(c)[0]);
+                        let cid = null;
+                        if (typeof c === 'string') cid = c;
+                        else if (typeof c === 'object') cid = Object.keys(c)[0];
+                        
+                        if (cid) {
+                            childIds.push(cid);
+                            idsToDeepCheck.push({ id: cid, content: typeof c === 'object' ? c[cid] : null });
+                        }
                     });
                 } else if (typeof node === 'object') {
-                    childIds.push(...Object.keys(node));
+                    for (const cid in node) {
+                        childIds.push(cid);
+                        idsToDeepCheck.push({ id: cid, content: node[cid] });
+                    }
                 }
             };
             collectDirectChildren(currentNode);
 
-            const missingChildIds = childIds.filter(id => !finalContextMeta[id] && !bookMeta.meta[id]);
+            // Truy quét thêm 1 cấp cho các chuỗi đơn (Hoisting target)
+            for (const item of idsToDeepCheck) {
+                const content = item.content;
+                if (content && typeof content === 'object') {
+                    const keys = Object.keys(content);
+                    // Nếu là chuỗi đơn (VD: long -> [dn])
+                    if (keys.length === 1 || (Array.isArray(content) && content.length === 1)) {
+                        let grandchildId = null;
+                        const firstChild = Array.isArray(content) ? content[0] : keys[0];
+                        
+                        if (typeof firstChild === 'string') grandchildId = firstChild;
+                        else if (typeof firstChild === 'object') grandchildId = Object.keys(firstChild)[0];
+                        
+                        if (grandchildId) childIds.push(grandchildId);
+                    }
+                }
+            }
+
+            const missingChildIds = [...new Set(childIds)].filter(id => !finalContextMeta[id] && !bookMeta.meta[id]);
             if (missingChildIds.length > 0) {
-                logger.debug("loadSutta", `Fetching missing metadata for ${missingChildIds.length} children of ${uid}`);
+                logger.debug("loadSutta", `Fetching missing metadata for ${missingChildIds.length} IDs (including hoisting targets)`);
                 const extraMeta = await SuttaRepository.fetchMetaList(missingChildIds);
                 Object.assign(finalContextMeta, extraMeta);
             }

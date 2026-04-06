@@ -27,21 +27,29 @@ function flattenSingleChains(structure, metaMap) {
                 else if (typeof child === 'object') childId = Object.keys(child)[0];
 
                 if (childId) {
-                    // Logic Gộp Meta:
-                    // Bạn muốn meta của 'long' (parent) đóng vai trò header.
-                    // Ta có thể update meta của child ('dn') để nối thêm thông tin từ parent
-                    // hoặc đơn giản là trả về child structure luôn để render thẳng child.
-                    
-                    // Ở đây tôi chọn cách trả về child structure, 
-                    // ContentCompiler sẽ render thẻ của Child (DN).
-                    // Nếu muốn hiển thị tên Parent (Long), ta có thể sửa translated_title của Child tạm thời.
-                    
-                    /* Optional: Merge Meta Title (VD: "Long Discourses / Digha Nikaya")*/
+                    // [UPDATED] Logic Gộp Meta thông minh hơn
                     if (metaMap[parentId] && metaMap[childId]) {
-                         metaMap[childId].translated_title = metaMap[parentId].acronym + " / " + metaMap[childId].translated_title;
+                        const pMeta = metaMap[parentId];
+                        const cMeta = metaMap[childId];
+
+                        // 1. Gộp Title: "Parent Acronym / Child Title"
+                        const pTitle = pMeta.translated_title || pMeta.acronym || parentId.toUpperCase();
+                        if (!cMeta._isMerged) {
+                            cMeta.translated_title = `${pTitle} / ${cMeta.translated_title || cMeta.acronym || childId}`;
+                            cMeta._isMerged = true;
+                        }
+
+                        // 2. Kế thừa Blurb nếu con không có
+                        if (!cMeta.blurb && pMeta.blurb) {
+                            cMeta.blurb = pMeta.blurb;
+                        }
+
+                        // 3. Kế thừa Acronym nếu con không có
+                        if (!cMeta.acronym && pMeta.acronym) {
+                            cMeta.acronym = pMeta.acronym;
+                        }
                     }
                     
-                   
                     // Đệ quy tiếp cho con (phòng trường hợp chuỗi dài A->B->C)
                     return flattenSingleChains(child, metaMap);
                 }
