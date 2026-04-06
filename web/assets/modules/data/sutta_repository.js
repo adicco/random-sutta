@@ -64,13 +64,19 @@ export const SuttaRepository = {
 
     async fetchContent(uid) {
         if (!uid) return null;
-        const results = await SuttaDB.query("SELECT html FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order", [uid]);
+        const results = await SuttaDB.query("SELECT segment_id, pli, eng, html, comm FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order", [uid]);
         if (results.length === 0) return null;
-        let html = "";
+        
+        const contentMap = {};
         for (const row of results) {
-            if (row.html) html += row.html;
+            contentMap[row.segment_id] = {
+                pli: row.pli,
+                eng: row.eng,
+                html: row.html,
+                comm: row.comm
+            };
         }
-        return html;
+        return contentMap;
     },
 
     async fetchMetaList(uids) {
