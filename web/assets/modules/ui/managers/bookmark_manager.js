@@ -140,8 +140,8 @@ export const BookmarkManager = {
             return `
                 <div class="bookmark-item" data-id="${b.id}">
                     <div class="bookmark-info">
-                        <div class="bookmark-title">${displayAcronym}</div>
-                        ${displayTitle ? `<div class="bookmark-id">${displayTitle}</div>` : ''}
+                        <div class="bookmark-id">${displayAcronym}</div>
+                        ${displayTitle ? `<div class="bookmark-title">${displayTitle}</div>` : ''}
                     </div>
                     <button class="bookmark-del-btn" title="Remove">✕</button>
                 </div>
