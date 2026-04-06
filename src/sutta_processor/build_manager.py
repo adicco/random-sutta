@@ -56,7 +56,12 @@ class BuildManager:
             shutil.rmtree(STAGE_PROCESSED_DIR)
         STAGE_PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
         
-        self.sqlite_gen = SqliteGenerator(STAGE_PROCESSED_DIR / "sutta_data.db")
+        # [UPDATED] Pass directory instead of single file path
+        self.sqlite_gen = SqliteGenerator(STAGE_PROCESSED_DIR)
+        
+        # [NEW] Insert configs into core_db
+        from .shared.app_config import CONFIG_AUTHOR_PRIORITY
+        self.sqlite_gen.insert_config("author_priority", CONFIG_AUTHOR_PRIORITY)
         
         if not self.dry_run and LEGACY_DIST_BOOKS_DIR.exists():
              shutil.rmtree(LEGACY_DIST_BOOKS_DIR)
@@ -175,14 +180,14 @@ class BuildManager:
         run_optimizer(dry_run=self.dry_run)
         
         if not self.dry_run:
-            # [NEW] Copy SQLite DB to public assets FIRST
-            sqlite_src = STAGE_PROCESSED_DIR / "sutta_data.db"
-            if sqlite_src.exists():
-                DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(sqlite_src, DIST_DB_DIR / "sutta_data.db")
-                logger.info(f"🚀 Copied sutta_data.db to {DIST_DB_DIR}")
+            # [UPDATED] Copy ALL SQLite DBs to public assets
+            DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
+            db_files = list(STAGE_PROCESSED_DIR.glob("*.db"))
+            for db_file in db_files:
+                shutil.copy2(db_file, DIST_DB_DIR / db_file.name)
+                logger.info(f"🚀 Copied {db_file.name} to {DIST_DB_DIR}")
             
-            # [NEW] Then generate manifest based on the copied file
+            # [NEW] Generate manifest based on the copied files
             generate_db_manifest()
         
         logger.info("✅ All processing tasks completed.")

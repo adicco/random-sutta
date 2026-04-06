@@ -1,132 +1,128 @@
+// Path: web/assets/modules/data/sutta_db.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLite, withExistDB, useIdbStorage } from 'services/sqlite_helper.js';
+import { initSQLite } from 'services/sqlite_helper.js';
 
 const logger = getLogger("SuttaDB");
-const DB_NAME = "sutta_data.db";
 
 export class SuttaDB {
-    static db = null;
+    static core = null;
+    static shards = new Map(); // Category -> DB Instance
+    static manifest = null;
     static isInitializing = false;
 
+    /**
+     * Khởi động Core Database (Metadata, Structure, Config)
+     */
     static async init(onProgress) {
-        if (this.db) {
-            if (onProgress) onProgress(100, 100);
-            return true;
-        }
-        if (this.isInitializing) {
-            return new Promise(resolve => {
-                const interval = setInterval(() => {
-                    if (this.db) {
-                        clearInterval(interval);
-                        if (onProgress) onProgress(100, 100);
-                        resolve(true);
-                    } else if (this.isInitializing === false) {
-                        clearInterval(interval);
-                        resolve(false);
-                    }
-                }, 100);
-            });
-        }
+        if (this.core) return true;
+        if (this.isInitializing) return this._waitForInit();
 
         this.isInitializing = true;
         try {
-            logger.info("Init", `Initializing ${DB_NAME}...`);
+            // 1. Load Manifest
+            const manifestResp = await fetch('/assets/db/db_manifest.json');
+            this.manifest = await manifestResp.json();
+
+            // 2. Load Core DB (Dùng MemoryVFS - Nạp vào RAM)
+            const coreFileName = "sutta_core.db";
+            const coreFile = await this._fetchFile(coreFileName, onProgress);
             
-            const dbVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev";
-            const url = `/assets/db/${DB_NAME}?v=${dbVersion}`;
-            
-            let dbFile;
-            const CACHE_NAME = `sutta-db-cache-v1`; // Stable cache name
-            
-            const fetchAndVerify = async (targetUrl) => {
-                logger.info("Init", `Fetching ${DB_NAME} from network...`);
-                const response = await fetch(targetUrl);
-                if (!response.ok) throw new Error(`HTTP ${response.status} when fetching ${targetUrl}`);
-                
-                // Track progress
-                const contentLength = response.headers.get('content-length');
-                const total = contentLength ? parseInt(contentLength, 10) : 0;
-                let loaded = 0;
+            this.core = await initSQLite({
+                path: coreFileName,
+                useMemory: true,
+                file: coreFile
+            });
 
-                const reader = response.body.getReader();
-                const chunks = [];
-                
-                while(true) {
-                    const {done, value} = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                    loaded += value.length;
-                    if (onProgress && total) onProgress(loaded, total);
-                }
-
-                const buffer = new Uint8Array(loaded);
-                let pos = 0;
-                for (const chunk of chunks) {
-                    buffer.set(chunk, pos);
-                    pos += chunk.length;
-                }
-
-                if (buffer.byteLength < 16) throw new Error("File too small to be a database");
-                
-                const header = new Uint8Array(buffer.slice(0, 16));
-                const magic = String.fromCharCode(...header.slice(0, 15));
-                if (magic !== "SQLite format 3") {
-                    throw new Error("File is not a valid SQLite database (Magic header mismatch)");
-                }
-                
-                // Reconstruct response for cache
-                return new Response(buffer, {
-                    headers: response.headers
-                });
-            };
-
-            if ('caches' in window) {
-                const cache = await caches.open(CACHE_NAME);
-                let response = await cache.match(url);
-                
-                if (response) {
-                    // Quick integrity check
-                    try {
-                        const buffer = await response.clone().arrayBuffer();
-                        const header = new Uint8Array(buffer.slice(0, 16));
-                        const magic = String.fromCharCode(...header.slice(0, 15));
-                        if (magic !== "SQLite format 3") throw new Error("Corrupted cache");
-                        logger.info("Init", "Loaded valid sutta_data.db from cache.");
-                        if (onProgress) onProgress(100, 100);
-                    } catch (e) {
-                        logger.warn("Init", "Cache corrupted, redownloading...");
-                        await cache.delete(url);
-                        response = null;
-                    }
-                }
-
-                if (!response) {
-                    response = await fetchAndVerify(url);
-                    await cache.put(url, response.clone());
-                }
-                
-                const buffer = await response.arrayBuffer();
-                dbFile = new File([buffer], DB_NAME, { type: 'application/x-sqlite3' });
-            } else {
-                const response = await fetchAndVerify(url);
-                const buffer = await response.arrayBuffer();
-                dbFile = new File([buffer], DB_NAME, { type: 'application/x-sqlite3' });
-            }
-
-            this.db = await initSQLite(useIdbStorage(DB_NAME, withExistDB(dbFile)));
-            logger.info("Init", "Database loaded into MemoryVFS.");
-            
             this.isInitializing = false;
             return true;
         } catch (e) {
-            logger.error("Init", "Failed to initialize SuttaDB", e);
+            logger.error("Init", "Failed to initialize Core DB", e);
             this.isInitializing = false;
             return false;
         }
     }
 
+    /**
+     * Nạp một Content Shard (Vd: major, minor, vinaya) vào OPFS
+     */
+    static async loadShard(category, onProgress) {
+        if (this.shards.has(category)) return this.shards.get(category);
+
+        const fileName = `sutta_content_${category}.db`;
+        logger.info("LoadShard", `Loading ${fileName}...`);
+
+        try {
+            const file = await this._fetchFile(fileName, onProgress);
+            const instance = await initSQLite({
+                path: fileName,
+                useMemory: false, // Dùng OPFS cho file lớn
+                file: file
+            });
+            this.shards.set(category, instance);
+            return instance;
+        } catch (e) {
+            logger.error("LoadShard", `Failed to load shard ${category}`, e);
+            return null;
+        }
+    }
+
+    static async _fetchFile(fileName, onProgress) {
+        const dbVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev";
+        const url = `/assets/db/${fileName}?v=${dbVersion}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${fileName}`);
+
+        const contentLength = response.headers.get('content-length');
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        let loaded = 0;
+
+        const reader = response.body.getReader();
+        const chunks = [];
+        
+        while(true) {
+            const {done, value} = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            loaded += value.length;
+            if (onProgress && total) onProgress(loaded, total);
+        }
+
+        const buffer = new Uint8Array(loaded);
+        let pos = 0;
+        for (const chunk of chunks) {
+            buffer.set(chunk, pos);
+            pos += chunk.length;
+        }
+
+        return new File([buffer], fileName, { type: 'application/x-sqlite3' });
+    }
+
+    static async _waitForInit() {
+        return new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (this.core) {
+                    clearInterval(interval);
+                    resolve(true);
+                }
+            }, 50);
+        });
+    }
+
+    /**
+     * Query vào Core DB
+     */
     static async query(sql, params) {
-        if (!this.db) await this.init();
-        return await this.db.run(sql, params);
+        if (!this.core) await this.init();
+        return await this.core.run(sql, params);
+    }
+
+    /**
+     * Query vào một Content Shard cụ thể
+     */
+    static async queryShard(category, sql, params) {
+        const shard = await this.loadShard(category);
+        if (!shard) return [];
+        return await shard.run(sql, params);
     }
 }

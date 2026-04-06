@@ -18,28 +18,46 @@ def _calculate_file_hash(file_path: Path) -> str:
 
 def generate_db_manifest() -> None:
     """
-    Tạo file db_manifest.json chứa hash của sutta_data.db để hỗ trợ Offline Update.
+    Tạo file db_manifest.json chứa hash của TẤT CẢ các file .db để hỗ trợ Offline Update.
     """
-    db_path = DIST_DB_DIR / "sutta_data.db"
     manifest_path = DIST_DB_DIR / "db_manifest.json"
+    db_files = list(DIST_DB_DIR.glob("*.db"))
     
-    if not db_path.exists():
-        logger.warning(f"⚠️ {db_path.name} not found, skipping manifest generation.")
+    if not db_files:
+        logger.warning("⚠️ No .db files found in dist, skipping manifest generation.")
         return
 
     try:
-        file_hash = _calculate_file_hash(db_path)
-        
         manifest_data = {
-            "hash": file_hash,
-            "size_bytes": db_path.stat().st_size,
-            "generated_at_ts": os.path.getmtime(db_path)
+            "files": {},
+            "total_size_bytes": 0,
+            "generated_at_ts": 0
         }
+        
+        max_mtime = 0
+        total_size = 0
+
+        for db_file in db_files:
+            file_hash = _calculate_file_hash(db_file)
+            size = db_file.stat().st_size
+            mtime = os.path.getmtime(db_file)
+            
+            manifest_data["files"][db_file.name] = {
+                "hash": file_hash,
+                "size_bytes": size
+            }
+            
+            total_size += size
+            if mtime > max_mtime:
+                max_mtime = mtime
+                
+        manifest_data["total_size_bytes"] = total_size
+        manifest_data["generated_at_ts"] = max_mtime
         
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest_data, f, indent=2)
 
-        logger.info(f"   ✅ Manifest generated for {db_path.name}: {file_hash[:12]}...")
+        logger.info(f"   ✅ Manifest generated for {len(db_files)} DB files.")
         
     except Exception as e:
         logger.error(f"❌ Failed to generate DB manifest: {e}")

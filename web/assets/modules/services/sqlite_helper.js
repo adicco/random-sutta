@@ -1,18 +1,21 @@
 // Path: web/assets/modules/services/sqlite_helper.js
 import { Factory } from '@journeyapps/wa-sqlite/src/sqlite-api.js';
 import { MemoryVFS } from '@journeyapps/wa-sqlite/src/examples/MemoryVFS.js';
-import SQLiteESMFactory from '@journeyapps/wa-sqlite/dist/wa-sqlite.mjs'; // <-- Changed to synchronous WASM
+import { OPFSAnyContextVFS } from '@journeyapps/wa-sqlite/src/examples/OPFSAnyContextVFS.js';
+import SQLiteESMFactory from '@journeyapps/wa-sqlite/dist/wa-sqlite.mjs'; 
 import * as SQLiteConstants from '@journeyapps/wa-sqlite/src/sqlite-constants.js';
 
 const getWasmUrl = () => {
-    // Dùng URL đặc thù của Vite cho WASM
     return new URL('@journeyapps/wa-sqlite/dist/wa-sqlite.wasm?url', import.meta.url).href;
 };
 
 const wasmUrl = getWasmUrl();
 
+/**
+ * Khởi tạo SQLite Instance với VFS tùy chọn (Memory hoặc OPFS).
+ */
 export async function initSQLite(options) {
-    const { path, vfsOptions, readonly, beforeOpen } = await options;
+    const { path, useMemory = true, file } = options;
     
     const sqliteModule = await SQLiteESMFactory({
         locateFile: (file) => {
@@ -22,24 +25,49 @@ export async function initSQLite(options) {
     });
 
     const sqlite = Factory(sqliteModule);
-    
-    // Sử dụng MemoryVFS để nạp toàn bộ DB vào RAM. Siêu tốc và không gây lỗi Asyncify (Jetsam iOS).
-    const memoryVfs = await MemoryVFS.create(path, sqliteModule);
-    sqlite.vfs_register(memoryVfs, true); 
+    let vfs;
 
-    if (beforeOpen) {
-        await beforeOpen(sqlite, memoryVfs, path);
+    if (useMemory) {
+        // [iOS JETSAM SAFE] Dùng cho Core DB nhỏ (< 10MB)
+        vfs = await MemoryVFS.create(path, sqliteModule);
+        sqlite.vfs_register(vfs, true); 
+
+        if (file) {
+            const buffer = await file.arrayBuffer();
+            const data = new Uint8Array(buffer);
+            const fileId = 12345;
+            const pOutFlags = new DataView(new ArrayBuffer(4));
+            const openResult = await vfs.jOpen(path, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
+            if (openResult === SQLiteConstants.SQLITE_OK) {
+                await vfs.jTruncate(fileId, 0);
+                await vfs.jWrite(fileId, data, 0);
+                await vfs.jClose(fileId);
+                console.log(`✅ [MemoryVFS] Loaded ${path} to RAM.`);
+            }
+        }
+    } else {
+        // [LARGE DB SAFE] Dùng cho Content Shards (OPFS)
+        vfs = await OPFSAnyContextVFS.create(path, sqliteModule);
+        sqlite.vfs_register(vfs, true);
+        
+        // Ghi dữ liệu file vào OPFS nếu có
+        if (file) {
+            const root = await navigator.storage.getDirectory();
+            const handle = await root.getFileHandle(path, { create: true });
+            const writable = await handle.createWritable();
+            await writable.write(await file.arrayBuffer());
+            await writable.close();
+            console.log(`✅ [OPFS] Loaded ${path} to persistent storage.`);
+        }
     }
 
     const db = await sqlite.open_v2(
         path,
-        readonly ? SQLiteConstants.SQLITE_OPEN_READONLY : (SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_CREATE),
-        memoryVfs.name
+        SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_CREATE,
+        vfs.name
     );
 
-    const core = {
-        db, path, pointer: db, sqlite, sqliteModule, vfs: memoryVfs
-    };
+    const core = { db, path, pointer: db, sqlite, sqliteModule, vfs };
 
     return {
         ...core,
@@ -48,46 +76,31 @@ export async function initSQLite(options) {
     };
 }
 
-export function withExistDB(file) {
-    return {
-        beforeOpen: async (sqlite, memoryVfs, dbPath) => {
-            const buffer = await file.arrayBuffer();
-            const data = new Uint8Array(buffer);
-            const fileId = 12345; 
-            const pOutFlags = new DataView(new ArrayBuffer(4));
-            
-            // Mở file ảo trên MemoryVFS
-            const openResult = await memoryVfs.jOpen(dbPath, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
-            
-            if (openResult === SQLiteConstants.SQLITE_OK) {
-                await memoryVfs.jTruncate(fileId, 0);
-                await memoryVfs.jWrite(fileId, data, 0);
-                await memoryVfs.jClose(fileId);
-                console.log(`✅ Database ${dbPath} imported successfully to RAM (MemoryVFS).`);
-            }
-        }
-    };
-}
-
 async function run(core, sql, params) {
     const { sqlite, db } = core;
     const results = [];
-    for await (const stmt of sqlite.statements(db, sql)) {
-        if (params) sqlite.bind_collection(stmt, params);
-        const cols = sqlite.column_names(stmt);
-        while (await sqlite.step(stmt) === SQLiteConstants.SQLITE_ROW) {
-            const row = sqlite.row(stmt);
-            results.push(Object.fromEntries(cols.map((key, i) => [key, row[i]])));
+    try {
+        for await (const stmt of sqlite.statements(db, sql)) {
+            if (params) {
+                // Hỗ trợ cả array và object params
+                if (Array.isArray(params)) {
+                    sqlite.bind_collection(stmt, params);
+                } else {
+                    for (const [key, val] of Object.entries(params)) {
+                        const idx = sqlite.bind_parameter_index(stmt, `@${key}`) || sqlite.bind_parameter_index(stmt, `:${key}`);
+                        if (idx > 0) sqlite.bind_text(stmt, idx, val);
+                    }
+                }
+            }
+            
+            const cols = sqlite.column_names(stmt);
+            while (await sqlite.step(stmt) === SQLiteConstants.SQLITE_ROW) {
+                const row = sqlite.row(stmt);
+                results.push(Object.fromEntries(cols.map((key, i) => [key, row[i]])));
+            }
         }
+    } catch (e) {
+        console.error("❌ SQLite Query Error:", e, sql);
     }
     return results;
-}
-
-export function useIdbStorage(dbName, options = {}) {
-    const idbName = dbName.endsWith('.db') ? dbName : `${dbName}.db`;
-    return {
-        path: idbName,
-        vfsOptions: { idbName, ...options },
-        ...options
-    };
 }

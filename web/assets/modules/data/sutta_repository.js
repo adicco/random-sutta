@@ -1,3 +1,4 @@
+// Path: web/assets/modules/data/sutta_repository.js
 import { SuttaDB } from './sutta_db.js';
 import { getLogger } from 'utils/logger.js';
 
@@ -6,14 +7,24 @@ const logger = getLogger("SuttaRepository");
 export const SuttaRepository = {
     
     async init() {
-        logger.info("Init", "Initializing SuttaDB...");
         await SuttaDB.init();
+    },
+
+    /**
+     * Xác định shard (category) dựa trên bookId
+     */
+    _getCategory(bookId) {
+        if (!bookId) return "minor";
+        const b = bookId.toLowerCase();
+        if (['dn', 'mn', 'sn', 'an'].includes(b)) return "major";
+        if (b.startsWith('pli-tv-')) return "vinaya";
+        if (['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana'].includes(b)) return "abhidhamma";
+        return "minor";
     },
 
     async resolveLocation(uid) {
         if (!uid) return null;
         const cleanUid = uid.toLowerCase().trim();
-        
         const results = await SuttaDB.query("SELECT book_id FROM metadata WHERE uid = ?", [cleanUid]);
         if (results.length > 0) {
             return [results[0].book_id, "none"];
@@ -22,12 +33,12 @@ export const SuttaRepository = {
     },
 
     async fetchMeta(bookId) {
+        // Query Metadata từ Core DB
         const metaResults = await SuttaDB.query("SELECT * FROM metadata WHERE book_id = ?", [bookId]);
         if (metaResults.length === 0) return null;
         
         const meta = {};
         let rootTitle = "";
-        let superBookTitle = "";
         
         for (const r of metaResults) {
             meta[r.uid] = {
@@ -39,6 +50,7 @@ export const SuttaRepository = {
                 author_uid: r.author_uid,
                 parent_uid: r.parent_uid,
                 target_uid: r.target_uid,
+                children: r.children ? JSON.parse(r.children) : [],
                 hash_id: r.hash_id,
                 extract_id: r.extract_id,
                 nav: { prev: r.nav_prev, next: r.nav_next }
@@ -58,13 +70,24 @@ export const SuttaRepository = {
             meta: meta,
             tree: tree,
             title: rootTitle || bookId,
-            super_book_title: superBookTitle || rootTitle || bookId
+            super_book_title: rootTitle || bookId
         };
     },
 
     async fetchContent(uid) {
         if (!uid) return null;
-        const results = await SuttaDB.query("SELECT segment_id, pli, eng, html, comm FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order", [uid]);
+        
+        // 1. Tìm book_id để biết nạp shard nào
+        const loc = await this.resolveLocation(uid);
+        if (!loc) return null;
+        
+        const [bookId] = loc;
+        const category = this._getCategory(bookId);
+
+        // 2. Query từ Content Shard tương ứng
+        const sql = "SELECT segment_id, pli, eng, html, comm FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order";
+        const results = await SuttaDB.queryShard(category, sql, [uid]);
+        
         if (results.length === 0) return null;
         
         const contentMap = {};
@@ -97,6 +120,7 @@ export const SuttaRepository = {
                 author_uid: r.author_uid,
                 parent_uid: r.parent_uid,
                 target_uid: r.target_uid,
+                children: r.children ? JSON.parse(r.children) : [],
                 hash_id: r.hash_id,
                 extract_id: r.extract_id,
                 nav: { prev: r.nav_prev, next: r.nav_next }
@@ -107,6 +131,8 @@ export const SuttaRepository = {
     },
 
     async downloadAll(onProgress) {
-        return await SuttaDB.init(onProgress);
+        // Mặc định nạp Core
+        await SuttaDB.init(onProgress);
+        // Có thể nạp thêm các shard quan trọng nếu muốn
     }
 };
