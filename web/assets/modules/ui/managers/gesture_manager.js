@@ -51,6 +51,11 @@ export const GestureManager = {
             if (deltaTime < tapTimeThreshold && dist < 10) {
                 // [FIX] Prevent conflict with word lookup or other interactive elements
                 const target = e.target;
+                
+                // [NEW] Ignore if inside Magic Nav (Sidebar)
+                const isInsideMagicNav = target.closest('#magic-nav-wrapper, #magic-nav-corner');
+                if (isInsideMagicNav) return;
+
                 // If user clicks a button, link or specific interactive item, let it pass
                 if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item')) return;
 
