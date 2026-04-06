@@ -15,13 +15,14 @@ export const GestureManager = {
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) return; // Ignore multi-touch
             
-            // [NEW] Restrict to sutta-container only
             const target = e.target;
-            const isInsideSutta = target.closest('#sutta-container');
             const isInsidePopup = target.closest('.popup-container');
+            const isInsideDrawer = target.closest('#filter-drawer, #magic-toc-drawer');
             
-            if (!isInsideSutta || isInsidePopup) {
-                touchStartX = -1; // Invalidate
+            // [FIX] Don't invalidate if tapping on margins/body or the collapsed magic nav
+            // but still invalidate if inside an active popup/drawer
+            if (isInsidePopup || isInsideDrawer) {
+                touchStartX = -1; 
                 return;
             }
 
@@ -50,9 +51,10 @@ export const GestureManager = {
             if (deltaTime < tapTimeThreshold && dist < 10) {
                 // [FIX] Prevent conflict with word lookup or other interactive elements
                 const target = e.target;
-                if (target.closest('a, button, .comment-marker, .lookup-highlight')) return;
+                // If user clicks a button, link or specific interactive item, let it pass
+                if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item')) return;
 
-                // Check if tapping on a word
+                // Check if tapping on a word (Pali lookup)
                 let isWord = false;
                 try {
                     let range;
@@ -69,7 +71,6 @@ export const GestureManager = {
                     if (range && range.startContainer.nodeType === 3) {
                         const text = range.startContainer.textContent;
                         const offset = range.startOffset;
-                        // If it's not a whitespace, consider it a word
                         if (text[offset] && /\S/.test(text[offset])) {
                             isWord = true;
                         }
@@ -99,6 +100,10 @@ export const GestureManager = {
             }
 
             // 2. Quick Swipe -> History Navigation
+            // [RESTRICTION] Swipe should only work on the main reading area
+            const startTarget = document.elementFromPoint(touchStartX, touchStartY);
+            if (!startTarget || !startTarget.closest('#sutta-container')) return;
+
             // Must be a quick swipe
             if (deltaTime > timeThreshold) return;
 
