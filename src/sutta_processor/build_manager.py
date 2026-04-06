@@ -7,8 +7,9 @@ from typing import Dict, List, Any, Tuple, Optional
 
 from .shared.app_config import (
     STAGE_PROCESSED_DIR, 
-    LEGACY_DIST_BOOKS_DIR,
-    PROJECT_ROOT 
+    LEGACY_DIST_BOOKS_DIR, 
+    PROJECT_ROOT,
+    DIST_DB_DIR
 )
 from .ingestion.metadata_parser import load_names_map
 from .ingestion.file_crawler import generate_book_tasks
@@ -171,6 +172,12 @@ class BuildManager:
         
         if not self.dry_run:
             create_db_bundle()
+            # [NEW] Copy SQLite DB to public assets
+            sqlite_src = STAGE_PROCESSED_DIR / "sutta_data.db"
+            if sqlite_src.exists():
+                DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(sqlite_src, DIST_DB_DIR / "sutta_data.db")
+                logger.info(f"🚀 Copied sutta_data.db to {DIST_DB_DIR}")
         
         logger.info("✅ All processing tasks completed.")
         

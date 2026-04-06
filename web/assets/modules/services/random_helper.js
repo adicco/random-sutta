@@ -1,22 +1,17 @@
-// Path: web/assets/modules/services/random_helper.js
-import { PRIMARY_BOOKS, SECONDARY_BOOKS, SUB_BOOKS, RANDOM_POOLS } from 'data/constants.js'; // [UPDATED] Import SECONDARY_BOOKS
+import { PRIMARY_BOOKS, SECONDARY_BOOKS, SUB_BOOKS } from 'data/constants.js';
 import { getLogger } from 'utils/logger.js';
+import { SuttaDB } from 'data/sutta_db.js';
 
 const logger = getLogger("RandomHelper");
 
 export const RandomHelper = {
-    // Init rỗng để giữ interface
     init() {},
 
-    // Hàm chọn ngẫu nhiên siêu tốc (Virtual Merge)
-    getRandomPayloadSync(activeFilters) {
-        // 1. Xác định danh sách sách cần random
-        // [UPDATED] Nếu không có filter (tắt hết), dùng cả PRIMARY + SECONDARY
+    async getRandomPayload(activeFilters) {
         const rootBooks = (!activeFilters || activeFilters.length === 0) 
             ? [...PRIMARY_BOOKS, ...SECONDARY_BOOKS] 
             : activeFilters;
         
-        // Mở rộng sách con (Flatten: an -> an1, an2...)
         const targetBookIds = [];
         for (const bookId of rootBooks) {
             if (SUB_BOOKS[bookId]) {
@@ -28,40 +23,26 @@ export const RandomHelper = {
             }
         }
 
-        // 2. Tính tổng số lượng bài (Total Count)
-        let totalCount = 0;
-        const availableBooks = [];
+        if (targetBookIds.length === 0) return null;
 
-        for (const bid of targetBookIds) {
-            const pool = RANDOM_POOLS[bid];
-            if (pool && pool.length > 0) {
-                totalCount += pool.length;
-                availableBooks.push({ id: bid, count: pool.length });
-            }
-        }
-
-        if (totalCount === 0) return null;
-
-        // 3. Chọn một số ngẫu nhiên trong tổng số
-        let randomTicket = Math.floor(Math.random() * totalCount);
-
-        // 4. Tìm xem vé số đó thuộc về sách nào
-        for (const book of availableBooks) {
-            if (randomTicket < book.count) {
-                const targetUid = RANDOM_POOLS[book.id][randomTicket];
-                logger.info("Random", `Selected: ${targetUid} from ${book.id}`);
+        const placeholders = targetBookIds.map(() => '?').join(',');
+        const sql = `SELECT book_id, sutta_uid FROM random_pools WHERE book_id IN (${placeholders}) ORDER BY RANDOM() LIMIT 1`;
+        
+        try {
+            const results = await SuttaDB.query(sql, targetBookIds);
+            
+            if (results.length > 0) {
+                const row = results[0];
+                logger.info("Random", `Selected: ${row.sutta_uid} from ${row.book_id}`);
                 return {
-                    uid: targetUid,
-                    book_id: book.id
+                    uid: row.sutta_uid,
+                    book_id: row.book_id
                 };
             }
-            randomTicket -= book.count;
+        } catch (e) {
+            logger.error("Random", "Failed to fetch random sutta from DB", e);
         }
 
         return null;
-    },
-
-    async getRandomPayload(activeFilters) {
-        return this.getRandomPayloadSync(activeFilters);
     }
 };

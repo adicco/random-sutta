@@ -11,19 +11,15 @@ logger = logging.getLogger("SuttaProcessor.Output.Sqlite")
 
 class SqliteGenerator:
     """
-    Generates a single SQLite database containing all metadata, content, and structure
-    for Phase 1 of the SQLite migration.
+    Generates a normalized SQLite database containing metadata, content segments, and structure.
     """
     def __init__(self, db_path: Path):
         self.db_path = Path(str(db_path.absolute()))
         self._init_db()
 
     def _get_connection(self):
-        # Always use absolute path as string for sqlite3
         conn = sqlite3.connect(str(self.db_path))
-        # Wait up to 30 seconds for locks to be released
         conn.execute("PRAGMA busy_timeout = 30000")
-        # Use WAL mode for better concurrency during writing
         conn.execute("PRAGMA journal_mode=WAL")
         return conn
 
@@ -37,34 +33,57 @@ class SqliteGenerator:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS metadata (
                 uid TEXT PRIMARY KEY,
-                json_data TEXT NOT NULL
+                book_id TEXT,
+                type TEXT,
+                acronym TEXT,
+                translated_title TEXT,
+                original_title TEXT,
+                blurb TEXT,
+                author_uid TEXT,
+                parent_uid TEXT,
+                target_uid TEXT,
+                hash_id TEXT,
+                extract_id TEXT,
+                nav_prev TEXT,
+                nav_next TEXT
             )
         """)
         
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS content (
-                uid TEXT PRIMARY KEY,
-                json_data TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS content_segments (
+                sutta_uid TEXT,
+                segment_id TEXT,
+                segment_order INTEGER,
+                pli TEXT,
+                eng TEXT,
+                html TEXT,
+                comm TEXT,
+                PRIMARY KEY (sutta_uid, segment_id)
             )
         """)
         
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS structure (
                 book_id TEXT PRIMARY KEY,
-                json_data TEXT NOT NULL
+                tree_json TEXT NOT NULL
             )
         """)
         
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS config (
-                key TEXT PRIMARY KEY,
-                json_data TEXT NOT NULL
+            CREATE TABLE IF NOT EXISTS random_pools (
+                book_id TEXT,
+                sutta_uid TEXT,
+                PRIMARY KEY (book_id, sutta_uid)
             )
         """)
         
+        # Indexes for fast lookup
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_book_id ON metadata(book_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_content_segments_order ON content_segments(sutta_uid, segment_order)")
+        
         conn.commit()
         conn.close()
-        logger.info(f"SQLite Database initialized at {self.db_path}")
+        logger.info(f"Normalized SQLite Database initialized at {self.db_path}")
 
     def insert_book(self, book_obj: Dict[str, Any]):
         book_id = book_obj.get("id")
@@ -83,33 +102,50 @@ class SqliteGenerator:
                 
                 # 1. Structure
                 cursor.execute(
-                    "INSERT OR REPLACE INTO structure (book_id, json_data) VALUES (?, ?)",
+                    "INSERT OR REPLACE INTO structure (book_id, tree_json) VALUES (?, ?)",
                     (book_id, json.dumps(structure, ensure_ascii=False))
                 )
                 
-                # 2. Config (Random Pool)
+                # 2. Random Pool
                 if random_pool:
-                    cursor.execute(
-                        "INSERT OR REPLACE INTO config (key, json_data) VALUES (?, ?)",
-                        (f"{book_id}_random_pool", json.dumps(random_pool, ensure_ascii=False))
-                    )
+                    for uid in random_pool:
+                        cursor.execute(
+                            "INSERT OR REPLACE INTO random_pools (book_id, sutta_uid) VALUES (?, ?)",
+                            (book_id, uid)
+                        )
                 
                 # 3. Metadata
-                for uid, meta_val in meta_dict.items():
-                    cursor.execute(
-                        "INSERT OR REPLACE INTO metadata (uid, json_data) VALUES (?, ?)",
-                        (uid, json.dumps(meta_val, ensure_ascii=False))
-                    )
+                for uid, m in meta_dict.items():
+                    nav = m.get("nav", {})
+                    cursor.execute("""
+                        INSERT OR REPLACE INTO metadata (
+                            uid, book_id, type, acronym, translated_title, original_title,
+                            blurb, author_uid, parent_uid, target_uid, hash_id, extract_id,
+                            nav_prev, nav_next
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
+                        m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
+                        m.get("parent_uid"), m.get("target_uid"), m.get("hash_id"),
+                        m.get("extract_id"), nav.get("prev"), nav.get("next")
+                    ))
                     
                 # 4. Content
-                for uid, content_val in content_dict.items():
-                    cursor.execute(
-                        "INSERT OR REPLACE INTO content (uid, json_data) VALUES (?, ?)",
-                        (uid, json.dumps(content_val, ensure_ascii=False))
-                    )
-                    
+                for uid, segments in content_dict.items():
+                    order = 0
+                    for seg_id, seg in segments.items():
+                        cursor.execute("""
+                            INSERT OR REPLACE INTO content_segments (
+                                sutta_uid, segment_id, segment_order, pli, eng, html, comm
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            uid, seg_id, order,
+                            seg.get("pli"), seg.get("eng"), seg.get("html"), seg.get("comm")
+                        ))
+                        order += 1
+                        
                 conn.commit()
-                logger.info(f"   [SQLite] Inserted {book_id} with {len(meta_dict)} meta, {len(content_dict)} content.")
+                logger.info(f"   [SQLite] Inserted {book_id} with {len(meta_dict)} meta, {len(content_dict)} content segments.")
         except Exception as e:
             logger.error(f"❌ [SQLite] Failed to insert book {book_id}: {e}")
             
@@ -118,18 +154,30 @@ class SqliteGenerator:
         structure = super_book_data.get("structure", [])
         meta_dict = super_book_data.get("meta", {})
         
-        with self._get_connection() as conn:
-            cursor = conn.cursor()
-            
-            cursor.execute(
-                "INSERT OR REPLACE INTO structure (book_id, json_data) VALUES (?, ?)",
-                (book_id, json.dumps(structure, ensure_ascii=False))
-            )
-            
-            for uid, meta_val in meta_dict.items():
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                
                 cursor.execute(
-                    "INSERT OR REPLACE INTO metadata (uid, json_data) VALUES (?, ?)",
-                    (uid, json.dumps(meta_val, ensure_ascii=False))
+                    "INSERT OR REPLACE INTO structure (book_id, tree_json) VALUES (?, ?)",
+                    (book_id, json.dumps(structure, ensure_ascii=False))
                 )
                 
-            conn.commit()
+                for uid, m in meta_dict.items():
+                    nav = m.get("nav", {})
+                    cursor.execute("""
+                        INSERT OR REPLACE INTO metadata (
+                            uid, book_id, type, acronym, translated_title, original_title,
+                            blurb, author_uid, parent_uid, target_uid, hash_id, extract_id,
+                            nav_prev, nav_next
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
+                        m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
+                        m.get("parent_uid"), m.get("target_uid"), m.get("hash_id"),
+                        m.get("extract_id"), nav.get("prev"), nav.get("next")
+                    ))
+                    
+                conn.commit()
+        except Exception as e:
+            logger.error(f"❌ [SQLite] Failed to insert super book: {e}")

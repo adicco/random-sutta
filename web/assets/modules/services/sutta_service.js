@@ -1,4 +1,3 @@
-// Path: web/assets/modules/services/sutta_service.js
 import { SuttaRepository } from "data/sutta_repository.js";
 import { SuttaExtractor } from "data/sutta_extractor.js";
 import { getLogger } from "utils/logger.js";
@@ -61,22 +60,21 @@ export const SuttaService = {
     },
 
     async loadSutta(input, options = { prefetchNav: true }) {
-        let uid, hintChunk = null, hintBook = null;
+        let uid, hintBook = null;
         if (typeof input === 'object') {
             uid = input.uid;
-            hintChunk = input.chunk || null;
             hintBook = input.book_id || null;
         } else {
             uid = input;
         }
 
-        if (hintBook === null || hintChunk === null) {
+        if (hintBook === null) {
             let loc = await SuttaRepository.resolveLocation(uid);
             if (!loc) {
                 logger.warn("loadSutta", `UID not found in index: ${uid}`);
                 return null;
             }
-            [hintBook, hintChunk] = loc;
+            hintBook = loc[0];
         }
 
         const isFileProtocol = window.location.protocol === 'file:';
@@ -99,15 +97,10 @@ export const SuttaService = {
         const fetchLabel = `Data Fetch (${uid}) [${timerId}]`;
         logger.timer(fetchLabel);
 
-        const promises = [
+        const [bookMeta, superMeta] = await Promise.all([
             SuttaRepository.fetchMeta(hintBook),
             tpkPromise 
-        ];
-        if (hintChunk !== null) {
-            promises.push(SuttaRepository.fetchContentChunk(hintBook, hintChunk));
-        }
-
-        const [bookMeta, superMeta, contentChunk] = await Promise.all(promises);
+        ]);
         
         logger.timerEnd(fetchLabel);
 
@@ -136,27 +129,22 @@ export const SuttaService = {
             };
         }
 
-        let content = null;
-        if (contentChunk) {
-            if (contentChunk[uid]) {
-                content = contentChunk[uid];
-            } 
-            else if (metaEntry.parent_uid) {
-                const parentUid = metaEntry.parent_uid;
-                if (contentChunk[parentUid]) {
-                    const parentContent = contentChunk[parentUid];
-                    const extractKey = metaEntry.extract_id || uid;
-                    content = SuttaExtractor.extract(parentContent, extractKey);
-                    if (!content) {
-                        logger.error("loadSutta", `Extraction failed. Parent '${parentUid}' found, but extract '${extractKey}' returned null.`);
-                    }
-                } else {
-                    logger.warn("loadSutta", `Parent '${parentUid}' NOT found in Chunk ${hintChunk}.`);
+        let content = await SuttaRepository.fetchContent(uid);
+        if (!content && metaEntry.parent_uid) {
+            const parentUid = metaEntry.parent_uid;
+            const parentContent = await SuttaRepository.fetchContent(parentUid);
+            if (parentContent) {
+                const extractKey = metaEntry.extract_id || uid;
+                content = SuttaExtractor.extract(parentContent, extractKey);
+                if (!content) {
+                    logger.error("loadSutta", `Extraction failed. Parent '${parentUid}' found, but extract '${extractKey}' returned null.`);
                 }
             } else {
-                if (metaEntry.type === 'leaf' || metaEntry.type === 'subleaf') {
-                     logger.warn("loadSutta", `No content for ${uid} and no parent_uid defined.`);
-                }
+                logger.warn("loadSutta", `Parent '${parentUid}' NOT found.`);
+            }
+        } else if (!content) {
+            if (metaEntry.type === 'leaf' || metaEntry.type === 'subleaf') {
+                 logger.warn("loadSutta", `No content for ${uid} and no parent_uid defined.`);
             }
         }
 
