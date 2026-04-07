@@ -93,14 +93,8 @@ async function run(core, sql, params) {
     try {
         for await (const stmt of sqlite.statements(db, sql)) {
             if (params) {
-                if (Array.isArray(params)) {
-                    sqlite.bind_collection(stmt, params);
-                } else {
-                    for (const [key, val] of Object.entries(params)) {
-                        const idx = sqlite.bind_parameter_index(stmt, `@${key}`) || sqlite.bind_parameter_index(stmt, `:${key}`);
-                        if (idx > 0) sqlite.bind_text(stmt, idx, val);
-                    }
-                }
+                // wa-sqlite cung cấp bind_collection để map params (array hoặc object) vào stmt
+                sqlite.bind_collection(stmt, params);
             }
             
             const cols = sqlite.column_names(stmt);
