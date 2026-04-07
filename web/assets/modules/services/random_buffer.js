@@ -23,7 +23,11 @@ export const RandomBuffer = {
         if (activeFilters && activeFilters.length > 0) {
             const originalLength = this._buffer.length;
             this._buffer = this._buffer.filter(item => {
-                const match = item.uid.match(/^[a-z]+/i);
+                // [FIXED] Truy cập uid thông qua item.payload
+                const uid = item.payload?.uid || item.uid; 
+                if (!uid) return false;
+                
+                const match = uid.match(/^[a-z]+/i);
                 const bookId = match ? match[0].toLowerCase() : '';
                 return activeFilters.includes(bookId);
             });
