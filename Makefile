@@ -152,7 +152,7 @@ view:
 # ==============================================================================
 
 # Deploy Web (GH Pages via Vite plugin / npm script)
-deploy:
+deploy: re
 	npm run deploy
 
 # Publish Pre-release
