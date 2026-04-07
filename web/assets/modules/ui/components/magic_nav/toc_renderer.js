@@ -12,7 +12,7 @@ export const TocRenderer = {
         return false;
     },
 
-    render(node, currentUid, metaMap, level = 0, bookmarkedSet = new Set()) {
+    render(node, currentUid, metaMap, level = 0, bookmarkedSet = new Set(), historyMap = {}) {
         let html = ``;
         const getToggleIcon = () => `
             <span class="toc-toggle-icon" onclick="event.stopPropagation(); MagicNav.toggleNode(this)">
@@ -63,11 +63,13 @@ export const TocRenderer = {
             const type = meta.type || (level === 0 ? 'leaf' : 'subleaf');
             const isActive = id === currentUid ? "active" : "";
             const isBookmarked = bookmarkedSet.has(id) ? "bookmarked" : "";
+            const famLevel = historyMap[id] ? historyMap[id].level : 0;
+            const famClass = famLevel > 0 ? `fam-level-${famLevel}` : "";
             const action = isActive ? "" : getLoadAction(id);
             
             const presentationClass = type === 'leaf' ? 'toc-leaf-presentation' : '';
             const paddingLeft = 15 + (level * 16);
-            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked}" data-toc-id="${id}" ${action} style="padding-left: ${paddingLeft}px">
+            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked} ${famClass}" data-toc-id="${id}" ${action} style="padding-left: ${paddingLeft}px">
                         ${generateInnerContent(id, type)}
                     </div>`;
         };
@@ -79,6 +81,8 @@ export const TocRenderer = {
             const paddingLeft = 15 + (currentLevel * 10);
             const isActive = id === currentUid;
             const isBookmarked = bookmarkedSet.has(id) ? "bookmarked" : "";
+            const famLevel = historyMap[id] ? historyMap[id].level : 0;
+            const famClass = famLevel > 0 ? `fam-level-${famLevel}` : "";
             const isClickable = !!metaMap[id];
             
             let headerAction = "";
@@ -103,7 +107,7 @@ export const TocRenderer = {
             const tooltip = getTooltip(id);
 
             return `<div class="toc-node-wrapper ${collapsedClass}" data-toc-id="${id}">
-                        <div class="toc-header-row ${rowActiveClass} ${isBookmarked}" title="${tooltip}">
+                        <div class="toc-header-row ${rowActiveClass} ${isBookmarked} ${famClass}" title="${tooltip}">
                             <div class="${headerClasses}" ${headerAction} style="padding-left: ${paddingLeft}px">
                                 ${generateInnerContent(id, type)}
                             </div>
@@ -116,10 +120,10 @@ export const TocRenderer = {
         if (typeof node === 'string') {
             return createItem(node);
         } else if (Array.isArray(node)) {
-            node.forEach(child => html += this.render(child, currentUid, metaMap, level, bookmarkedSet));
+            node.forEach(child => html += this.render(child, currentUid, metaMap, level, bookmarkedSet, historyMap));
         } else if (typeof node === 'object' && node !== null) {
             for (const key in node) {
-                const childrenHtml = this.render(node[key], currentUid, metaMap, level + 1, bookmarkedSet);
+                const childrenHtml = this.render(node[key], currentUid, metaMap, level + 1, bookmarkedSet, historyMap);
                 html += createParentNode(key, childrenHtml, level, node[key]);
             }
         }

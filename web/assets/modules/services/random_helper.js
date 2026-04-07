@@ -1,6 +1,7 @@
 import { PRIMARY_BOOKS, SECONDARY_BOOKS, SUB_BOOKS } from 'data/constants.js';
 import { getLogger } from 'utils/logger.js';
 import { SuttaDB } from 'data/sutta_db.js';
+import { HistoryManager } from 'ui/managers/history_manager.js';
 
 const logger = getLogger("RandomHelper");
 
@@ -28,28 +29,46 @@ export const RandomHelper = {
         const placeholders = targetBookIds.map(() => '?').join(',');
         
         try {
-            // [OPTIMIZED] Step 1: Get total count for the selected books
             const countSql = `SELECT COUNT(*) as total FROM random_pools WHERE book_id IN (${placeholders})`;
             const countResults = await SuttaDB.query(countSql, targetBookIds);
             const total = countResults[0]?.total || 0;
 
             if (total === 0) return null;
 
-            // Step 2: Pick a random offset
+            const MAX_RETRIES = 50; // Prevent infinite loops
+            
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                const randomOffset = Math.floor(Math.random() * total);
+                const pickSql = `SELECT book_id, sutta_uid FROM random_pools WHERE book_id IN (${placeholders}) LIMIT 1 OFFSET ${randomOffset}`;
+                const results = await SuttaDB.query(pickSql, targetBookIds);
+                
+                if (results.length > 0) {
+                    const row = results[0];
+                    const prob = HistoryManager.getKeepProbability(row.sutta_uid);
+                    
+                    // Rejection Sampling
+                    if (Math.random() <= prob) {
+                        logger.info("Random", `Selected: ${row.sutta_uid} from ${row.book_id} (Offset: ${randomOffset}/${total}, Keep Prob: ${prob})`);
+                        return {
+                            uid: row.sutta_uid,
+                            book_id: row.book_id
+                        };
+                    } else {
+                        logger.debug("Random", `Rejected: ${row.sutta_uid} (Keep Prob: ${prob}). Retrying...`);
+                    }
+                }
+            }
+            
+            // Fallback: If we hit max retries, just pick one regardless of familiarity
             const randomOffset = Math.floor(Math.random() * total);
-
-            // Step 3: Fetch the row at that offset (much faster than ORDER BY RANDOM)
             const pickSql = `SELECT book_id, sutta_uid FROM random_pools WHERE book_id IN (${placeholders}) LIMIT 1 OFFSET ${randomOffset}`;
             const results = await SuttaDB.query(pickSql, targetBookIds);
-            
             if (results.length > 0) {
                 const row = results[0];
-                logger.info("Random", `Selected: ${row.sutta_uid} from ${row.book_id} (Offset: ${randomOffset}/${total})`);
-                return {
-                    uid: row.sutta_uid,
-                    book_id: row.book_id
-                };
+                logger.warn("Random", `Max retries hit. Forced selection: ${row.sutta_uid}`);
+                return { uid: row.sutta_uid, book_id: row.book_id };
             }
+
         } catch (e) {
             logger.error("Random", "Failed to fetch random sutta from DB", e);
         }

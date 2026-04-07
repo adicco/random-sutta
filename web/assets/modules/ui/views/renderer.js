@@ -5,20 +5,24 @@ import { setupTableOfHeadings } from "ui/components/toh/toh_controller.js";
 import { UIFactory } from "ui/common/ui_factory.js";
 import { HeaderView } from "./header_view.js";
 import { MagicNav } from "ui/components/magic_nav/magic_nav_controller.js";
+import { FamiliarityBar } from "ui/components/familiarity_bar.js";
 
 let tohInstance = null;
 
 export async function renderSutta(suttaId, data, options = {}) {
     const container = document.getElementById("sutta-container");
+    const famHeaderContainer = document.getElementById("familiarity-bar-header");
     
     // 1. Kiểm tra data null (giữ nguyên)
     if (!data) {
         container.innerHTML = UIFactory.createErrorHtml(suttaId);
+        if (famHeaderContainer) famHeaderContainer.innerHTML = '';
         document.getElementById("breadcrumb-container")?.classList.add("hidden");
         return false;
     }
 
     container.innerHTML = "";
+    if (famHeaderContainer) famHeaderContainer.innerHTML = '';
     let renderResult = null;
     let isLeaf = false;
 
@@ -54,7 +58,15 @@ export async function renderSutta(suttaId, data, options = {}) {
     const nav = data.nav || {};
     const bottomNavHtml = UIFactory.createBottomNavHtml(nav.prev, nav.next, data.navMeta || {});
     
-    container.innerHTML = renderResult.html + bottomNavHtml;
+    // Thêm Familiarity Bar
+    const famBarTop = FamiliarityBar.generateHtml(data.uid, true);
+    const famBarBottom = FamiliarityBar.generateHtml(data.uid, false);
+    
+    if (famHeaderContainer) famHeaderContainer.innerHTML = famBarTop;
+    container.innerHTML = renderResult.html + famBarBottom + bottomNavHtml;
+    
+    // Bind events for the newly added familiarity buttons
+    FamiliarityBar.bindEvents();
 
     HeaderView.update(renderResult.displayInfo, nav.prev, nav.next, data.navMeta);
 

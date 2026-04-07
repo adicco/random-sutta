@@ -5,6 +5,8 @@ import { UIManager } from './ui_manager.js';
 import { AppConfig } from 'core/app_config.js';
 import { BookmarkManager } from 'ui/managers/bookmark_manager.js';
 
+import { HistoryManager } from 'ui/managers/history_manager.js';
+
 export const MagicNav = {
     _closeTimer: null,
 
@@ -69,6 +71,36 @@ export const MagicNav = {
         }
     },
 
+    // [NEW] Cập nhật DOM trực tiếp khi thay đổi Familiarity
+    updateHistoryState(id, level) {
+        const tocContent = document.getElementById("magic-toc-content");
+        if (!tocContent) return;
+
+        // Xóa class fam-level-* cũ
+        const removeOldFam = (element) => {
+            for (let i = 1; i <= 5; i++) {
+                element.classList.remove(`fam-level-${i}`);
+            }
+        };
+
+        // Leaf items
+        const item = tocContent.querySelector(`.toc-item[data-toc-id="${id}"]`);
+        if (item) {
+            removeOldFam(item);
+            if (level > 0) item.classList.add(`fam-level-${level}`);
+        }
+
+        // Branch items (header row)
+        const wrapper = tocContent.querySelector(`.toc-node-wrapper[data-toc-id="${id}"]`);
+        if (wrapper) {
+            const headerRow = wrapper.querySelector('.toc-header-row');
+            if (headerRow) {
+                removeOldFam(headerRow);
+                if (level > 0) headerRow.classList.add(`fam-level-${level}`);
+            }
+        }
+    },
+
     render(localTree, currentUid, contextMeta, superTree, superMeta) {
         let fullPath = BreadcrumbRenderer.findPath(localTree, currentUid);
         let localRootId = fullPath ? fullPath[0] : null;
@@ -95,8 +127,11 @@ export const MagicNav = {
         // [NEW] Lấy danh sách bookmark hiện tại
         const bookmarks = BookmarkManager.getBookmarks();
         const bookmarkedSet = new Set(bookmarks.map(b => b.id));
+        
+        // [NEW] Lấy lịch sử độ quen thuộc
+        const historyMap = HistoryManager.getHistory();
 
-        const tocHtml = TocRenderer.render(localTree, currentUid, finalMeta, 0, bookmarkedSet);
+        const tocHtml = TocRenderer.render(localTree, currentUid, finalMeta, 0, bookmarkedSet, historyMap);
         UIManager.updateContent(bcHtml, tocHtml);
         UIManager.setHidden(!fullPath);
     }
