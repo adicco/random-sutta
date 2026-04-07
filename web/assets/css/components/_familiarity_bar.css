@@ -4,65 +4,43 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    padding: 10px 0;
-    margin: 10px 0;
-    border-top: 1px solid var(--border-light);
-    border-bottom: 1px solid var(--border-light);
-}
-
-.familiarity-header-bar {
-    border-bottom: none;
-    border-top: none;
+    gap: 4px;
+    padding: 15px 0;
     margin: 0;
-    padding: 5px 0 10px 0;
-}
-
-.familiarity-label {
-    font-size: 0.8rem;
-    color: var(--text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-    margin-right: 8px;
+    /* Clean separator look, no borders */
+    border: none;
 }
 
 .fam-btn {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 2px solid transparent;
+    width: 20px;
+    height: 4px; /* Line/dash shape instead of circle */
+    border-radius: 4px;
+    border: none;
     cursor: pointer;
     transition: all 0.2s ease;
-    background-color: var(--bg-card);
+    background-color: var(--border-light);
+    opacity: 0.5;
 }
 
 .fam-btn:hover {
-    transform: scale(1.1);
+    opacity: 0.8;
+    transform: scaleY(1.5);
 }
 
 .fam-btn.active {
-    transform: scale(1.2);
-    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    opacity: 1;
+    transform: scaleY(1.5);
+    box-shadow: 0 0 6px rgba(0,0,0,0.1);
 }
 
-.fam-btn-0 { border-color: var(--border-light); }
-.fam-btn-0.active { background-color: var(--border-light); }
+.fam-btn-0 { background-color: var(--border-light); }
+.fam-btn-0.active { background-color: var(--text-light); }
 
-.fam-btn-1 { border-color: var(--fam-1-color); }
-.fam-btn-1.active { background-color: var(--fam-1-color); }
-
-.fam-btn-2 { border-color: var(--fam-2-color); }
-.fam-btn-2.active { background-color: var(--fam-2-color); }
-
-.fam-btn-3 { border-color: var(--fam-3-color); }
-.fam-btn-3.active { background-color: var(--fam-3-color); }
-
-.fam-btn-4 { border-color: var(--fam-4-color); }
-.fam-btn-4.active { background-color: var(--fam-4-color); }
-
-.fam-btn-5 { border-color: var(--fam-5-color); }
-.fam-btn-5.active { background-color: var(--fam-5-color); }
+.fam-btn-1.active, .fam-btn-1:hover { background-color: var(--fam-1-color); }
+.fam-btn-2.active, .fam-btn-2:hover { background-color: var(--fam-2-color); }
+.fam-btn-3.active, .fam-btn-3:hover { background-color: var(--fam-3-color); }
+.fam-btn-4.active, .fam-btn-4:hover { background-color: var(--fam-4-color); }
+.fam-btn-5.active, .fam-btn-5:hover { background-color: var(--fam-5-color); }
 
 /* Apply familiarity color to TOC items too */
 .toc-item.fam-level-1 { border-left: 3px solid var(--fam-1-color); }

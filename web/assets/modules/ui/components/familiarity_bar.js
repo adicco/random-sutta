@@ -4,7 +4,6 @@ import { HistoryManager } from "ui/managers/history_manager.js";
 export const FamiliarityBar = {
     generateHtml(uid, isHeader = true) {
         const currentLevel = HistoryManager.getFamiliarity(uid);
-        const containerClass = isHeader ? "familiarity-bar-container familiarity-header-bar" : "familiarity-bar-container";
         
         // Tạo các nút 0 đến 5
         let buttonsHtml = '';
@@ -16,8 +15,7 @@ export const FamiliarityBar = {
         }
 
         return `
-            <div class="${containerClass}" data-uid="${uid}">
-                <span class="familiarity-label">Familiarity</span>
+            <div class="familiarity-bar-container" data-uid="${uid}">
                 ${buttonsHtml}
             </div>
         `;
