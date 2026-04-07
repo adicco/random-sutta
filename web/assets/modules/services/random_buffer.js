@@ -38,7 +38,9 @@ export const RandomBuffer = {
 
         if (this._buffer.length > 0) {
             const item = this._buffer.pop();
-            logger.info("Random", `Served from Buffer: ${item.uid} (Remaining: ${this._buffer.length})`);
+            // [FIXED] Log đúng uid từ cấu trúc mới
+            const displayUid = item.payload?.uid || item.uid;
+            logger.info("Random", `Served from Buffer: ${displayUid} (Remaining: ${this._buffer.length})`);
             
             this._scheduleRefill(activeFilters);
             return item;

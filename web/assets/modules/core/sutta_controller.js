@@ -244,15 +244,19 @@ export const SuttaController = {
     logger.timer('Random Process Total');
 
     const filters = FilterComponent.getActiveFilters();
-    const payload = await RandomBuffer.getPayload(filters);
+    const input = await RandomBuffer.getPayload(filters);
 
-    if (!payload || !payload.uid) {
+    // [FIXED] Kiểm tra uid linh hoạt cho cả cấu trúc cũ và mới (buffered)
+    const isValid = input && (input.uid || (input.payload && input.payload.uid));
+
+    if (!isValid) {
       logger.warn('Random Process Total', 'Payload empty');
       return;
     }
 
-    logger.info('loadRandom', `Selected: ${payload.uid}`);
-    await this.loadSutta(payload, shouldUpdateUrl, 0, { transition: false });
+    const suttaUid = input.uid || input.payload.uid;
+    logger.info('loadRandom', `Selected: ${suttaUid}`);
+    await this.loadSutta(input, shouldUpdateUrl, 0, { transition: false });
 
     logger.timerEnd('Random Process Total');
   }
