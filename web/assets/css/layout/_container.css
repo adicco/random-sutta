@@ -25,7 +25,7 @@ body.tts-open #reader-view > header {
   box-shadow: none;
   
   /* [MẶC ĐỊNH] Padding khi KHÔNG bật TTS */
-  padding: 20px 40px 60px 40px; 
+  padding: 10px 40px 20px 40px; 
   
   min-height: 300px;
   
@@ -44,7 +44,7 @@ body.tts-open #sutta-container {
     padding: 0;
   }
   #sutta-container {
-    padding: 30px 20px 80px 20px;
+    padding: 15px 20px 30px 20px;
   }
   
   body.tts-open #sutta-container {

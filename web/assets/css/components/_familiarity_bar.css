@@ -4,43 +4,59 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 4px;
-    padding: 15px 0;
+    gap: 8px; /* Slightly wider gap for finger targets */
+    padding: 10px 0; /* Reduced padding */
     margin: 0;
     /* Clean separator look, no borders */
     border: none;
 }
 
+/* Base button provides the hit area */
 .fam-btn {
-    width: 20px;
-    height: 4px; /* Line/dash shape instead of circle */
-    border-radius: 4px;
+    width: 36px; /* Wider dash */
+    height: 24px; /* Much larger hit area (vertical) */
+    padding: 0;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    background-color: transparent;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* The visible dash */
+.fam-btn::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 4px;
+    border-radius: 4px;
     background-color: var(--border-light);
     opacity: 0.5;
+    transition: all 0.2s ease;
 }
 
-.fam-btn:hover {
+.fam-btn:hover::after {
     opacity: 0.8;
-    transform: scaleY(1.5);
+    transform: translateY(-50%) scaleY(1.5);
 }
 
-.fam-btn.active {
+.fam-btn.active::after {
     opacity: 1;
-    transform: scaleY(1.5);
+    transform: translateY(-50%) scaleY(1.5);
     box-shadow: 0 0 6px rgba(0,0,0,0.1);
 }
 
-.fam-btn-0 { background-color: var(--border-light); }
-.fam-btn-0.active { background-color: var(--text-light); }
+.fam-btn-0::after { background-color: var(--border-light); }
+.fam-btn-0.active::after { background-color: var(--text-light); }
 
-.fam-btn-1.active, .fam-btn-1:hover { background-color: var(--fam-1-color); }
-.fam-btn-2.active, .fam-btn-2:hover { background-color: var(--fam-2-color); }
-.fam-btn-3.active, .fam-btn-3:hover { background-color: var(--fam-3-color); }
-.fam-btn-4.active, .fam-btn-4:hover { background-color: var(--fam-4-color); }
-.fam-btn-5.active, .fam-btn-5:hover { background-color: var(--fam-5-color); }
+.fam-btn-1.active::after, .fam-btn-1:hover::after { background-color: var(--fam-1-color); }
+.fam-btn-2.active::after, .fam-btn-2:hover::after { background-color: var(--fam-2-color); }
+.fam-btn-3.active::after, .fam-btn-3:hover::after { background-color: var(--fam-3-color); }
+.fam-btn-4.active::after, .fam-btn-4:hover::after { background-color: var(--fam-4-color); }
+.fam-btn-5.active::after, .fam-btn-5:hover::after { background-color: var(--fam-5-color); }
 
 /* Apply familiarity color to TOC items too */
 .toc-item.fam-level-1 { border-left: 3px solid var(--fam-1-color); }
