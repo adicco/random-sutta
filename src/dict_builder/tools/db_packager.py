@@ -3,6 +3,7 @@ import zipfile
 import json
 import hashlib
 import logging
+import shutil
 from pathlib import Path
 
 logger = logging.getLogger("dict_builder.packager")
