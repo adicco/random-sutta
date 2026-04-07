@@ -19,8 +19,8 @@ export class SuttaDB {
 
         this.isInitializing = true;
         try {
-            // 1. Load Manifest
-            const manifestResp = await fetch('/assets/db/db_manifest.json');
+            // [FIXED] Dùng đường dẫn tương đối để hỗ trợ GitHub Pages subdirectory
+            const manifestResp = await fetch('assets/db/db_manifest.json');
             this.manifest = await manifestResp.json();
 
             // 2. Load Core DB
@@ -81,7 +81,8 @@ export class SuttaDB {
 
     static async _fetchFile(fileName, onProgress) {
         const dbVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev";
-        const url = `/assets/db/${fileName}?v=${dbVersion}`;
+        // [FIXED] Dùng đường dẫn tương đối
+        const url = `assets/db/${fileName}?v=${dbVersion}`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status} for ${fileName}`);

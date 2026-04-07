@@ -50,9 +50,9 @@ export const OfflineService = {
     },
 
     // [NEW] Download Manifest từ Server
-    async fetchRemoteManifest() {
+    async checkUpdate() {
         try {
-            const response = await fetch('./assets/db/db_manifest.json?t=' + Date.now()); // Anti-cache query
+            const response = await fetch('assets/db/db_manifest.json?t=' + Date.now()); // Anti-cache query
             if (!response.ok) return null;
             return await response.json();
         } catch (e) {

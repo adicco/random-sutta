@@ -69,7 +69,8 @@ export class SqliteConnection {
 
     async _downloadSource() {
         // [STRATEGY] Try raw .db first, fallback to .zip
-        const rawDbUrl = this.zipUrl.replace(".db.zip", ".db");
+        const cleanUrl = this.zipUrl.startsWith('/') ? this.zipUrl.substring(1) : this.zipUrl;
+        const rawDbUrl = cleanUrl.replace(".db.zip", ".db");
         const currentHash = localStorage.getItem(`${this.dbName}_hash`) || Date.now();
         
         try {
@@ -92,8 +93,8 @@ export class SqliteConnection {
         }
 
         // Fallback to ZIP
-        logger.info("Download", `Fetching ZIP: ${this.zipUrl}`);
-        const response = await fetch(`${this.zipUrl}?v=${currentHash}`);
+        logger.info("Download", `Fetching ZIP: ${cleanUrl}`);
+        const response = await fetch(`${cleanUrl}?v=${currentHash}`);
         if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
         
         const blob = await response.blob();
@@ -106,7 +107,9 @@ export class SqliteConnection {
     async _checkAndApplyUpdate() {
         if (!this.zipUrl) return false;
         try {
-            const manifestUrl = this.zipUrl.replace(".db.zip", ".json");
+            // Remove leading slash if present to make it relative
+            const cleanUrl = this.zipUrl.startsWith('/') ? this.zipUrl.substring(1) : this.zipUrl;
+            const manifestUrl = cleanUrl.replace(".db.zip", ".json");
             const res = await fetch(`${manifestUrl}?t=${Date.now()}`, { cache: "no-store" });
             if (!res.ok) return false; 
             
