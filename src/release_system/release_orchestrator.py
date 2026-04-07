@@ -8,7 +8,8 @@ from .logic import (
     release_versioning,
     asset_validator,
     git_automator,
-    github_publisher
+    github_publisher,
+    artifact_packer
 )
 
 logger = logging.getLogger("Release.Orchestrator")
@@ -42,6 +43,12 @@ def run_release_process(
         # =========================================================
         # PHASE 3: PUBLISH (Phase 1 and 2 are now handled by Vite)
         # =========================================================
+        
+        # 1. Create Artifact if requested or publishing
+        if create_zip or publish_gh:
+            if not artifact_packer.create_release_artifact(version_tag):
+                raise Exception("Artifact creation failed.")
+
         if enable_git:
              if not git_automator.commit_source_changes(version_tag):
                 logger.info("ℹ️  No source changes detected.")
