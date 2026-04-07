@@ -100,8 +100,15 @@ export const GestureManager = {
                 if (touchStartX <= edgeTapThreshold) {
                     const btnPrev = document.getElementById("nav-prev");
                     if (btnPrev && !btnPrev.disabled) {
-                        logger.debug("EdgeTap", "Triggering Prev Sutta");
-                        btnPrev.click();
+                        logger.debug("EdgeTap", "Triggering Prev Sutta (Direct)");
+                        // [NEW] Call direct navigation instead of button click
+                        const success = window.SuttaController?.navigatePrev();
+                        
+                        // [NEW] Visual feedback on button
+                        if (success) {
+                            btnPrev.classList.add("active");
+                            setTimeout(() => btnPrev.classList.remove("active"), 150);
+                        }
                         return;
                     }
                 }
@@ -109,8 +116,15 @@ export const GestureManager = {
                 if (touchStartX >= windowWidth - edgeTapThreshold) {
                     const btnNext = document.getElementById("nav-next");
                     if (btnNext && !btnNext.disabled) {
-                        logger.debug("EdgeTap", "Triggering Next Sutta");
-                        btnNext.click();
+                        logger.debug("EdgeTap", "Triggering Next Sutta (Direct)");
+                        // [NEW] Call direct navigation instead of button click
+                        const success = window.SuttaController?.navigateNext();
+
+                        // [NEW] Visual feedback on button
+                        if (success) {
+                            btnNext.classList.add("active");
+                            setTimeout(() => btnNext.classList.remove("active"), 150);
+                        }
                         return;
                     }
                 }

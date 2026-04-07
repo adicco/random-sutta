@@ -15,6 +15,23 @@ const PopupAPI = initPopupSystem();
 
 export const SuttaController = {
   isRestoring: false, // [NEW] Guard flag
+  currentNav: { prev: null, next: null }, // [NEW] Track navigation IDs
+
+  navigatePrev: function() {
+    if (this.currentNav.prev) {
+        this.loadSutta(this.currentNav.prev);
+        return true;
+    }
+    return false;
+  },
+
+  navigateNext: function() {
+    if (this.currentNav.next) {
+        this.loadSutta(this.currentNav.next);
+        return true;
+    }
+    return false;
+  },
 
   loadSutta: async function (input, shouldUpdateUrl = true, scrollY = 0, options = {}) {
     const isTransition = options.transition === true;
@@ -72,9 +89,17 @@ export const SuttaController = {
         const result = await SuttaService.loadSutta(suttaId);
         
         if (!result) {
+            this.currentNav = { prev: null, next: null }; // Clear nav on error
             renderSutta(suttaId, null, null, options);
             logger.timerEnd(`Render: ${suttaId}`);
             return false;
+        }
+
+        // [NEW] Update Navigation State
+        if (result.nav) {
+            this.currentNav = { prev: result.nav.prev, next: result.nav.next };
+        } else {
+            this.currentNav = { prev: null, next: null };
         }
 
         if (result.isAlias) {

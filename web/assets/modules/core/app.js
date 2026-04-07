@@ -50,6 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setupQuickNav((query) => SuttaController.loadSutta(query));
 
+  window.SuttaController = SuttaController; // [NEW] Expose controller
   window.loadSutta = (id, u, s, o) => SuttaController.loadSutta(id, u, s, o);
   window.triggerRandomSutta = () => SuttaController.loadRandomSutta(true);
 
