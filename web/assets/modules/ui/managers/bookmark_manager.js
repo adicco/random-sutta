@@ -89,6 +89,7 @@ export const BookmarkManager = {
         if (index > -1) {
             bookmarks.splice(index, 1);
             logger.info("Toggle", `Removed: ${currentId}`);
+            if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, false);
         } else {
             bookmarks.push({ 
                 id: currentId, 
@@ -97,6 +98,7 @@ export const BookmarkManager = {
                 timestamp: Date.now() 
             });
             logger.info("Toggle", `Added: ${currentId} (${acronym})`);
+            if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, true);
         }
 
         this.saveBookmarks(bookmarks);
@@ -159,6 +161,8 @@ export const BookmarkManager = {
                     this.saveBookmarks(currentBookmarks.filter(b => b.id !== id));
                     this.renderList();
                     
+                    if (window.MagicNav) window.MagicNav.updateBookmarkState(id, false);
+
                     const params = new URLSearchParams(window.location.search);
                     if (params.get("q") && params.get("q").split('#')[0] === id) {
                         this.updateButtonState(id);

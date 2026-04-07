@@ -12,7 +12,7 @@ export const TocRenderer = {
         return false;
     },
 
-    render(node, currentUid, metaMap, level = 0) {
+    render(node, currentUid, metaMap, level = 0, bookmarkedSet = new Set()) {
         let html = ``;
         const getToggleIcon = () => `
             <span class="toc-toggle-icon" onclick="event.stopPropagation(); MagicNav.toggleNode(this)">
@@ -28,6 +28,12 @@ export const TocRenderer = {
             return "";
         };
 
+        const getBookmarkIcon = () => `
+            <span class="toc-bookmark-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+            </span>
+        `;
+
         const generateInnerContent = (id, type) => {
             const meta = metaMap[id] || {};
             const acronym = meta.acronym || id.toUpperCase();
@@ -38,15 +44,15 @@ export const TocRenderer = {
                 const tooltip = getTooltip(id);
                 return `
                     <div class="toc-text-container" title="${tooltip}">
-                        <div class="toc-row-main">${acronym}</div>
+                        <div class="toc-row-main">${acronym} ${getBookmarkIcon()}</div>
                         ${title ? `<div class="toc-row-sub">${title}</div>` : ''}
                     </div>
                 `;
             } else if (type === 'subleaf') {
-                return `<div class="toc-subleaf-label" title="${title}">${acronym}</div>`;
+                return `<div class="toc-subleaf-label" title="${title}">${acronym} ${getBookmarkIcon()}</div>`;
             } else {
                 const branchLabel = meta.translated_title || meta.original_title || meta.acronym || id.toUpperCase();
-                return `<div class="toc-branch-label">${branchLabel}</div>`;
+                return `<div class="toc-branch-label">${branchLabel} ${getBookmarkIcon()}</div>`;
             }
         };
 
@@ -56,11 +62,12 @@ export const TocRenderer = {
             const meta = metaMap[id] || {};
             const type = meta.type || (level === 0 ? 'leaf' : 'subleaf');
             const isActive = id === currentUid ? "active" : "";
+            const isBookmarked = bookmarkedSet.has(id) ? "bookmarked" : "";
             const action = isActive ? "" : getLoadAction(id);
             
             const presentationClass = type === 'leaf' ? 'toc-leaf-presentation' : '';
             const paddingLeft = 15 + (level * 16);
-            return `<div class="toc-item ${type} ${presentationClass} ${isActive}" ${action} style="padding-left: ${paddingLeft}px">
+            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked}" data-toc-id="${id}" ${action} style="padding-left: ${paddingLeft}px">
                         ${generateInnerContent(id, type)}
                     </div>`;
         };
@@ -71,6 +78,7 @@ export const TocRenderer = {
             
             const paddingLeft = 15 + (currentLevel * 10);
             const isActive = id === currentUid;
+            const isBookmarked = bookmarkedSet.has(id) ? "bookmarked" : "";
             const isClickable = !!metaMap[id];
             
             let headerAction = "";
@@ -94,8 +102,8 @@ export const TocRenderer = {
             // [UPDATED] Add tooltip to toc-header-row
             const tooltip = getTooltip(id);
 
-            return `<div class="toc-node-wrapper ${collapsedClass}">
-                        <div class="toc-header-row ${rowActiveClass}" title="${tooltip}">
+            return `<div class="toc-node-wrapper ${collapsedClass}" data-toc-id="${id}">
+                        <div class="toc-header-row ${rowActiveClass} ${isBookmarked}" title="${tooltip}">
                             <div class="${headerClasses}" ${headerAction} style="padding-left: ${paddingLeft}px">
                                 ${generateInnerContent(id, type)}
                             </div>
@@ -108,10 +116,10 @@ export const TocRenderer = {
         if (typeof node === 'string') {
             return createItem(node);
         } else if (Array.isArray(node)) {
-            node.forEach(child => html += this.render(child, currentUid, metaMap, level));
+            node.forEach(child => html += this.render(child, currentUid, metaMap, level, bookmarkedSet));
         } else if (typeof node === 'object' && node !== null) {
             for (const key in node) {
-                const childrenHtml = this.render(node[key], currentUid, metaMap, level + 1);
+                const childrenHtml = this.render(node[key], currentUid, metaMap, level + 1, bookmarkedSet);
                 html += createParentNode(key, childrenHtml, level, node[key]);
             }
         }

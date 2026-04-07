@@ -281,6 +281,19 @@
   background-color: var(--primary-color);
 }
 
+/* --- BOOKMARK ICON IN TOC --- */
+.toc-bookmark-icon {
+  display: none;
+  vertical-align: text-bottom;
+  margin-left: 4px;
+  color: var(--primary-color);
+  align-items: center;
+}
+
+.bookmarked .toc-bookmark-icon {
+  display: inline-flex;
+}
+
 /* Ensure .toc-header acting as leaf looks correct */
 .toc-header.toc-leaf-presentation {
   /* The shared class handles the reset, but we ensure flex works in the header context */
