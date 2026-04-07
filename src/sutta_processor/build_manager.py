@@ -45,6 +45,9 @@ class BuildManager:
         self.processed_book_ids: List[str] = [] 
         self.sutta_group_map: Dict[str, str] = {}
         
+        # [NEW] Group structure accumulator for constants.js
+        self.group_structure: Dict[str, List[str]] = {}
+        
         # Accumulators
         self.all_generated_items: List[Tuple[str, str, str, str]] = []
         
@@ -93,9 +96,16 @@ class BuildManager:
         )
         
         if book_obj and "id" in book_obj:
-            self.processed_book_ids.append(book_obj["id"])
+            bid = book_obj["id"]
+            self.processed_book_ids.append(bid)
+            # Register structure: "an" -> ["an1", "an2"...]
+            root_id = group.split("/")[-1]
+            if bid != root_id:
+                if root_id not in self.group_structure: self.group_structure[root_id] = []
+                self.group_structure[root_id].append(bid)
 
-        write_book_file(group, book_obj, dry_run=True) 
+        # [REMOVED] write_book_file (Legacy JSON)
+        # write_book_file(group, book_obj, dry_run=True) 
         if self.sqlite_gen:
             self.sqlite_gen.insert_book(book_obj)
 
@@ -174,6 +184,20 @@ class BuildManager:
 
         # [NEW] Finalize SQLite DB
         if self.sqlite_gen:
+            # Generate constants.js (needed by frontend)
+            from .optimizer.pool_manager import PoolManager
+            pm = PoolManager()
+            pm.set_sutta_universe(self.processed_book_ids)
+            pm.group_structure = self.group_structure
+            # Mock pools for secondary book detection (needed by pm.generate_js_constants)
+            pm.register_pools({bid: [None] for bid in self.processed_book_ids})
+            pm.generate_js_constants()
+            
+            # Also insert into SQLite Config
+            from .optimizer.config import PRIMARY_BOOKS_LIST
+            self.sqlite_gen.insert_config("primary_books", PRIMARY_BOOKS_LIST)
+            self.sqlite_gen.insert_config("sub_books_map", self.group_structure)
+
             self.sqlite_gen.finalize()
 
         # [REMOVED] Legacy Optimizer
