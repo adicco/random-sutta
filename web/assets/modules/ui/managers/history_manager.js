@@ -245,7 +245,7 @@ export const HistoryManager = {
                         // It's already handled via DOM in setFamiliarity by re-rendering list, 
                         // but updating the bar in the reader view requires triggering its event.
                         // For now, re-rendering the history list is sufficient.
-                        const barContainers = document.querySelectorAll(\`.familiarity-bar-container[data-uid="\${id}"]\`);
+                        const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${id}"]`);
                         barContainers.forEach(container => {
                             const buttons = container.querySelectorAll('.fam-btn');
                             buttons.forEach(btn => {
