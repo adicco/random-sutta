@@ -2,93 +2,98 @@
 import { Factory } from '@journeyapps/wa-sqlite/src/sqlite-api.js';
 import * as SQLiteConstants from '@journeyapps/wa-sqlite/src/sqlite-constants.js';
 
-// WASM Assets (Static URLs for Vite)
+// WASM Assets
 const wasmUrlSync = new URL('@journeyapps/wa-sqlite/dist/wa-sqlite.wasm?url', import.meta.url).href;
 const wasmUrlAsync = new URL('@journeyapps/wa-sqlite/dist/wa-sqlite-async.wasm?url', import.meta.url).href;
 
+// Cache Module Promises
+let syncModulePromise = null;
+let asyncModulePromise = null;
+
+async function getSqliteModule(useMemory) {
+    if (useMemory) {
+        if (!syncModulePromise) {
+            syncModulePromise = (async () => {
+                const { default: factory } = await import('@journeyapps/wa-sqlite/dist/wa-sqlite.mjs');
+                return factory({ locateFile: (file) => file.endsWith('.wasm') ? wasmUrlSync : file });
+            })();
+        }
+        return syncModulePromise;
+    } else {
+        if (!asyncModulePromise) {
+            asyncModulePromise = (async () => {
+                const { default: factory } = await import('@journeyapps/wa-sqlite/dist/wa-sqlite-async.mjs');
+                return factory({ locateFile: (file) => file.endsWith('.wasm') ? wasmUrlAsync : file });
+            })();
+        }
+        return asyncModulePromise;
+    }
+}
+
 /**
- * Khởi tạo SQLite Instance với VFS tùy chọn (Memory hoặc OPFS).
- * @param {Object} options 
- * @param {string} options.path Đường dẫn/Tên DB
- * @param {boolean} options.useMemory Mặc định true (Sync/RAM), false (Async/OPFS)
- * @param {File} options.file File dữ liệu ban đầu (nếu có)
+ * Khởi tạo SQLite Instance.
  */
 export async function initSQLite(options) {
-    const { path, useMemory = true, file, beforeOpen } = options;
+    let { path, useMemory = true, file, beforeOpen } = options;
     
-    // 1. Dynamic Load VFS và Factory dựa trên chế độ
-    let vfsClass, factory;
-    if (useMemory) {
-        const mod = await import('@journeyapps/wa-sqlite/src/examples/MemoryVFS.js');
-        const facMod = await import('@journeyapps/wa-sqlite/dist/wa-sqlite.mjs');
-        vfsClass = mod.MemoryVFS;
-        factory = facMod.default;
-    } else {
-        const mod = await import('@journeyapps/wa-sqlite/src/examples/OPFSAnyContextVFS.js');
-        const facMod = await import('@journeyapps/wa-sqlite/dist/wa-sqlite-async.mjs');
-        vfsClass = mod.OPFSAnyContextVFS;
-        factory = facMod.default;
+    // 1. Chuẩn hóa đường dẫn cho OPFS (Yêu cầu có / để tránh lỗi regex trong wa-sqlite VFS)
+    if (!useMemory && !path.startsWith('/')) {
+        path = `/dbs/${path}`;
     }
 
-    const wasmUrl = useMemory ? wasmUrlSync : wasmUrlAsync;
-
-    // 2. Initialize WASM Module
-    const sqliteModule = await factory({
-        locateFile: (file) => {
-            if (file.endsWith('.wasm')) return wasmUrl;
-            return file;
-        }
-    });
-
+    // 2. Load Module & VFS Class
+    const sqliteModule = await getSqliteModule(useMemory);
     const sqlite = Factory(sqliteModule);
     
-    // 3. Register VFS
+    let vfsClass;
+    if (useMemory) {
+        const { MemoryVFS } = await import('@journeyapps/wa-sqlite/src/examples/MemoryVFS.js');
+        vfsClass = MemoryVFS;
+    } else {
+        const { OPFSAnyContextVFS } = await import('@journeyapps/wa-sqlite/src/examples/OPFSAnyContextVFS.js');
+        vfsClass = OPFSAnyContextVFS;
+    }
+
+    // 3. Register VFS (Dùng tên path làm tên VFS để tránh xung đột giữa các shard)
     const vfs = await vfsClass.create(path, sqliteModule);
     sqlite.vfs_register(vfs, true); 
 
-    // [BACKWARD COMPAT] Legacy hooks
-    if (beforeOpen) {
-        await beforeOpen(sqlite, vfs, path);
-    }
+    if (beforeOpen) await beforeOpen(sqlite, vfs, path);
 
-    // 4. Hydrate Data (nếu có file)
+    // 4. Hydrate Data
     if (file) {
+        const buffer = await file.arrayBuffer();
+        const data = new Uint8Array(buffer);
+        
         if (useMemory) {
-            const buffer = await file.arrayBuffer();
-            const data = new Uint8Array(buffer);
-            const fileId = 12345;
+            const fileId = Math.floor(Math.random() * 1000000);
             const pOutFlags = new DataView(new ArrayBuffer(4));
-            const openResult = await vfs.jOpen(path, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
-            if (openResult === SQLiteConstants.SQLITE_OK) {
+            const res = await vfs.jOpen(path, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
+            if (res === SQLiteConstants.SQLITE_OK) {
                 await vfs.jTruncate(fileId, 0);
                 await vfs.jWrite(fileId, data, 0);
                 await vfs.jClose(fileId);
-                console.log(`✅ [MemoryVFS] Hydrated ${path}`);
+                console.log(`✅ [MemoryVFS] Hydrated: ${path}`);
             }
         } else {
-            try {
-                // OPFS Hydration
-                const root = await navigator.storage.getDirectory();
-                const handle = await root.getFileHandle(path, { create: true });
-                const writable = await handle.createWritable();
-                await writable.write(await file.arrayBuffer());
-                await writable.close();
-                console.log(`✅ [OPFS] Hydrated ${path}`);
-            } catch (e) {
-                console.warn(`⚠️ OPFS hydration failed, using existing data.`, e);
-            }
+            await writeToOPFS(path, data);
+            console.log(`✅ [OPFS] Hydrated: ${path}`);
         }
     }
 
     // 5. Open Database
+    // Lưu ý: open_v2 của wa-sqlite trả về pointer trực tiếp qua Promise
     const db = await sqlite.open_v2(
         path,
         SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_CREATE,
         vfs.name
     );
 
-    const core = { db, path, pointer: db, sqlite, sqliteModule, vfs };
+    if (!db) {
+        throw new Error(`❌ Failed to open database: ${path}`);
+    }
 
+    const core = { db, path, pointer: db, sqlite, sqliteModule, vfs };
     return {
         ...core,
         run: (sql, params) => run(core, sql, params),
@@ -97,30 +102,26 @@ export async function initSQLite(options) {
 }
 
 /**
- * [BACKWARD COMPAT] Helper for existing DB hydration
+ * Ghi dữ liệu vào OPFS theo cấu trúc thư mục.
  */
-export function withExistDB(file) {
-    return {
-        beforeOpen: async (sqlite, memoryVfs, dbPath) => {
-            const buffer = await file.arrayBuffer();
-            const data = new Uint8Array(buffer);
-            const fileId = 12345; 
-            const pOutFlags = new DataView(new ArrayBuffer(4));
-            const openResult = await memoryVfs.jOpen(dbPath, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
-            if (openResult === SQLiteConstants.SQLITE_OK) {
-                await memoryVfs.jTruncate(fileId, 0);
-                await memoryVfs.jWrite(fileId, data, 0);
-                await memoryVfs.jClose(fileId);
-                console.log(`✅ Legacy database ${dbPath} hydrated.`);
-            }
-        }
-    };
+async function writeToOPFS(path, data) {
+    const parts = path.split('/').filter(p => p);
+    const filename = parts.pop();
+    let dir = await navigator.storage.getDirectory();
+    
+    for (const part of parts) {
+        dir = await dir.getDirectoryHandle(part, { create: true });
+    }
+    
+    const fileHandle = await dir.getFileHandle(filename, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(data);
+    await writable.close();
 }
 
-export function useIdbStorage(dbName, options = {}) {
-    return { path: dbName, useMemory: true, ...options };
-}
-
+/**
+ * Thực thi câu lệnh SQL.
+ */
 async function run(core, sql, params) {
     const { sqlite, db } = core;
     const results = [];
@@ -136,7 +137,28 @@ async function run(core, sql, params) {
             }
         }
     } catch (e) {
-        console.error("❌ SQLite Query Error:", e, sql);
+        console.error(`❌ SQLite Query Error [${core.path}]:`, e, sql);
     }
     return results;
+}
+
+export function withExistDB(file) {
+    return {
+        beforeOpen: async (sqlite, vfs, dbPath) => {
+            const buffer = await file.arrayBuffer();
+            const data = new Uint8Array(buffer);
+            const fileId = 12345; 
+            const pOutFlags = new DataView(new ArrayBuffer(4));
+            const openResult = await vfs.jOpen(dbPath, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
+            if (openResult === SQLiteConstants.SQLITE_OK) {
+                await vfs.jTruncate(fileId, 0);
+                await vfs.jWrite(fileId, data, 0);
+                await vfs.jClose(fileId);
+            }
+        }
+    };
+}
+
+export function useIdbStorage(dbName, options = {}) {
+    return { path: dbName, useMemory: true, ...options };
 }
