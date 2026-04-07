@@ -163,11 +163,15 @@ export const HistoryManager = {
             html += items.map(b => {
                 const displayTitle = b.title || "";
                 return `
-                    <div class="history-item fam-level-${b.level}" data-id="${b.id}">
+                    <div class="history-item fam-level-${b.level}" data-id="${b.id}" data-level="${b.level}" data-acronym="${b.acronym}" data-title="${displayTitle.replace(/"/g, '&quot;')}">
                         <div class="history-indicator"></div>
                         <div class="history-info">
                             <div class="history-id">${b.acronym}</div>
                             ${displayTitle ? `<div class="history-title">${displayTitle}</div>` : ''}
+                        </div>
+                        <div class="history-actions">
+                            <button class="fam-adjust-btn fam-dec" title="Decrease Familiarity">-</button>
+                            <button class="fam-adjust-btn fam-inc" title="Increase Familiarity">+</button>
                         </div>
                     </div>
                 `;
@@ -178,8 +182,83 @@ export const HistoryManager = {
 
         // Add event listeners
         this.listContainer.querySelectorAll(".history-item").forEach(item => {
+            const id = item.getAttribute("data-id");
+            const currentLevel = parseInt(item.getAttribute("data-level"), 10);
+            const acronym = item.getAttribute("data-acronym");
+            const title = item.getAttribute("data-title");
+
+            // Swipe logic
+            let startX = 0;
+            let startY = 0;
+            let isSwiping = false;
+
+            item.addEventListener('touchstart', (e) => {
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                isSwiping = true;
+            }, { passive: true });
+
+            item.addEventListener('touchmove', (e) => {
+                if (!isSwiping) return;
+                const currentY = e.touches[0].clientY;
+                if (Math.abs(currentY - startY) > 20) {
+                    isSwiping = false; // Cancel swipe if user scrolls vertically
+                }
+            }, { passive: true });
+
+            item.addEventListener('touchend', (e) => {
+                if (!isSwiping) return;
+                const endX = e.changedTouches[0].clientX;
+                const deltaX = endX - startX;
+
+                if (Math.abs(deltaX) > 50) {
+                    // Valid swipe
+                    let newLevel = currentLevel;
+                    if (deltaX > 0 && currentLevel < 5) {
+                        newLevel++; // Swipe Right -> Increase
+                    } else if (deltaX < 0 && currentLevel > 0) {
+                        newLevel--; // Swipe Left -> Decrease
+                    }
+
+                    if (newLevel !== currentLevel) {
+                        this.setFamiliarity(id, newLevel, acronym, title);
+                        // Also update UI in FamiliarityBar if visible
+                        if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(id, newLevel);
+                    }
+                }
+            });
+
+            // Click logic
             item.onclick = (e) => {
-                const id = item.getAttribute("data-id");
+                const decBtn = e.target.closest('.fam-dec');
+                const incBtn = e.target.closest('.fam-inc');
+
+                if (decBtn || incBtn) {
+                    e.stopPropagation();
+                    let newLevel = currentLevel;
+                    if (incBtn && currentLevel < 5) newLevel++;
+                    if (decBtn && currentLevel > 0) newLevel--;
+                    
+                    if (newLevel !== currentLevel) {
+                        this.setFamiliarity(id, newLevel, acronym, title);
+                        // Try to find FamiliarityBar globally if needed (via dynamic import or expose)
+                        // It's already handled via DOM in setFamiliarity by re-rendering list, 
+                        // but updating the bar in the reader view requires triggering its event.
+                        // For now, re-rendering the history list is sufficient.
+                        const barContainers = document.querySelectorAll(\`.familiarity-bar-container[data-uid="\${id}"]\`);
+                        barContainers.forEach(container => {
+                            const buttons = container.querySelectorAll('.fam-btn');
+                            buttons.forEach(btn => {
+                                if (parseInt(btn.getAttribute('data-level'), 10) === newLevel) {
+                                    btn.classList.add('active');
+                                } else {
+                                    btn.classList.remove('active');
+                                }
+                            });
+                        });
+                    }
+                    return;
+                }
                 
                 // Close drawer logic
                 const drawer = document.getElementById("magic-toc-drawer");
