@@ -68,6 +68,7 @@ class SqliteGenerator:
             cursor.execute("CREATE TABLE IF NOT EXISTS random_pools (book_id TEXT, sutta_uid TEXT, PRIMARY KEY (book_id, sutta_uid))")
             
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_book_id ON metadata(book_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_random_pools_book_id ON random_pools(book_id)")
             conn.commit()
         logger.info(f"✨ [SQLite] Core Database initialized at {self.core_db_path}")
 

@@ -19,25 +19,22 @@ async function getSqliteModule() {
 }
 
 /**
- * Khởi tạo SQLite Instance sử dụng MemoryVFS (Đồng bộ, Tốc độ cao, Không Asyncify).
+ * Khởi tạo SQLite Instance sử dụng MemoryVFS (Đồng bộ, Tốc độ cao).
  */
 export async function initSQLite(options) {
     let { path, file } = options;
     
-    // 1. Chuẩn hóa đường dẫn
     if (!path.startsWith('/')) path = `/${path}`; 
 
-    // 2. Load Module & VFS Class
     const sqliteModule = await getSqliteModule();
     const sqlite = Factory(sqliteModule);
     const vfs = await MemoryVFS.create(path, sqliteModule);
     sqlite.vfs_register(vfs, true); 
 
-    // 3. Hydrate Data trực tiếp vào MemoryVFS
     if (file) {
         const buffer = await file.arrayBuffer();
         const data = new Uint8Array(buffer);
-        const fileId = Math.floor(Math.random() * 1000000);
+        const fileId = 12345;
         const pOutFlags = new DataView(new ArrayBuffer(4));
         const res = await vfs.jOpen(path, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
         if (res === SQLiteConstants.SQLITE_OK) {
@@ -48,7 +45,6 @@ export async function initSQLite(options) {
         }
     }
 
-    // 4. Open Database
     const db = await sqlite.open_v2(
         path,
         SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_CREATE,
@@ -57,20 +53,28 @@ export async function initSQLite(options) {
 
     if (!db) throw new Error(`❌ Failed to open database: ${path}`);
 
+    // [OPTIMIZATION] PRAGMA settings for RAM performance
+    await run_internal(sqlite, db, "PRAGMA journal_mode = OFF");
+    await run_internal(sqlite, db, "PRAGMA synchronous = OFF");
+    await run_internal(sqlite, db, "PRAGMA temp_store = MEMORY");
+    await run_internal(sqlite, db, "PRAGMA cache_size = -10000");
+
     const core = { db, path, pointer: db, sqlite, sqliteModule, vfs };
     return {
         ...core,
         run: (sql, params) => run(core, sql, params),
         close: async () => {
             await sqlite.close(db);
-            // Có thể cần gọi VFS jDelete nếu muốn giải phóng RAM hoàn toàn sau này
         }
     };
 }
 
-/**
- * Thực thi câu lệnh SQL (Chế độ đồng bộ/Sync).
- */
+async function run_internal(sqlite, db, sql) {
+    for await (const stmt of sqlite.statements(db, sql)) {
+        await sqlite.step(stmt);
+    }
+}
+
 async function run(core, sql, params) {
     const { sqlite, db } = core;
     const results = [];
@@ -90,10 +94,5 @@ async function run(core, sql, params) {
     return results;
 }
 
-export function withExistDB(file) {
-    return { file }; 
-}
-
-export function useIdbStorage(dbName, options = {}) {
-    return { path: dbName, ...options };
-}
+export function withExistDB(file) { return { file }; }
+export function useIdbStorage(dbName, options = {}) { return { path: dbName, ...options }; }

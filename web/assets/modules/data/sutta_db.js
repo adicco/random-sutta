@@ -139,4 +139,29 @@ export class SuttaDB {
         if (!shard) return [];
         return await shard.run(sql, params);
     }
+
+    /**
+     * [DEBUG] Chạy thử nghiệm hiệu năng truy vấn
+     */
+    static async runBenchmark() {
+        logger.info("Benchmark", "Starting Query Performance Test...");
+        
+        // 1. Core DB Query (Metadata)
+        const startCore = performance.now();
+        await this.query("SELECT * FROM metadata WHERE book_id = 'dn' LIMIT 100");
+        const endCore = performance.now();
+        logger.info("Benchmark", `Core DB (100 rows): ${(endCore - startCore).toFixed(2)}ms`);
+
+        // 2. Random Pool (Counting with index)
+        const startCount = performance.now();
+        await this.query("SELECT COUNT(*) FROM random_pools WHERE book_id IN ('mn', 'dn', 'sn', 'an')");
+        const endCount = performance.now();
+        logger.info("Benchmark", `Random Count (Index): ${(endCount - startCount).toFixed(2)}ms`);
+
+        // 3. Shard DB Query (Content)
+        const startShard = performance.now();
+        await this.queryShard("major", "SELECT * FROM content_segments WHERE sutta_uid = 'dn1' ORDER BY segment_order");
+        const endShard = performance.now();
+        logger.info("Benchmark", `Shard Content (major): ${(endShard - startShard).toFixed(2)}ms`);
+    }
 }
