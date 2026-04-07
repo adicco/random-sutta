@@ -19,22 +19,22 @@ export class SqliteConnection {
 
         this.isInitializing = true;
         try {
-            await this._checkAndApplyUpdate();
+            const hasUpdate = await this._checkAndApplyUpdate();
 
             logger.info("Init", `Initializing ${this.dbName} on OPFS...`);
             
-            // 1. Try to open from OPFS first (Persistent)
+            // 1. Try to open from OPFS first
             let dbHandle = await initSQLite({
                 path: this.dbName,
-                useMemory: false // Use OPFS for Dictionary
+                useMemory: false 
             });
             
-            // 2. Check if DB has tables
+            // 2. Check if DB has tables AND no update was pending
             const tables = await dbHandle.run("SELECT name FROM sqlite_master WHERE type='table'");
             
-            // 3. If empty, download and hydrate
-            if (tables.length === 0) {
-                logger.info("Init", "OPFS DB empty. Downloading source...");
+            // 3. If empty OR we just detected an update, download and hydrate
+            if (tables.length === 0 || hasUpdate) {
+                logger.info("Init", hasUpdate ? "Update pending. Re-hydrating OPFS..." : "OPFS DB empty. Downloading source...");
                 await dbHandle.close();
                 
                 const dbBinary = await this._downloadSource();
@@ -78,7 +78,18 @@ export class SqliteConnection {
         try {
             logger.info("Download", `Trying raw DB: ${rawDbUrl}`);
             const resp = await fetch(`${rawDbUrl}?v=${currentHash}`);
-            if (resp.ok) return await resp.arrayBuffer();
+            if (resp.ok) {
+                const buffer = await resp.arrayBuffer();
+                // [NEW] Verify Magic Header: "SQLite format 3"
+                const header = new Uint8Array(buffer.slice(0, 16));
+                const magic = String.fromCharCode(...header.slice(0, 15));
+                if (magic === "SQLite format 3") {
+                    logger.info("Download", "Raw DB verified. Using direct buffer.");
+                    return buffer;
+                } else {
+                    logger.warn("Download", "Raw DB verification failed (Not a SQLite file). Falling back to ZIP.");
+                }
+            }
         } catch (e) {
             logger.warn("Download", "Raw DB fetch failed, falling back to ZIP");
         }
@@ -96,22 +107,23 @@ export class SqliteConnection {
     }
 
     async _checkAndApplyUpdate() {
-        if (!this.zipUrl) return;
+        if (!this.zipUrl) return false;
         try {
             const manifestUrl = this.zipUrl.replace(".db.zip", ".json");
             const res = await fetch(`${manifestUrl}?t=${Date.now()}`, { cache: "no-store" });
-            if (!res.ok) return; 
+            if (!res.ok) return false; 
             
             const remoteData = await res.json();
             const remoteHash = remoteData.hash;
             const localHash = localStorage.getItem(`${this.dbName}_hash`);
             
             if (remoteHash && remoteHash !== localHash) {
-                logger.info("Update", "New version detected. Cleaning old OPFS storage...");
-                // Note: Actual deletion happens by overwriting in init() or we could use OPFS API
+                logger.info("Update", "New version detected. Marking for re-hydration...");
                 localStorage.setItem(`${this.dbName}_hash`, remoteHash);
+                return true;
             }
         } catch (e) {}
+        return false;
     }
 
     async run(sql, params) {

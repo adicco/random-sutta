@@ -176,7 +176,7 @@ publish:
 clean:
 	@echo "🧹 Cleaning up..."
 	rm -rf build/ dist/ release/ tmp/
-	rm -rf web/public/assets/db/sutta_data.db web/public/assets/db/db_manifest.json
+	rm -rf web/public/assets/db/*
 	rm -rf web/assets/modules/data/constants.js
 	@echo "🗑️  Removing cache directories (skipping envs)..."
 	find . \( -name ".venv" -o -name ".direnv" -o -name "node_modules" -o -name ".git" \) -prune -o \

@@ -168,7 +168,7 @@ class BuildManager:
         if self.processed_book_ids:
             super_book_data = generate_super_book_data(self.processed_book_ids)
             if super_book_data:
-                write_book_file("super", super_book_data, dry_run=True)
+                # [REMOVED] write_book_file (Legacy JSON)
                 if self.sqlite_gen:
                     self.sqlite_gen.insert_super_book(super_book_data)
 
@@ -176,8 +176,9 @@ class BuildManager:
         if self.sqlite_gen:
             self.sqlite_gen.finalize()
 
-        logger.info("⚡ Transforming processed data to Optimized DB...")
-        run_optimizer(dry_run=self.dry_run)
+        # [REMOVED] Legacy Optimizer
+        # logger.info("⚡ Transforming processed data to Optimized DB...")
+        # run_optimizer(dry_run=self.dry_run)
         
         if not self.dry_run:
             # [UPDATED] Copy ALL SQLite DBs to public assets
