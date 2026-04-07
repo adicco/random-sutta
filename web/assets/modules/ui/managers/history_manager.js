@@ -98,7 +98,7 @@ export const HistoryManager = {
         return this.WEIGHTS[level] !== undefined ? this.WEIGHTS[level] : 1.0;
     },
 
-    setFamiliarity(id, level, acronym, title) {
+    setFamiliarity(id, level, acronym, title, skipRender = false) {
         const history = this.getHistory();
         
         if (level === 0) {
@@ -117,11 +117,23 @@ export const HistoryManager = {
         }
         
         this.saveHistory(history);
-        this.renderList();
+        if (!skipRender) this.renderList();
         
         if (window.MagicNav) {
             window.MagicNav.updateHistoryState(id, level);
         }
+    },
+
+    // [NEW] Helper cập nhật DOM tại chỗ trong History List
+    _updateItemDOM(itemEl, newLevel) {
+        // Xóa class fam-level-* cũ
+        for (let i = 1; i <= 5; i++) {
+            itemEl.classList.remove(`fam-level-${i}`);
+        }
+        // Thêm class mới
+        if (newLevel > 0) itemEl.classList.add(`fam-level-${newLevel}`);
+        // Cập nhật attribute để lần click tiếp theo biết level hiện tại
+        itemEl.setAttribute("data-level", newLevel);
     },
 
     renderList() {
@@ -212,17 +224,18 @@ export const HistoryManager = {
                 const deltaX = endX - startX;
 
                 if (Math.abs(deltaX) > 50) {
-                    // Valid swipe
-                    let newLevel = currentLevel;
-                    if (deltaX > 0 && currentLevel < 5) {
+                    // Lấy level mới nhất từ DOM (phòng trường hợp bấm nhiều lần)
+                    const latestLevel = parseInt(item.getAttribute("data-level"), 10);
+                    let newLevel = latestLevel;
+                    if (deltaX > 0 && latestLevel < 5) {
                         newLevel++; // Swipe Right -> Increase
-                    } else if (deltaX < 0 && currentLevel > 0) {
+                    } else if (deltaX < 0 && latestLevel > 0) {
                         newLevel--; // Swipe Left -> Decrease
                     }
 
-                    if (newLevel !== currentLevel) {
-                        this.setFamiliarity(id, newLevel, acronym, title);
-                        // Also update UI in FamiliarityBar if visible
+                    if (newLevel !== latestLevel) {
+                        this.setFamiliarity(id, newLevel, acronym, title, true); // skipRender = true
+                        this._updateItemDOM(item, newLevel);
                         if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(id, newLevel);
                     }
                 }
@@ -235,16 +248,15 @@ export const HistoryManager = {
 
                 if (decBtn || incBtn) {
                     e.stopPropagation();
-                    let newLevel = currentLevel;
-                    if (incBtn && currentLevel < 5) newLevel++;
-                    if (decBtn && currentLevel > 0) newLevel--;
+                    const latestLevel = parseInt(item.getAttribute("data-level"), 10);
+                    let newLevel = latestLevel;
+                    if (incBtn && latestLevel < 5) newLevel++;
+                    if (decBtn && latestLevel > 0) newLevel--;
                     
-                    if (newLevel !== currentLevel) {
-                        this.setFamiliarity(id, newLevel, acronym, title);
-                        // Try to find FamiliarityBar globally if needed (via dynamic import or expose)
-                        // It's already handled via DOM in setFamiliarity by re-rendering list, 
-                        // but updating the bar in the reader view requires triggering its event.
-                        // For now, re-rendering the history list is sufficient.
+                    if (newLevel !== latestLevel) {
+                        this.setFamiliarity(id, newLevel, acronym, title, true); // skipRender = true
+                        this._updateItemDOM(item, newLevel);
+                        
                         const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${id}"]`);
                         barContainers.forEach(container => {
                             const buttons = container.querySelectorAll('.fam-btn');
