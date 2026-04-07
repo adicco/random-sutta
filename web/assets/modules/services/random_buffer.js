@@ -58,14 +58,15 @@ export const RandomBuffer = {
             this._refillTimer = null;
         }
 
+        // Reduced delay to 300ms for more aggressive refilling
         this._refillTimer = setTimeout(() => {
             if ('requestIdleCallback' in window) {
-                requestIdleCallback(() => this._fillBuffer(filters), { timeout: 2000 });
+                requestIdleCallback(() => this._fillBuffer(filters), { timeout: 1000 });
             } else {
                 this._fillBuffer(filters);
             }
             this._refillTimer = null;
-        }, 1000);
+        }, 300);
     },
 
     async _fillBuffer(filters = null) {

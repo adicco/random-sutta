@@ -26,14 +26,25 @@ export const RandomHelper = {
         if (targetBookIds.length === 0) return null;
 
         const placeholders = targetBookIds.map(() => '?').join(',');
-        const sql = `SELECT book_id, sutta_uid FROM random_pools WHERE book_id IN (${placeholders}) ORDER BY RANDOM() LIMIT 1`;
         
         try {
-            const results = await SuttaDB.query(sql, targetBookIds);
+            // [OPTIMIZED] Step 1: Get total count for the selected books
+            const countSql = `SELECT COUNT(*) as total FROM random_pools WHERE book_id IN (${placeholders})`;
+            const countResults = await SuttaDB.query(countSql, targetBookIds);
+            const total = countResults[0]?.total || 0;
+
+            if (total === 0) return null;
+
+            // Step 2: Pick a random offset
+            const randomOffset = Math.floor(Math.random() * total);
+
+            // Step 3: Fetch the row at that offset (much faster than ORDER BY RANDOM)
+            const pickSql = `SELECT book_id, sutta_uid FROM random_pools WHERE book_id IN (${placeholders}) LIMIT 1 OFFSET ${randomOffset}`;
+            const results = await SuttaDB.query(pickSql, targetBookIds);
             
             if (results.length > 0) {
                 const row = results[0];
-                logger.info("Random", `Selected: ${row.sutta_uid} from ${row.book_id}`);
+                logger.info("Random", `Selected: ${row.sutta_uid} from ${row.book_id} (Offset: ${randomOffset}/${total})`);
                 return {
                     uid: row.sutta_uid,
                     book_id: row.book_id
