@@ -6,7 +6,6 @@ import * as SQLiteConstants from '@journeyapps/wa-sqlite/src/sqlite-constants.js
 const wasmUrlSync = new URL('@journeyapps/wa-sqlite/dist/wa-sqlite.wasm?url', import.meta.url).href;
 const wasmUrlAsync = new URL('@journeyapps/wa-sqlite/dist/wa-sqlite-async.wasm?url', import.meta.url).href;
 
-// Cache Module Promises
 let syncModulePromise = null;
 let asyncModulePromise = null;
 
@@ -34,55 +33,59 @@ async function getSqliteModule(useMemory) {
  * Khởi tạo SQLite Instance.
  */
 export async function initSQLite(options) {
-    let { path, useMemory = true, file, beforeOpen } = options;
+    let { path, useMemory = true, file } = options;
     
-    // 1. Chuẩn hóa đường dẫn cho OPFS (Yêu cầu có / để tránh lỗi regex trong wa-sqlite VFS)
+    // 1. Chuẩn hóa đường dẫn
     if (!useMemory && !path.startsWith('/')) {
-        path = `/dbs/${path}`;
+        path = `/${path}`; // OPFS yêu cầu / ở đầu
     }
 
-    // 2. Load Module & VFS Class
-    const sqliteModule = await getSqliteModule(useMemory);
-    const sqlite = Factory(sqliteModule);
-    
-    let vfsClass;
-    if (useMemory) {
-        const { MemoryVFS } = await import('@journeyapps/wa-sqlite/src/examples/MemoryVFS.js');
-        vfsClass = MemoryVFS;
-    } else {
-        const { OPFSAnyContextVFS } = await import('@journeyapps/wa-sqlite/src/examples/OPFSAnyContextVFS.js');
-        vfsClass = OPFSAnyContextVFS;
-    }
-
-    // 3. Register VFS (Dùng tên path làm tên VFS để tránh xung đột giữa các shard)
-    const vfs = await vfsClass.create(path, sqliteModule);
-    sqlite.vfs_register(vfs, true); 
-
-    if (beforeOpen) await beforeOpen(sqlite, vfs, path);
-
-    // 4. Hydrate Data
+    // 2. Hydrate dữ liệu từ File nguồn (nếu có) TRƯỚC khi mở DB
     if (file) {
         const buffer = await file.arrayBuffer();
         const data = new Uint8Array(buffer);
         
         if (useMemory) {
-            const fileId = Math.floor(Math.random() * 1000000);
+            // Với MemoryVFS, chúng ta nạp sau khi tạo VFS nhưng trước khi open_v2
+        } else {
+            // Với OPFS, ghi trực tiếp bằng Web API trước khi VFS khởi động
+            await writeToOPFS(path, data);
+            console.log(`✅ [OPFS] Hydrated ${path} (${data.byteLength} bytes)`);
+        }
+    }
+
+    // 3. Load Module & VFS Class
+    const sqliteModule = await getSqliteModule(useMemory);
+    const sqlite = Factory(sqliteModule);
+    
+    let vfs;
+    if (useMemory) {
+        const { MemoryVFS } = await import('@journeyapps/wa-sqlite/src/examples/MemoryVFS.js');
+        vfs = await MemoryVFS.create(path, sqliteModule);
+        
+        // Hydrate cho MemoryVFS
+        if (file) {
+            const buffer = await file.arrayBuffer();
+            const data = new Uint8Array(buffer);
+            const fileId = 12345;
             const pOutFlags = new DataView(new ArrayBuffer(4));
             const res = await vfs.jOpen(path, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
             if (res === SQLiteConstants.SQLITE_OK) {
                 await vfs.jTruncate(fileId, 0);
                 await vfs.jWrite(fileId, data, 0);
                 await vfs.jClose(fileId);
-                console.log(`✅ [MemoryVFS] Hydrated: ${path}`);
+                console.log(`✅ [MemoryVFS] Hydrated ${path} (${data.byteLength} bytes)`);
             }
-        } else {
-            await writeToOPFS(path, data);
-            console.log(`✅ [OPFS] Hydrated: ${path}`);
         }
+    } else {
+        const { OPFSAnyContextVFS } = await import('@journeyapps/wa-sqlite/src/examples/OPFSAnyContextVFS.js');
+        vfs = await OPFSAnyContextVFS.create(path, sqliteModule);
     }
 
+    // 4. Đăng ký VFS
+    sqlite.vfs_register(vfs, true); 
+
     // 5. Open Database
-    // Lưu ý: open_v2 của wa-sqlite trả về pointer trực tiếp qua Promise
     const db = await sqlite.open_v2(
         path,
         SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_CREATE,
@@ -97,12 +100,14 @@ export async function initSQLite(options) {
     return {
         ...core,
         run: (sql, params) => run(core, sql, params),
-        close: () => sqlite.close(db)
+        close: async () => {
+            await sqlite.close(db);
+        }
     };
 }
 
 /**
- * Ghi dữ liệu vào OPFS theo cấu trúc thư mục.
+ * Ghi dữ liệu trực tiếp vào OPFS bằng Browser API.
  */
 async function writeToOPFS(path, data) {
     const parts = path.split('/').filter(p => p);
@@ -116,7 +121,7 @@ async function writeToOPFS(path, data) {
     const fileHandle = await dir.getFileHandle(filename, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(data);
-    await writable.close();
+    await writable.close(); // Đảm bảo flush dữ liệu xuống đĩa
 }
 
 /**
@@ -143,20 +148,7 @@ async function run(core, sql, params) {
 }
 
 export function withExistDB(file) {
-    return {
-        beforeOpen: async (sqlite, vfs, dbPath) => {
-            const buffer = await file.arrayBuffer();
-            const data = new Uint8Array(buffer);
-            const fileId = 12345; 
-            const pOutFlags = new DataView(new ArrayBuffer(4));
-            const openResult = await vfs.jOpen(dbPath, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
-            if (openResult === SQLiteConstants.SQLITE_OK) {
-                await vfs.jTruncate(fileId, 0);
-                await vfs.jWrite(fileId, data, 0);
-                await vfs.jClose(fileId);
-            }
-        }
-    };
+    return { file }; // Đơn giản hóa wrapper
 }
 
 export function useIdbStorage(dbName, options = {}) {
