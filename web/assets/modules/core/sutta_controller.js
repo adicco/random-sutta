@@ -42,6 +42,25 @@ export const SuttaController = {
     const currentScroll = Scroller.getScrollTop();
     const container = document.getElementById("sutta-container");
 
+    // [NEW] Check for pre-fetched data object (from Buffer)
+    let preFetchedData = null;
+    let suttaId;
+    let scrollTarget = null;
+
+    if (typeof input === 'object' && input.payload && input.data) {
+        // Input is a buffered object { payload, data }
+        preFetchedData = input.data;
+        suttaId = input.payload.uid;
+    } else if (typeof input === 'object') {
+        suttaId = input.uid;
+    } else {
+        const parts = input.split('#');
+        suttaId = parts[0].trim().toLowerCase();
+        if (parts.length > 1) {
+            scrollTarget = parts[1];
+        }
+    }
+
     // 1. Update URL State
     if (shouldUpdateUrl) {
         try {
@@ -61,19 +80,6 @@ export const SuttaController = {
         TTSOrchestrator.endSession();
     }
 
-    // 4. Parse Input
-    let suttaId;
-    let scrollTarget = null;
-    if (typeof input === 'object') {
-        suttaId = input.uid;
-    } else {
-        const parts = input.split('#');
-        suttaId = parts[0].trim().toLowerCase();
-        if (parts.length > 1) {
-            scrollTarget = parts[1];
-        }
-    }
-
     if (scrollTarget && !scrollTarget.includes(':')) {
         const isSegmentNumber = /^[\d\.]+$/.test(scrollTarget);
         if (isSegmentNumber) {
@@ -81,12 +87,15 @@ export const SuttaController = {
         }
     }
 
-    logger.info('loadSutta', `Request: ${suttaId} (URL update: ${shouldUpdateUrl})`);
+    logger.info('loadSutta', `Request: ${suttaId} (URL update: ${shouldUpdateUrl}, Cached: ${!!preFetchedData})`);
     logger.timer(`Render: ${suttaId}`);
 
     const performRender = async () => {
-        // A. Fetch data (Mất thời gian, chưa cần ẩn ở đây để tránh nháy trắng)
-        const result = await SuttaService.loadSutta(suttaId);
+        // A. Fetch data
+        const startFetch = performance.now();
+        const result = preFetchedData || await SuttaService.loadSutta(suttaId);
+        const endFetch = performance.now();
+        logger.debug('loadSutta', `Data Fetch/Logic: ${(endFetch - startFetch).toFixed(2)}ms`);
         
         if (!result) {
             this.currentNav = { prev: null, next: null }; // Clear nav on error
@@ -110,22 +119,18 @@ export const SuttaController = {
             return true;
         }
         
-        // B. [TELEPORT STEP 1] Stealth Mode ACTIVATED
-        // Chỉ ẩn nếu chúng ta định Jump (có target và không transition)
-        // Ẩn NGAY TRƯỚC KHI render HTML mới
+        // B. [TELEPORT STEP 1] Stealth Mode
         const isTeleporting = !isTransition && scrollTarget && container;
         if (isTeleporting) {
-            // Dùng visibility: hidden thay vì opacity để đảm bảo không thấy gì cả
-            // nhưng vẫn giữ layout để Scroller tính toán được vị trí.
             container.style.visibility = 'hidden';
-            
-            // Tạm thời tắt smooth scroll global để đảm bảo
             document.documentElement.style.scrollBehavior = 'auto';
         }
 
-        // C. Render Content (Thao tác DOM nặng nhất)
-        // Lúc này container đang hidden, người dùng không thấy nội dung chèn vào ở đầu trang.
+        // C. Render Content
+        const startRender = performance.now();
         const success = await renderSutta(suttaId, result, options);
+        const endRender = performance.now();
+        logger.debug('loadSutta', `DOM Rendering: ${(endRender - startRender).toFixed(2)}ms`);
         
         if (success) {
             PopupAPI.scan();

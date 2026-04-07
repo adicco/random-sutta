@@ -75,10 +75,14 @@ export const RandomBuffer = {
             const payload = await RandomHelper.getRandomPayload(filters);
             if (!payload) return;
 
-            // [PERF] Background buffer shouldn't block UI, usually fast but good to know
-            const result = await SuttaService.loadSutta(payload, { prefetchNav: false });
+            // [PERF] Background buffer now stores the FULL processed data object
+            const result = await SuttaService.loadSutta(payload.uid, { prefetchNav: false });
             if (result) {
-                this._buffer.push(payload);
+                // Đóng gói cả payload và data xử lý xong
+                this._buffer.push({
+                    payload: payload,
+                    data: result
+                });
                 logger.debug("Buffer", `Buffered: ${payload.uid} (Size: ${this._buffer.length})`);
             } else {
                 logger.warn("Buffer", `Skipped invalid item: ${payload.uid}`);
