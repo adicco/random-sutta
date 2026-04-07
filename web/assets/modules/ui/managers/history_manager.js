@@ -227,10 +227,10 @@ export const HistoryManager = {
                     // Lấy level mới nhất từ DOM (phòng trường hợp bấm nhiều lần)
                     const latestLevel = parseInt(item.getAttribute("data-level"), 10);
                     let newLevel = latestLevel;
-                    if (deltaX > 0 && latestLevel < 5) {
-                        newLevel++; // Swipe Right -> Increase
-                    } else if (deltaX < 0 && latestLevel > 0) {
-                        newLevel--; // Swipe Left -> Decrease
+                    if (deltaX > 0 && latestLevel > 0) {
+                        newLevel--; // Swipe Right -> Decrease
+                    } else if (deltaX < 0 && latestLevel < 5) {
+                        newLevel++; // Swipe Left -> Increase
                     }
 
                     if (newLevel !== latestLevel) {
