@@ -47,6 +47,11 @@ class DbPackager:
         logger.info(f"📦 Packaging {db_filename} -> {destination_dir}...")
 
         try:
+            # 0. Copy Raw DB (for direct fetch support)
+            target_db_path = destination_dir / db_filename
+            shutil.copy2(source_db_path, target_db_path)
+            logger.info(f"   ✅ Copied raw DB: {db_filename}")
+
             # 1. Create Deterministic Zip
             with zipfile.ZipFile(target_zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
                 with open(source_db_path, "rb") as f:
