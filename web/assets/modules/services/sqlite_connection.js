@@ -21,12 +21,10 @@ export class SqliteConnection {
         try {
             const hasUpdate = await this._checkAndApplyUpdate();
 
-            logger.info("Init", `Initializing ${this.dbName} on OPFS...`);
+            logger.info("Init", `Initializing ${this.dbName} in RAM...`);
             
-            // 1. Try to open from OPFS first
             let dbHandle = await initSQLite({
-                path: this.dbName,
-                useMemory: false 
+                path: this.dbName
             });
             
             // 2. Check if DB has tables AND no update was pending
@@ -34,7 +32,7 @@ export class SqliteConnection {
             
             // 3. If empty OR we just detected an update, download and hydrate
             if (tables.length === 0 || hasUpdate) {
-                logger.info("Init", hasUpdate ? "Update pending. Re-hydrating OPFS..." : "OPFS DB empty. Downloading source...");
+                logger.info("Init", hasUpdate ? "Update pending. Re-hydrating RAM..." : "RAM DB empty. Downloading source...");
                 await dbHandle.close();
                 
                 const dbBinary = await this._downloadSource();
@@ -42,10 +40,9 @@ export class SqliteConnection {
                 
                 dbHandle = await initSQLite({
                     path: this.dbName,
-                    useMemory: false,
                     file: dbFile
                 });
-                logger.info("Init", "Database hydrated to OPFS.");
+                logger.info("Init", "Database hydrated to RAM.");
             }
 
             this.db = dbHandle;

@@ -6,9 +6,10 @@ const logger = getLogger("SuttaDB");
 
 export class SuttaDB {
     static core = null;
-    static shards = new Map(); // Category -> DB Instance
-    static manifest = null;
+    static activeCategory = null;
+    static activeShard = null;
     static isInitializing = false;
+    static loadingPromise = null; // Tránh race condition khi nạp shard
 
     /**
      * Khởi động Core Database (Metadata, Structure, Config)
@@ -23,13 +24,12 @@ export class SuttaDB {
             const manifestResp = await fetch('/assets/db/db_manifest.json');
             this.manifest = await manifestResp.json();
 
-            // 2. Load Core DB (Dùng MemoryVFS - Nạp vào RAM)
+            // 2. Load Core DB
             const coreFileName = "sutta_core.db";
             const coreFile = await this._fetchFile(coreFileName, onProgress);
             
             this.core = await initSQLite({
                 path: coreFileName,
-                useMemory: true,
                 file: coreFile
             });
 
@@ -43,27 +43,50 @@ export class SuttaDB {
     }
 
     /**
-     * Nạp một Content Shard (Vd: major, minor, vinaya) vào OPFS
+     * Nạp một Content Shard (Memory Swapping)
      */
     static async loadShard(category, onProgress) {
-        if (this.shards.has(category)) return this.shards.get(category);
-
-        const fileName = `sutta_content_${category}.db`;
-        logger.info("LoadShard", `Loading ${fileName}...`);
-
-        try {
-            const file = await this._fetchFile(fileName, onProgress);
-            const instance = await initSQLite({
-                path: fileName,
-                useMemory: false, // Dùng OPFS cho file lớn
-                file: file
-            });
-            this.shards.set(category, instance);
-            return instance;
-        } catch (e) {
-            logger.error("LoadShard", `Failed to load shard ${category}`, e);
-            return null;
+        if (this.activeCategory === category && this.activeShard) return this.activeShard;
+        
+        // Tránh nhiều request nạp shard chạy đồng thời (Race Condition)
+        if (this.loadingPromise) {
+             const result = await this.loadingPromise;
+             // Nếu kết quả trả về đúng category mình cần thì lấy, không thì nạp lại
+             if (this.activeCategory === category) return result;
         }
+
+        this.loadingPromise = (async () => {
+            try {
+                // 1. Dọn dẹp Shard cũ (Giải phóng RAM)
+                if (this.activeShard) {
+                    logger.info("LoadShard", `Unloading previous shard: ${this.activeCategory}`);
+                    await this.activeShard.close();
+                    this.activeShard = null;
+                    this.activeCategory = null;
+                }
+
+                // 2. Nạp Shard mới
+                const fileName = `sutta_content_${category}.db`;
+                logger.info("LoadShard", `Loading ${fileName} to RAM...`);
+
+                const file = await this._fetchFile(fileName, onProgress);
+                const instance = await initSQLite({
+                    path: fileName,
+                    file: file
+                });
+                
+                this.activeShard = instance;
+                this.activeCategory = category;
+                return instance;
+            } catch (e) {
+                logger.error("LoadShard", `Failed to load shard ${category}`, e);
+                return null;
+            } finally {
+                this.loadingPromise = null;
+            }
+        })();
+
+        return await this.loadingPromise;
     }
 
     static async _fetchFile(fileName, onProgress) {
