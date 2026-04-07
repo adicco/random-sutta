@@ -83,7 +83,7 @@ export const OfflineService = {
         await this.requestPersistentStorage();
         
         // 1. Download Manifest First (để lấy hash chuẩn bị lưu)
-        const manifest = await this.fetchRemoteManifest();
+        const manifest = await this.checkUpdate();
         
         // 2. Download & Unzip DB
         await SuttaRepository.downloadAll(onProgress);
@@ -104,7 +104,7 @@ export const OfflineService = {
         logger.info("Update", "Checking for updates...");
         
         // 1. Lấy Manifest mới nhất
-        const remoteManifest = await this.fetchRemoteManifest();
+        const remoteManifest = await this.checkUpdate();
         const localHash = localStorage.getItem(STORAGE_KEYS.DB_HASH);
 
         let dataChanged = true;

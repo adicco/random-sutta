@@ -1,6 +1,7 @@
 // Path: web/assets/modules/core/app.js
 import { Router } from "core/router.js";
 import { SuttaController } from "core/sutta_controller.js";
+import { SuttaDB } from "data/sutta_db.js";
 import { SuttaService, RandomBuffer } from "services/index.js";
 import { setupLogging, LogLevel, getLogger } from "utils/logger.js";
 import { FilterComponent } from "ui/components/filters/index.js";
@@ -50,6 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setupQuickNav((query) => SuttaController.loadSutta(query));
 
+  window.SuttaDB = SuttaDB; // [NEW] Expose DB for debugging
   window.SuttaController = SuttaController; // [NEW] Expose controller
   window.loadSutta = (id, u, s, o) => SuttaController.loadSutta(id, u, s, o);
   window.triggerRandomSutta = () => SuttaController.loadRandomSutta(true);
