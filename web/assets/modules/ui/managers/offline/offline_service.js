@@ -4,7 +4,7 @@ import { getLogger } from 'utils/logger.js';
 import { AppConfig } from 'core/app_config.js';
 
 const logger = getLogger("OfflineService");
-export const APP_VERSION = "dev-placeholder";
+export const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev-placeholder";
 
 const STORAGE_KEYS = {
     VERSION: 'sutta_offline_version',

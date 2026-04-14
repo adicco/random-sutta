@@ -103,8 +103,7 @@ export default defineConfig(({ mode }) => {
                     background_color: '#fdfbf7',
                     display: 'standalone', 
                     orientation: 'portrait',
-                    scope: '/',
-                    start_url: '/',
+                    // Let VitePWA handle scope and start_url based on 'base'
                     icons: [
                         { src: 'assets/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
                         { src: 'assets/icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -116,10 +115,39 @@ export default defineConfig(({ mode }) => {
                     cleanupOutdatedCaches: true,
                     navigateFallback: 'index.html',
                     globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json}'], 
-                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js', '**/*.db', '**/*.zip'],
-                    maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // Tăng lên 15MB cho chắc
+                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], // Remove **/*.db from ignores
+                    maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // Tăng lên 50MB cho các shard lớn
                     runtimeCaching: [
-                        // Caching logic tương tự
+                        {
+                            // Sutta Databases (Core + Shards)
+                            urlPattern: /\/assets\/db\/sutta_.*\.db(\?.*)?$/,
+                            handler: 'CacheFirst',
+                            options: {
+                                cacheName: 'sutta-database-cache',
+                                expiration: {
+                                    maxEntries: 10,
+                                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                                },
+                                cacheableResponse: {
+                                    statuses: [0, 200],
+                                },
+                            },
+                        },
+                        {
+                            // Dictionary Databases
+                            urlPattern: /\/assets\/db\/dictionaries\/.*\.db(\?.*)?$/,
+                            handler: 'CacheFirst',
+                            options: {
+                                cacheName: 'dictionary-cache',
+                                expiration: {
+                                    maxEntries: 5,
+                                    maxAgeSeconds: 60 * 60 * 24 * 365,
+                                },
+                                cacheableResponse: {
+                                    statuses: [0, 200],
+                                },
+                            },
+                        }
                     ]
                 }
             })

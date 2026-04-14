@@ -80,9 +80,13 @@ export class SuttaDB {
     }
 
     static async _fetchFile(fileName, onProgress) {
-        const dbVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev";
-        // [FIXED] Dùng đường dẫn tương đối
-        const url = `assets/db/${fileName}?v=${dbVersion}`;
+        // [OPTIMIZED] Dùng hash từ manifest để cache buster chính xác hơn APP_VERSION
+        let fileVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev";
+        if (this.manifest && this.manifest.files && this.manifest.files[fileName]) {
+            fileVersion = this.manifest.files[fileName].hash.substring(0, 8);
+        }
+
+        const url = `assets/db/${fileName}?v=${fileVersion}`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP ${response.status} for ${fileName}`);

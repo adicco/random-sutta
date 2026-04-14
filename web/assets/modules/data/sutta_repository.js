@@ -131,8 +131,36 @@ export const SuttaRepository = {
     },
 
     async downloadAll(onProgress) {
-        // Mặc định nạp Core
-        await SuttaDB.init(onProgress);
-        // Có thể nạp thêm các shard quan trọng nếu muốn
+        // 1. Nạp Core Database (Metadata, Structure)
+        await SuttaDB.init((loaded, total) => {
+             if (onProgress) onProgress(loaded, total * 6); // 1 core + 4 shards + 1 dict = 6
+        });
+        
+        // 2. Nạp từ điển (DPD) để Safari cache lại
+        try {
+            const { DictProvider } = await import('lookup/dict_provider.js');
+            await DictProvider.init();
+            logger.info("DownloadAll", "✅ Dictionary cached.");
+        } catch (e) {
+            logger.warn("DownloadAll", "Failed to cache dictionary", e);
+        }
+
+        // 3. Nạp tất cả Shard nội dung đồng thời để Safari cache lại qua SW
+        const shards = ['major', 'minor', 'vinaya', 'abhidhamma'];
+        let shardCount = 0;
+        
+        logger.info("DownloadAll", "Fetching all content shards for offline use...");
+        
+        const tasks = shards.map(category => SuttaDB.loadShard(category, (loaded, total) => {
+             // Logic progress đơn giản: Coi mỗi shard là 1/5 tổng tiến trình
+             const base = (shardCount + 1) * 20; 
+             if (onProgress) onProgress(base, 100); 
+        }).then(res => {
+             shardCount++;
+             return res;
+        }));
+
+        await Promise.all(tasks);
+        logger.info("DownloadAll", "✅ All shards cached for offline.");
     }
 };
