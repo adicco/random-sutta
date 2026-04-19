@@ -162,15 +162,6 @@ details[open] .dpd-detail-icon {
     text-decoration: underline;
 }
 
-.dpd-construction-item:not(:last-child):after {
-    content: '|';
-    color: var(--text-light);
-    opacity: 0.5;
-    margin: 0 6px;
-    font-weight: 300;
-    font-size: 0.9em;
-}
-
 /* --- LINE 3: MEANING & LIT --- */
 .dpd-summary-line-3 {
     display: block; /* Flow text naturally */

@@ -117,9 +117,9 @@ export const PaliEntryRenderer = {
                 .map(line => line.trim())
                 .filter(line => line)
                 .map(line => {
-                    // Split by typical Pāli separators while keeping them
-                    // regex to find Pāli words: [a-zA-Zāāīīūūṅṅññṭṭḍḍṇṇḷḷṃṃ]+
-                    return line.replace(/[a-zA-Zāāīīūūṅṅññṭṭḍḍṇṇḷḷṃṃ]+/g, (match) => {
+                    // Granularly wrap Pāli words to allow individual lookups
+                    // regex includes common diacritics: ā ī ū ṅ ñ ṭ ḍ ṇ ḷ ṃ ṁ
+                    return line.replace(/[a-zA-ZāīūṅñṭḍṇḷṃṁĀĪŪṄÑṬḌṆḶṂṀ]+/g, (match) => {
                         return `<span class="dpd-construction-item clickable" data-lookup="${match}">${match}</span>`;
                     });
                 })

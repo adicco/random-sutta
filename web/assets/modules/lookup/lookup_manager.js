@@ -222,15 +222,15 @@ export const LookupManager = {
             }
         }
 
+        // [HISTORY] If this lookup was triggered from INSIDE the popup, save previous state
+        const isInternal = contextNode && (contextNode.closest("#lookup-popup") !== null);
+        if (isInternal && this._lastTitle && this._lastTitle !== cleanText) {
+            LookupState.pushHistory(this._getCurrentUIState());
+        }
+
         if (results && results.length > 0) {
             const renderData = PaliRenderer.renderList(results, cleanText);
             
-            // [HISTORY] If this lookup was triggered from INSIDE the popup, save previous state
-            const isInternal = contextNode && (contextNode.closest("#lookup-popup") !== null);
-            if (isInternal && this._lastTitle) {
-                LookupState.pushHistory(this._getCurrentUIState());
-            }
-
             // Store for History
             this._lastRenderData = renderData;
             this._lastTitle = cleanText;
@@ -254,8 +254,6 @@ export const LookupManager = {
             }
         } else {
             // Not found
-            // Only show error if explicitly navigating or clicking, maybe?
-            // Current behavior: show error in popup if popup is open or navigating
             if (LookupState.isNavigating || LookupUI.isVisible()) {
                 LookupUI.showError(`"${cleanText}" not found.`, cleanText);
             }

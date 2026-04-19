@@ -236,6 +236,14 @@ export const LookupUI = {
 
     showError(msg, title = "Error") {
         this.render(`<p class="error-message">${msg}</p>`, title);
+        
+        // Update history buttons even on error so user can navigate back
+        if (this.elements.btnHistoryBack) {
+            this.elements.btnHistoryBack.disabled = (LookupState.history.length === 0);
+        }
+        if (this.elements.btnHistoryForward) {
+            this.elements.btnHistoryForward.disabled = (LookupState.forwardStack.length === 0);
+        }
     },
 
     hide() {
