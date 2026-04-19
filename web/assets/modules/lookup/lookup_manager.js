@@ -71,8 +71,8 @@ export const LookupManager = {
         }
 
         // Clean Text
-        // [UPDATED] Include all smart quotes
-        const cleanText = text.toLowerCase().replace(/[.,;:"'‘’“”\—?!()…]/g, '').trim();
+        // [UPDATED] Include all smart quotes and normalize to NFC
+        const cleanText = text.toLowerCase().normalize('NFC').replace(/[.,;:"'‘’“”\—?!()…]/g, '').trim();
         
         if (cleanText.length > 50 || cleanText.length < 1) return; 
         
@@ -94,8 +94,9 @@ export const LookupManager = {
                     rows.forEach(row => {
                         const parts = row.split('+');
                         parts.forEach(p => {
-                            const cleanPart = p.trim().toLowerCase().replace(/[.,;:"'‘’“”\—?!()…]/g, '');
-                            // Avoid looking up the same word or very short words (optional)
+                            // [UPDATED] Use NFC normalization for consistent matching with DB
+                            const cleanPart = p.trim().toLowerCase().normalize('NFC').replace(/[.,;:"'‘’“”\—?!()…]/g, '');
+                            // Avoid looking up the same word or very short words
                             if (cleanPart && cleanPart !== cleanText && cleanPart.length > 1) {
                                 componentWords.add(cleanPart);
                             }
@@ -104,16 +105,19 @@ export const LookupManager = {
                 });
 
                 if (componentWords.size > 0) {
-                    const extraPromises = Array.from(componentWords).map(word => DictProvider.search(word, contextNode));
-                    const extraResultsArrays = await Promise.all(extraPromises);
-                    
-                    const seenIds = new Set(results.map(r => `${r.lookup_type}_${r.target_id}`));
-                    for (const resArray of extraResultsArrays) {
+                    // [IMPORTANT] Sequential lookup to avoid SQLite state collision in _lookup_params
+                    for (const word of componentWords) {
+                        const resArray = await DictProvider.search(word, contextNode);
                         for (const r of resArray) {
+                            // Ensure component matches are treated as exact matches in the final list
+                            r.is_exact = true;
+                            
                             const id = `${r.lookup_type}_${r.target_id}`;
-                            if (!seenIds.has(id)) {
-                                seenIds.add(id);
+                            const existing = results.find(ex => `${ex.lookup_type}_${ex.target_id}` === id);
+                            if (!existing) {
                                 results.push(r);
+                            } else {
+                                existing.is_exact = true;
                             }
                         }
                     }

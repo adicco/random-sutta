@@ -33,7 +33,7 @@ export const PaliDPD = {
     async search(term) {
         if (!this.connection) return [];
         if (!term) return [];
-        const cleanTerm = term.toLowerCase().trim();
+        const cleanTerm = term.toLowerCase().trim().normalize('NFC');
         
         try {
             // Optimized Lookup System: Using Specialized View (Exact Match + Decon Union)
