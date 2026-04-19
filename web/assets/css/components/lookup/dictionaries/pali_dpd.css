@@ -150,6 +150,18 @@ details[open] .dpd-detail-icon {
     white-space: nowrap;
 }
 
+.dpd-construction-item.clickable {
+    cursor: pointer;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    transition: opacity 0.2s;
+}
+
+.dpd-construction-item.clickable:hover {
+    opacity: 0.7;
+    text-decoration: underline;
+}
+
 .dpd-construction-item:not(:last-child):after {
     content: '|';
     color: var(--text-light);

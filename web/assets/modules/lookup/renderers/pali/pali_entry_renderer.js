@@ -116,7 +116,7 @@ export const PaliEntryRenderer = {
             const constrItems = construction.split('\n')
                 .map(item => item.trim())
                 .filter(item => item)
-                .map(item => `<span class="dpd-construction-item">${item}</span>`)
+                .map(item => `<span class="dpd-construction-item clickable" data-lookup="${item}">${item}</span>`)
                 .join('');
             line2 = `<div class="dpd-summary-line-2"><span class="dpd-construction">${constrItems}</span></div>`;
         }

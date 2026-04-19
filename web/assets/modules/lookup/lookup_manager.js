@@ -43,6 +43,22 @@ export const LookupManager = {
             LookupUI.hide();
             document.body.classList.remove("lookup-open");
         });
+
+        // Click inside popup (for construction items)
+        const popup = document.getElementById("lookup-popup");
+        if (popup) {
+            popup.addEventListener("click", (e) => {
+                const item = e.target.closest(".dpd-construction-item.clickable");
+                if (item) {
+                    const term = item.getAttribute("data-lookup");
+                    if (term) {
+                        e.stopPropagation();
+                        // Trigger lookup for the construction item (parts)
+                        this._performLookup(term, item);
+                    }
+                }
+            });
+        }
     },
 
     async _performLookup(text, contextNode) {
@@ -80,10 +96,35 @@ export const LookupManager = {
         const isReady = await DictProvider.init();
         if (!isReady) return;
         
+        // [COMPONENTS] Support construction lookup strings (e.g. "word1 + word2")
+        const searchTerms = cleanText.includes('+') 
+            ? cleanText.split('+').map(t => t.trim()).filter(t => t)
+            : [cleanText];
+
         // Search
-        let results = await DictProvider.search(cleanText, contextNode);
+        let results = [];
+        const seenIds = new Set();
         
-        // [DECONSTRUCTION] Auto-lookup components
+        // Use loop to ensure sequential lookups (state safety for SQLite _lookup_params)
+        for (const term of searchTerms) {
+            const res = await DictProvider.search(term, contextNode);
+            res.forEach(r => {
+                // If searching for components, mark them as exact so they show up at top
+                if (searchTerms.length > 1) r.is_exact = true;
+                
+                const id = `${r.lookup_type}_${r.target_id}`;
+                if (!seenIds.has(id)) {
+                    seenIds.add(id);
+                    results.push(r);
+                } else if (searchTerms.length > 1) {
+                    // Update existing to be exact if found via component
+                    const existing = results.find(ex => `${ex.lookup_type}_${ex.target_id}` === id);
+                    if (existing) existing.is_exact = true;
+                }
+            });
+        }
+        
+        // [DECONSTRUCTION] Auto-lookup components for DECON results
         if (results && results.length > 0) {
             const decons = results.filter(r => r.is_deconstruction && r.meaning);
             if (decons.length > 0) {
