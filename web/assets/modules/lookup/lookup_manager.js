@@ -81,8 +81,46 @@ export const LookupManager = {
         if (!isReady) return;
         
         // Search
-        const results = await DictProvider.search(cleanText, contextNode);
+        let results = await DictProvider.search(cleanText, contextNode);
         
+        // [DECONSTRUCTION] Auto-lookup components
+        if (results && results.length > 0) {
+            const decons = results.filter(r => r.is_deconstruction && r.meaning);
+            if (decons.length > 0) {
+                const componentWords = new Set();
+                decons.forEach(d => {
+                    // Split by ',' then by '+' as per pali_decon_renderer.js logic
+                    const rows = d.meaning.split(',');
+                    rows.forEach(row => {
+                        const parts = row.split('+');
+                        parts.forEach(p => {
+                            const cleanPart = p.trim().toLowerCase().replace(/[.,;:"'‘’“”\—?!()…]/g, '');
+                            // Avoid looking up the same word or very short words (optional)
+                            if (cleanPart && cleanPart !== cleanText && cleanPart.length > 1) {
+                                componentWords.add(cleanPart);
+                            }
+                        });
+                    });
+                });
+
+                if (componentWords.size > 0) {
+                    const extraPromises = Array.from(componentWords).map(word => DictProvider.search(word, contextNode));
+                    const extraResultsArrays = await Promise.all(extraPromises);
+                    
+                    const seenIds = new Set(results.map(r => `${r.lookup_type}_${r.target_id}`));
+                    for (const resArray of extraResultsArrays) {
+                        for (const r of resArray) {
+                            const id = `${r.lookup_type}_${r.target_id}`;
+                            if (!seenIds.has(id)) {
+                                seenIds.add(id);
+                                results.push(r);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (results && results.length > 0) {
             const renderData = PaliRenderer.renderList(results, cleanText);
             // Pass clickOffset to render
