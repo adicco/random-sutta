@@ -39,7 +39,8 @@ export const PaliDeconRenderer = {
             
             html += `<tr>`;
             parts.forEach((part, index) => {
-                html += `<td class="decon-cell">${part}</td>`;
+                const cleanPart = part.trim();
+                html += `<td class="decon-cell"><span class="dpd-construction-item clickable" data-lookup="${cleanPart}">${cleanPart}</span></td>`;
                 if (index < parts.length - 1) {
                     html += `<td class="decon-plus">+</td>`;
                 }

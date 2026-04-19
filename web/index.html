@@ -20,6 +20,7 @@
       href="assets/icons/apple-touch-icon.png"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Random Sutta" />
     <link
@@ -500,6 +501,14 @@
 
     <div id="lookup-popup" class="popup-container hidden">
       <div class="lookup-header-tabs">
+        <div class="lookup-history-controls">
+          <button id="btn-lookup-back" class="lookup-history-btn" title="Back" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button id="btn-lookup-forward" class="lookup-history-btn" title="Forward" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
         <div id="tab-dpd" class="lookup-tab active" title="Digital Pali Dictionary">
             <span>DPD</span>
         </div>

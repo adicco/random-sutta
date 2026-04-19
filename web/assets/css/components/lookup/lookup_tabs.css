@@ -10,6 +10,39 @@
     position: relative;
 }
 
+/* History Controls */
+.lookup-history-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 12px;
+    margin-bottom: 6px;
+    align-self: flex-end;
+}
+
+.lookup-history-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.lookup-history-btn:hover:not(:disabled) {
+    background-color: var(--bg-hover);
+    color: var(--primary-color);
+}
+
+.lookup-history-btn:disabled {
+    opacity: 0.2;
+    cursor: default;
+}
+
 .lookup-tab {
     padding: 6px 16px;
     margin-right: 2px;

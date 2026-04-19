@@ -113,12 +113,18 @@ export const PaliEntryRenderer = {
         // Line 2
         let line2 = '';
         if (construction) {
-            const constrItems = construction.split('\n')
-                .map(item => item.trim())
-                .filter(item => item)
-                .map(item => `<span class="dpd-construction-item clickable" data-lookup="${item}">${item}</span>`)
-                .join('');
-            line2 = `<div class="dpd-summary-line-2"><span class="dpd-construction">${constrItems}</span></div>`;
+            const constrLines = construction.split('\n')
+                .map(line => line.trim())
+                .filter(line => line)
+                .map(line => {
+                    // Split by typical Pāli separators while keeping them
+                    // regex to find Pāli words: [a-zA-Zāāīīūūṅṅññṭṭḍḍṇṇḷḷṃṃ]+
+                    return line.replace(/[a-zA-Zāāīīūūṅṅññṭṭḍḍṇṇḷḷṃṃ]+/g, (match) => {
+                        return `<span class="dpd-construction-item clickable" data-lookup="${match}">${match}</span>`;
+                    });
+                })
+                .join('<br>');
+            line2 = `<div class="dpd-summary-line-2"><span class="dpd-construction">${constrLines}</span></div>`;
         }
 
         // Line 3

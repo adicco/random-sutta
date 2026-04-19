@@ -2,6 +2,7 @@
 import { SwipeHandler } from 'ui/common/swipe_handler.js';
 import { ScrollHandler } from 'ui/common/scroll_handler.js';
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
+import { LookupState } from '../core/lookup_state.js';
 
 export const LookupUI = {
     elements: {},
@@ -13,6 +14,9 @@ export const LookupUI = {
             // Header & Controls
             closeBtn: document.getElementById("close-lookup"),
             wordHeading: document.getElementById("lookup-word-heading"),
+            btnHistoryBack: document.getElementById("btn-lookup-back"),
+            btnHistoryForward: document.getElementById("btn-lookup-forward"),
+            tabDpd: document.getElementById("tab-dpd"),
             
             // Content
             bestMatchesContainer: document.getElementById("lookup-best-matches"),
@@ -38,6 +42,26 @@ export const LookupUI = {
             this.hide();
             if (callbacks.onClose) callbacks.onClose();
         });
+
+        // History Controls
+        if (this.elements.btnHistoryBack) {
+            this.elements.btnHistoryBack.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (callbacks.onBack) callbacks.onBack();
+            });
+        }
+        if (this.elements.btnHistoryForward) {
+            this.elements.btnHistoryForward.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (callbacks.onForward) callbacks.onForward();
+            });
+        }
+        if (this.elements.tabDpd) {
+            this.elements.tabDpd.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if (callbacks.onGoHome) callbacks.onGoHome();
+            });
+        }
         
         // Prevent clicks inside popup from closing it
         this.elements.popup.addEventListener("click", (e) => {
@@ -46,7 +70,7 @@ export const LookupUI = {
 
         // Prevent focus loss when clicking summaries OR TABS
         this.elements.popup.addEventListener("mousedown", (e) => {
-            if (e.target.closest("summary") || e.target.closest(".lookup-tab")) {
+            if (e.target.closest("summary") || e.target.closest(".lookup-tab") || e.target.closest(".lookup-history-btn")) {
                 e.preventDefault();
             }
         });
@@ -183,6 +207,14 @@ export const LookupUI = {
 
         // 2. Set Title (Heading Row)
         if (this.elements.wordHeading) this.elements.wordHeading.textContent = titleWord;
+
+        // 2.1 Update History Button States
+        if (this.elements.btnHistoryBack) {
+            this.elements.btnHistoryBack.disabled = (LookupState.history.length === 0);
+        }
+        if (this.elements.btnHistoryForward) {
+            this.elements.btnHistoryForward.disabled = (LookupState.forwardStack.length === 0);
+        }
 
         // 3. Render DPD Content
         if (this.elements.contentDpd) this.elements.contentDpd.innerHTML = dictHtml;

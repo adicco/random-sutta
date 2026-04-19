@@ -16,7 +16,13 @@ export const LookupManager = {
         // UI Callbacks
         LookupUI.init({
             onClose: () => this.clearHighlight(),
-            onNavigate: (dir) => LookupNavigator.navigate(dir, this._performLookup.bind(this))
+            onNavigate: (dir) => LookupNavigator.navigate(dir, (text, node) => {
+                LookupState.clearHistory(); // New navigation word = new history
+                this._performLookup(text, node);
+            }),
+            onBack: () => this._navigateHistory(-1),
+            onForward: () => this._navigateHistory(1),
+            onGoHome: () => this._navigateHistory(0)
         });
         
         // Initialize Dictionaries
@@ -26,7 +32,10 @@ export const LookupManager = {
         
         // Click Event (Delegated)
         document.addEventListener("click", (e) => 
-            LookupEventHandler.handleClick(e, this._performLookup.bind(this))
+            LookupEventHandler.handleClick(e, (text, node) => {
+                LookupState.clearHistory(); // New click word = new history
+                this._performLookup(text, node);
+            })
         );
         
         // Keyboard Navigation
@@ -59,6 +68,53 @@ export const LookupManager = {
                 }
             });
         }
+    },
+
+    _navigateHistory(direction) {
+        if (direction === 0) { // Go Home (First result)
+            if (LookupState.history.length === 0) return;
+            const home = LookupState.history[0];
+            LookupState.clearHistory();
+            this._updateLastState(home);
+            LookupUI.render(home.renderData, home.title, home.segmentText, home.results, home.clickOffset);
+            return;
+        }
+
+        if (direction === -1) { // Back
+            const currentState = this._getCurrentUIState();
+            const prevState = LookupState.popHistory();
+            if (prevState) {
+                LookupState.pushForward(currentState);
+                this._updateLastState(prevState);
+                LookupUI.render(prevState.renderData, prevState.title, prevState.segmentText, prevState.results, prevState.clickOffset);
+            }
+        } else if (direction === 1) { // Forward
+            const currentState = this._getCurrentUIState();
+            const nextState = LookupState.popForward();
+            if (nextState) {
+                LookupState.pushHistory(currentState);
+                this._updateLastState(nextState);
+                LookupUI.render(nextState.renderData, nextState.title, nextState.segmentText, nextState.results, nextState.clickOffset);
+            }
+        }
+    },
+
+    _updateLastState(state) {
+        this._lastRenderData = state.renderData;
+        this._lastTitle = state.title;
+        this._lastSegmentText = state.segmentText;
+        this._lastResults = state.results;
+        this._lastClickOffset = state.clickOffset;
+    },
+
+    _getCurrentUIState() {
+        return {
+            renderData: this._lastRenderData,
+            title: this._lastTitle,
+            segmentText: this._lastSegmentText,
+            results: this._lastResults,
+            clickOffset: this._lastClickOffset
+        };
     },
 
     async _performLookup(text, contextNode) {
@@ -168,6 +224,20 @@ export const LookupManager = {
 
         if (results && results.length > 0) {
             const renderData = PaliRenderer.renderList(results, cleanText);
+            
+            // [HISTORY] If this lookup was triggered from INSIDE the popup, save previous state
+            const isInternal = contextNode && (contextNode.closest("#lookup-popup") !== null);
+            if (isInternal && this._lastTitle) {
+                LookupState.pushHistory(this._getCurrentUIState());
+            }
+
+            // Store for History
+            this._lastRenderData = renderData;
+            this._lastTitle = cleanText;
+            this._lastSegmentText = segmentText;
+            this._lastResults = results;
+            this._lastClickOffset = clickOffset;
+
             // Pass clickOffset to render
             LookupUI.render(renderData, cleanText, segmentText, results, clickOffset); 
             document.body.classList.add("lookup-open");
