@@ -150,17 +150,16 @@ export const SuttaRepository = {
         let shardCount = 0;
         
         logger.info("DownloadAll", "Fetching all content shards for offline use...");
-        
-        const tasks = shards.map(category => SuttaDB.loadShard(category, (loaded, total) => {
-             // Logic progress đơn giản: Coi mỗi shard là 1/5 tổng tiến trình
-             const base = (shardCount + 1) * 20; 
-             if (onProgress) onProgress(base, 100); 
-        }).then(res => {
-             shardCount++;
-             return res;
-        }));
 
-        await Promise.all(tasks);
+        // [OFFLINE FIX] Load sequentially to prevent iOS out-of-memory crashes
+        for (const category of shards) {
+             await SuttaDB.loadShard(category, (loaded, total) => {
+                 // Logic progress đơn giản: Coi mỗi shard là 1/5 tổng tiến trình
+                 const base = (shardCount + 1) * 20;
+                 if (onProgress) onProgress(base, 100);
+             });
+             shardCount++;
+        }
+
         logger.info("DownloadAll", "✅ All shards cached for offline.");
-    }
-};
+        }};

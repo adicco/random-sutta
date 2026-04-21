@@ -114,12 +114,11 @@ export default defineConfig(({ mode }) => {
                 workbox: {
                     cleanupOutdatedCaches: true,
                     navigateFallback: 'index.html',
-                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json}'], 
-                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], // Remove **/*.db from ignores
+                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json}'],
+                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], // Ensure db and index json are not ignored
                     maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // Tăng lên 50MB cho các shard lớn
                     runtimeCaching: [
-                        {
-                            // Sutta Databases (Core + Shards)
+                        {                            // Sutta Databases (Core + Shards)
                             urlPattern: /\/assets\/db\/sutta_.*\.db(\?.*)?$/,
                             handler: 'CacheFirst',
                             options: {

@@ -1,6 +1,7 @@
 // Path: web/assets/modules/services/sqlite_connection.js
 import { getLogger } from 'utils/logger.js';
 import { initSQLite } from './sqlite_helper.js';
+import { BlobCache } from './blob_cache.js';
 import JSZip from 'jszip';
 
 const logger = getLogger("SqliteConnection");
@@ -62,6 +63,9 @@ export class SqliteConnection {
                 if (this.db) {
                     clearInterval(interval);
                     resolve(true);
+                } else if (!this.isInitializing) {
+                    clearInterval(interval);
+                    resolve(false);
                 }
             }, 50);
         });
@@ -73,6 +77,21 @@ export class SqliteConnection {
         const rawDbUrl = cleanUrl.replace(".db.zip", ".db");
         const currentHash = localStorage.getItem(`${this.dbName}_hash`) || Date.now();
         
+        const cacheKey = `dict_${this.dbName}_${currentHash}`;
+
+        // [OFFLINE FIX] Try to load from BlobCache first to avoid fetch on iOS offline force-close
+        try {
+            const cachedBuffer = await BlobCache.getBlob(cacheKey);
+            if (cachedBuffer) {
+                logger.info("Download", `Loaded ${this.dbName} from local BlobCache (Offline Safe)`);
+                return cachedBuffer;
+            }
+        } catch (e) {
+            logger.warn("Download", "Error reading BlobCache", e);
+        }
+
+        let dbBuffer = null;
+
         try {
             logger.info("Download", `Trying raw DB: ${rawDbUrl}`);
             const resp = await fetch(`${rawDbUrl}?v=${currentHash}`);
@@ -83,7 +102,7 @@ export class SqliteConnection {
                 const magic = String.fromCharCode(...header.slice(0, 15));
                 if (magic === "SQLite format 3") {
                     logger.info("Download", "Raw DB verified. Using direct buffer.");
-                    return buffer;
+                    dbBuffer = buffer;
                 } else {
                     logger.warn("Download", "Raw DB verification failed (Not a SQLite file). Falling back to ZIP.");
                 }
@@ -92,16 +111,28 @@ export class SqliteConnection {
             logger.warn("Download", "Raw DB fetch failed, falling back to ZIP");
         }
 
-        // Fallback to ZIP
-        logger.info("Download", `Fetching ZIP: ${cleanUrl}`);
-        const response = await fetch(`${cleanUrl}?v=${currentHash}`);
-        if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-        
-        const blob = await response.blob();
-        const zip = await JSZip.loadAsync(blob);
-        const dbFile = zip.file(this.dbName); 
-        if (!dbFile) throw new Error(`${this.dbName} not found in zip`);
-        return await dbFile.async("arraybuffer");
+        if (!dbBuffer) {
+            // Fallback to ZIP
+            logger.info("Download", `Fetching ZIP: ${cleanUrl}`);
+            const response = await fetch(`${cleanUrl}?v=${currentHash}`);
+            if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+            
+            const blob = await response.blob();
+            const zip = await JSZip.loadAsync(blob);
+            const dbFile = zip.file(this.dbName); 
+            if (!dbFile) throw new Error(`${this.dbName} not found in zip`);
+            dbBuffer = await dbFile.async("arraybuffer");
+        }
+
+        // [OFFLINE FIX] Cache the buffer in BlobCache for next time
+        try {
+            await BlobCache.setBlob(cacheKey, dbBuffer);
+            logger.info("Download", `Saved ${this.dbName} to BlobCache`);
+        } catch (e) {
+            logger.warn("Download", "Error writing to BlobCache", e);
+        }
+
+        return dbBuffer;
     }
 
     async _checkAndApplyUpdate() {
@@ -122,7 +153,9 @@ export class SqliteConnection {
                 localStorage.setItem(`${this.dbName}_hash`, remoteHash);
                 return true;
             }
-        } catch (e) {}
+        } catch (e) {
+            logger.warn("Update", "Failed to check for updates (Offline?), skipping check.");
+        }
         return false;
     }
 
