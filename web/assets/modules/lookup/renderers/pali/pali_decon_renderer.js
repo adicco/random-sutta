@@ -41,7 +41,10 @@ export const PaliDeconRenderer = {
             parts.forEach((part, index) => {
                 const cleanPart = part.trim();
                 // Granularly wrap Pāli words to allow individual lookups
-                const wrappedPart = cleanPart.replace(/[a-zA-ZāīūṅñṭḍṇḷṃṁĀĪŪṄÑṬḌṆḶṂṀ]+/g, (match) => {
+                const wrappedPart = cleanPart.replace(/[a-zA-ZāīūṅñṭḍṇḷṃṁĀĪŪṄÑṬḌṆḶṂṀ]+|\>/g, (match) => {
+                    if (match === '>') {
+                        return `<span class="dpd-operator">${match}</span>`;
+                    }
                     return `<span class="dpd-construction-item clickable" data-lookup="${match}">${match}</span>`;
                 });
                 html += `<td class="decon-cell">${wrappedPart}</td>`;

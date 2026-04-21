@@ -163,7 +163,7 @@ details[open] .dpd-detail-icon {
 }
 
 .dpd-operator {
-    margin: 0 8px;
+    margin: 0 4px;
     color: var(--text-light);
     opacity: 0.6;
     font-weight: 300;
