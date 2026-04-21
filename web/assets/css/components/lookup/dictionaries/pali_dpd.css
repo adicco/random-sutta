@@ -162,6 +162,13 @@ details[open] .dpd-detail-icon {
     text-decoration: underline;
 }
 
+.dpd-operator {
+    margin: 0 8px;
+    color: var(--text-light);
+    opacity: 0.6;
+    font-weight: 300;
+}
+
 /* --- LINE 3: MEANING & LIT --- */
 .dpd-summary-line-3 {
     display: block; /* Flow text naturally */

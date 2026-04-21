@@ -118,8 +118,12 @@ export const PaliEntryRenderer = {
                 .filter(line => line)
                 .map(line => {
                     // Granularly wrap Pāli words to allow individual lookups
+                    // and wrap operators for styling
                     // regex includes common diacritics: ā ī ū ṅ ñ ṭ ḍ ṇ ḷ ṃ ṁ
-                    return line.replace(/[a-zA-ZāīūṅñṭḍṇḷṃṁĀĪŪṄÑṬḌṆḶṂṀ]+/g, (match) => {
+                    return line.replace(/[a-zA-ZāīūṅñṭḍṇḷṃṁĀĪŪṄÑṬḌṆḶṂṀ]+|\+/g, (match) => {
+                        if (match === '+') {
+                            return `<span class="dpd-operator">+</span>`;
+                        }
                         return `<span class="dpd-construction-item clickable" data-lookup="${match}">${match}</span>`;
                     });
                 })

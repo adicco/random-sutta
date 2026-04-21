@@ -46,7 +46,7 @@ export const PaliDeconRenderer = {
                 });
                 html += `<td class="decon-cell">${wrappedPart}</td>`;
                 if (index < parts.length - 1) {
-                    html += `<td class="decon-plus">+</td>`;
+                    html += `<td class="decon-plus"><span class="dpd-operator">+</span></td>`;
                 }
             });
             html += `</tr>`;
