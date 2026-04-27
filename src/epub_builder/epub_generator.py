@@ -3,16 +3,15 @@ import zipfile
 import logging
 import uuid
 import datetime
-import json
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List
 
 from .db_reader import DbReader
 from .templates import (
-    EPUB_MIMETYPE, CONTAINER_XML, CONTENT_OPF_TEMPLATE,
-    TOC_NCX_TEMPLATE, NAV_XHTML_TEMPLATE, PAGE_HTML_TEMPLATE,
-    BRANCH_HTML_TEMPLATE, STYLE_CSS
+    EPUB_MIMETYPE, CONTAINER_XML, CONTENT_OPF_TEMPLATE, STYLE_CSS
 )
+from .core.html_builder import HtmlBuilder
+from .core.toc_builder import TocBuilder
 
 logger = logging.getLogger("EpubBuilder.Generator")
 
@@ -34,147 +33,8 @@ class EpubGenerator:
         self.spine_items = []
         self.manifest_items = []
         self.visited_uids = set()
-
-    def _get_title(self, uid: str, meta: Dict[str, Any]) -> str:
-        translated = meta.get("translated_title")
-        original = meta.get("original_title")
-        acronym = meta.get("acronym")
         
-        base_title = ""
-        if translated and original:
-            base_title = f"{translated} - {original}"
-        else:
-            base_title = translated or original or uid.upper()
-            
-        if acronym:
-            return f"{acronym} - {base_title}"
-        return base_title
-
-    def _build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0) -> str:
-        html_tag = segment.get("html", "")
-        pli = segment.get("pli") or ""
-        eng = segment.get("eng") or ""
-        segment_id = segment.get("segment_id", "")
-        
-        if not pli and not eng:
-            return ""
-
-        content = ""
-        if pli:
-            pli_text = pli
-            # Attach footnote to Pali if no English is present
-            if not eng and footnote_idx > 0:
-                pli_text += f' <a class="footnote-link" href="#fn_{segment_id}" id="ref_{segment_id}">[{footnote_idx}]</a>'
-            content += f'<p class="pli">{pli_text}</p>'
-            
-        if eng:
-            eng_text = eng
-            if footnote_idx > 0:
-                eng_text += f' <a class="footnote-link" href="#fn_{segment_id}" id="ref_{segment_id}">[{footnote_idx}]</a>'
-            content += f'<p class="eng">{eng_text}</p>'
-            
-        inner_html = f'<div class="segment" id="{segment_id}">\n{content}\n</div>'
-        
-        if html_tag:
-            # Hide the <ul> containing meta division headers in EPUB
-            if "<header><ul" in html_tag:
-                html_tag = html_tag.replace("<header><ul", '<header><ul class="invisible-segment"')
-            
-            # If the html column has `{}` pattern (like `<h1>{}</h1>`)
-            if "{}" in html_tag:
-                return html_tag.format(inner_html)
-                
-        return inner_html
-
-    def _generate_page(self, uid: str) -> Optional[Tuple[str, List[Dict[str, str]]]]:
-        meta = self.all_meta.get(uid)
-        if not meta:
-            logger.warning(f"Missing metadata for {uid}")
-            return None
-
-        m_type = meta.get("type", "branch")
-        
-        # Skip subleaf pages entirely
-        if m_type == "subleaf":
-            return None
-            
-        title = self._get_title(uid, meta)
-        
-        # Build filename based on type
-        safe_uid = uid.replace("/", "_").replace(":", "_")
-        filename = f"{m_type}_{safe_uid}.html"
-        self.uid_to_filename[uid] = filename
-        
-        collected_headers = []
-        
-        if m_type == "leaf":
-            # Fetch content
-            segments = self.db.get_segments(uid, meta.get("book_id", ""))
-            
-            html_parts = []
-            current_footnotes = []
-            
-            # Prepend acronym if it exists
-            acronym = meta.get("acronym")
-            if acronym:
-                html_parts.append(f'<div class="low-profile-acronym">{acronym}</div>')
-                
-            for seg in segments:
-                html_tag = seg.get("html", "")
-                
-                # Check for comm (footnotes)
-                comm = seg.get("comm")
-                footnote_idx = 0
-                if comm:
-                    current_footnotes.append((seg.get("segment_id", ""), comm))
-                    footnote_idx = len(current_footnotes)
-                
-                # Collect headers for TOC (h1, h2, h3), excluding sutta-titles
-                if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3"]):
-                    if "class='sutta-title'" not in html_tag and 'class="sutta-title"' not in html_tag:
-                        # Strip HTML tags to get pure text from segment (pli or eng)
-                        header_text = seg.get("pli") or seg.get("eng") or "Section"
-                        collected_headers.append({
-                            "title": header_text,
-                            "anchor": seg.get("segment_id", "")
-                        })
-                        
-                html_parts.append(self._build_segment_html(seg, footnote_idx))
-                
-            if current_footnotes:
-                fn_html = '<div class="footnotes-section">\n'
-                for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
-                    fn_html += f'<div class="footnote-item" id="fn_{seg_id}"><a class="footnote-back" href="#ref_{seg_id}">^{idx}</a> {comm_text}</div>\n'
-                fn_html += '</div>'
-                html_parts.append(fn_html)
-                
-            content_html = "\n".join(html_parts)
-            if not content_html.strip():
-                content_html = "<p><i>[No content available]</i></p>"
-                
-            page_html = PAGE_HTML_TEMPLATE.format(title=title, content=content_html)
-            self.pages.append({"filename": filename, "content": page_html})
-            
-        elif m_type == "branch":
-            blurb = meta.get("blurb") or ""
-            # We will fill the children_links later when the tree is parsed
-            # So for now, we just save the skeleton
-            page_html = BRANCH_HTML_TEMPLATE.format(
-                title=title, 
-                blurb=blurb,
-                children_links="{children_links}" # Placeholder
-            )
-            self.pages.append({"filename": filename, "content": page_html, "uid": uid, "is_branch": True})
-            
-        elif m_type == "alias":
-            # Alias points to another uid. Let's just create a redirect or simple page if needed,
-            # or map it to the target file.
-            target = meta.get("target_uid")
-            if target:
-                self.uid_to_filename[uid] = self.uid_to_filename.get(target, f"leaf_{target.replace('/', '_')}.html")
-            return None
-
-        return filename, collected_headers
+        self.html_builder = None
 
     def _traverse_tree(self, node: Any, parent_toc_list: List[Dict[str, Any]], depth: int = 1):
         if isinstance(node, dict):
@@ -200,7 +60,7 @@ class EpubGenerator:
                 elif isinstance(book_structure, list):
                     children = book_structure
 
-        page_result = self._generate_page(uid)
+        page_result = self.html_builder.generate_page(uid, self.pages)
         if not page_result:
             # If it's an alias or failed or subleaf, still process children if any
             if children:
@@ -210,7 +70,7 @@ class EpubGenerator:
         filename, collected_headers = page_result
 
         meta = self.all_meta.get(uid, {})
-        title = self._get_title(uid, meta)
+        title = self.html_builder.get_title(uid, meta)
         
         toc_entry = {
             "uid": uid,
@@ -252,7 +112,7 @@ class EpubGenerator:
             links_html = ""
             for cid in child_uids:
                 cmeta = self.all_meta.get(cid, {})
-                ctitle = self._get_title(cid, cmeta)
+                ctitle = self.html_builder.get_title(cid, cmeta)
                 cfile = self.uid_to_filename.get(cid, "#")
                 cblurb = cmeta.get("blurb", "")
                 blurb_html = f'<div class="child-blurb">{cblurb}</div>' if cblurb else ""
@@ -267,44 +127,23 @@ class EpubGenerator:
                     page["content"] = page["content"].replace("{children_links}", links_html)
                     break
 
-    def _build_toc_ncx(self) -> str:
-        def build_nav_points(entries: List[Dict], level: int) -> str:
-            res = ""
-            for entry in entries:
-                res += f'{"  " * level}<navPoint id="navPoint-{entry["play_order"]}" playOrder="{entry["play_order"]}">\n'
-                res += f'{"  " * level}  <navLabel><text>{entry["title"]}</text></navLabel>\n'
-                res += f'{"  " * level}  <content src="Text/{entry["filename"]}"/>\n'
-                if entry["children"]:
-                    res += build_nav_points(entry["children"], level + 2)
-                res += f'{"  " * level}</navPoint>\n'
-            return res
-            
-        nav_points = build_nav_points(self.toc_entries, 2)
-        return TOC_NCX_TEMPLATE.format(
-            uuid=self.uuid, depth=5, title="Random Sutta TPK", nav_points=nav_points
-        )
-
-    def _build_nav_xhtml(self) -> str:
-        def build_nav_list(entries: List[Dict], level: int) -> str:
-            if not entries: return ""
-            res = f'{"  " * level}<ol>\n'
-            for entry in entries:
-                res += f'{"  " * (level + 1)}<li><a href="Text/{entry["filename"]}">{entry["title"]}</a>\n'
-                if entry["children"]:
-                    res += build_nav_list(entry["children"], level + 2)
-                res += f'{"  " * (level + 1)}</li>\n'
-            res += f'{"  " * level}</ol>\n'
-            return res
-            
-        nav_list = build_nav_list(self.toc_entries, 2)
-        return NAV_XHTML_TEMPLATE.format(title="Table of Contents", nav_list=nav_list)
-
     def build(self):
         logger.info("📚 Starting EPUB build process...")
         with DbReader(self.db_dir) as db:
             self.db = db
             self.all_meta = db.get_all_metadata()
+            self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename)
             
+            # Map existing files so link_resolver can find them even if processed out of order?
+            # Actually, to make link_resolver robust, we might pre-compute uid_to_filename for everything.
+            # But the structure traversal creates filenames sequentially. For aliases, it resolves on-the-fly.
+            # To be 100% safe, we should pre-populate uid_to_filename for all items, but for now we follow the traversal order.
+            # Let's pre-populate uid_to_filename for all items based on their type to avoid unresolvable internal links.
+            for m_uid, m_data in self.all_meta.items():
+                if m_data.get("type") in ["leaf", "branch"]:
+                    safe_uid = m_uid.replace("/", "_").replace(":", "_")
+                    self.uid_to_filename[m_uid] = f"{m_data.get('type')}_{safe_uid}.html"
+
             tpk_tree = db.get_structure("tpk")
             if not tpk_tree:
                 logger.error("❌ TPK tree not found in structure table.")
@@ -329,10 +168,10 @@ class EpubGenerator:
                 epub.writestr(f"OEBPS/Text/{page['filename']}", page["content"], compress_type=zipfile.ZIP_DEFLATED)
             
             # TOCs
-            ncx_content = self._build_toc_ncx()
+            ncx_content = TocBuilder.build_toc_ncx(self.toc_entries, self.uuid)
             epub.writestr("OEBPS/toc.ncx", ncx_content, compress_type=zipfile.ZIP_DEFLATED)
             
-            nav_content = self._build_nav_xhtml()
+            nav_content = TocBuilder.build_nav_xhtml(self.toc_entries)
             epub.writestr("OEBPS/nav.xhtml", nav_content, compress_type=zipfile.ZIP_DEFLATED)
             
             # OPF
