@@ -54,6 +54,7 @@ class EpubGenerator:
         html_tag = segment.get("html", "")
         pli = segment.get("pli") or ""
         eng = segment.get("eng") or ""
+        segment_id = segment.get("segment_id", "")
         
         if not pli and not eng:
             return ""
@@ -64,20 +65,30 @@ class EpubGenerator:
         if eng:
             content += f'<p class="eng">{eng}</p>'
             
-        inner_html = f'<div class="segment" id="{segment.get("segment_id", "")}">\n{content}\n</div>'
+        # Determine if segment should be invisible (e.g. ends with :0.1, :0.2, etc.)
+        invisible_class = ""
+        if any(segment_id.endswith(ext) for ext in [":0.1", ":0.2", ":0.3", ":0.4"]):
+            invisible_class = " invisible-segment"
+            
+        inner_html = f'<div class="segment{invisible_class}" id="{segment_id}">\n{content}\n</div>'
         
         # If the html column has `{}` pattern (like `<h1>{}</h1>`)
         if html_tag and "{}" in html_tag:
             return html_tag.format(inner_html)
         return inner_html
 
-    def _generate_page(self, uid: str) -> Optional[str]:
+    def _generate_page(self, uid: str) -> Optional[Tuple[str, List[Dict[str, str]]]]:
         meta = self.all_meta.get(uid)
         if not meta:
             logger.warning(f"Missing metadata for {uid}")
             return None
 
         m_type = meta.get("type", "branch")
+        
+        # Skip subleaf pages entirely
+        if m_type == "subleaf":
+            return None
+            
         title = self._get_title(uid, meta)
         
         # Build filename based on type
@@ -85,10 +96,32 @@ class EpubGenerator:
         filename = f"{m_type}_{safe_uid}.html"
         self.uid_to_filename[uid] = filename
         
-        if m_type in ["leaf", "subleaf"]:
+        collected_headers = []
+        
+        if m_type == "leaf":
             # Fetch content
             segments = self.db.get_segments(uid, meta.get("book_id", ""))
-            content_html = "\n".join([self._build_segment_html(seg) for seg in segments])
+            
+            html_parts = []
+            
+            # Prepend acronym if it exists
+            acronym = meta.get("acronym")
+            if acronym:
+                html_parts.append(f'<div class="low-profile-acronym">{acronym}</div>')
+                
+            for seg in segments:
+                html_tag = seg.get("html", "")
+                # Collect headers for TOC (h1, h2, h3)
+                if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3"]):
+                    # Strip HTML tags to get pure text from segment (pli or eng)
+                    header_text = seg.get("pli") or seg.get("eng") or "Section"
+                    collected_headers.append({
+                        "title": header_text,
+                        "anchor": seg.get("segment_id", "")
+                    })
+                html_parts.append(self._build_segment_html(seg))
+                
+            content_html = "\n".join(html_parts)
             if not content_html.strip():
                 content_html = "<p><i>[No content available]</i></p>"
                 
@@ -114,7 +147,7 @@ class EpubGenerator:
                 self.uid_to_filename[uid] = self.uid_to_filename.get(target, f"leaf_{target.replace('/', '_')}.html")
             return None
 
-        return filename
+        return filename, collected_headers
 
     def _traverse_tree(self, node: Any, parent_toc_list: List[Dict[str, Any]], depth: int = 1):
         if isinstance(node, dict):
@@ -140,12 +173,14 @@ class EpubGenerator:
                 elif isinstance(book_structure, list):
                     children = book_structure
 
-        filename = self._generate_page(uid)
-        if not filename:
-            # If it's an alias or failed, still process children if any
+        page_result = self._generate_page(uid)
+        if not page_result:
+            # If it's an alias or failed or subleaf, still process children if any
             if children:
                 self._traverse_tree(children, parent_toc_list, depth)
             return
+
+        filename, collected_headers = page_result
 
         meta = self.all_meta.get(uid, {})
         title = self._get_title(uid, meta)
@@ -162,6 +197,17 @@ class EpubGenerator:
         
         self.spine_items.append(f'<itemref idref="item_{uid}"/>')
         self.manifest_items.append(f'<item id="item_{uid}" href="Text/{filename}" media-type="application/xhtml+xml"/>')
+
+        # Add headers found in this leaf to the TOC
+        for header in collected_headers:
+            toc_entry["children"].append({
+                "uid": f"{uid}_{header['anchor']}",
+                "title": header["title"],
+                "filename": f"{filename}#{header['anchor']}",
+                "play_order": self.play_order,
+                "children": []
+            })
+            self.play_order += 1
 
         child_uids = []
         if children:

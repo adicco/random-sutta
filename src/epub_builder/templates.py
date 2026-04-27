@@ -131,6 +131,19 @@ h2 { font-size: 1.5em; }
     margin-bottom: 2em;
 }
 
+.low-profile-acronym {
+    text-align: center;
+    font-size: 0.9em;
+    color: #888;
+    letter-spacing: 1px;
+    margin-bottom: 1em;
+    text-transform: uppercase;
+}
+
+.invisible-segment {
+    display: none;
+}
+
 .branch-list {
     list-style-type: none;
     padding: 0;
