@@ -8,7 +8,8 @@ from typing import Dict, Any, List
 
 from .db_reader import DbReader
 from .templates import (
-    EPUB_MIMETYPE, CONTAINER_XML, CONTENT_OPF_TEMPLATE, STYLE_CSS
+    EPUB_MIMETYPE, CONTAINER_XML, CONTENT_OPF_TEMPLATE, STYLE_CSS,
+    COVER_HTML_TEMPLATE, COVER_IMAGE
 )
 from .core.html_builder import HtmlBuilder
 from .core.toc_builder import TocBuilder
@@ -176,6 +177,32 @@ class EpubGenerator:
             for page in self.pages:
                 epub.writestr(f"OEBPS/Text/{page['filename']}", page["content"], compress_type=zipfile.ZIP_DEFLATED)
             
+            # Write Cover
+            cover_meta = ""
+            cover_manifest = ""
+            cover_spine = ""
+            
+            if COVER_IMAGE:
+                epub.writestr("OEBPS/Images/cover.jpg", COVER_IMAGE, compress_type=zipfile.ZIP_STORED)
+                epub.writestr("OEBPS/Text/cover.html", COVER_HTML_TEMPLATE, compress_type=zipfile.ZIP_DEFLATED)
+                
+                cover_meta = '    <meta name="cover" content="cover-image"/>'
+                cover_manifest = '    <item id="cover-image" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>\n'
+                cover_manifest += '    <item id="cover" href="Text/cover.html" media-type="application/xhtml+xml"/>'
+                cover_spine = '    <itemref idref="cover" linear="yes"/>'
+                
+                # Insert cover at the beginning of TOC entries
+                cover_toc_entry = {
+                    "uid": "cover",
+                    "title": "Cover",
+                    "filename": "cover.html",
+                    "play_order": 0,
+                    "children": []
+                }
+                self.toc_entries.insert(0, cover_toc_entry)
+                # Adjust play_orders? Actually TOC builder doesn't strictly need 0, it just prints it.
+                # Let's fix play_order inside TOC builder if needed, or just let it be.
+            
             # TOCs
             ncx_content = TocBuilder.build_toc_ncx(self.toc_entries, self.uuid)
             epub.writestr("OEBPS/toc.ncx", ncx_content, compress_type=zipfile.ZIP_DEFLATED)
@@ -185,11 +212,14 @@ class EpubGenerator:
             
             # OPF
             opf_content = CONTENT_OPF_TEMPLATE.format(
-                title="Random Sutta TPK",
-                author="Sutta Processor",
+                title="SuttaCentral Tipitaka",
+                author="Random Sutta",
                 language="en",
                 uuid=self.uuid,
                 date=self.date_str,
+                cover_meta=cover_meta,
+                cover_manifest=cover_manifest,
+                cover_spine=cover_spine,
                 manifest_items="\n".join(self.manifest_items),
                 spine_items="\n".join(self.spine_items)
             )

@@ -9,6 +9,12 @@ def _read_template(filename: str) -> str:
         return path.read_text(encoding="utf-8")
     return ""
 
+def _read_binary_template(filename: str) -> bytes:
+    path = _TEMPLATES_DIR / filename
+    if path.exists():
+        return path.read_bytes()
+    return b""
+
 EPUB_MIMETYPE = "application/epub+zip"
 CONTAINER_XML = _read_template("container.xml")
 CONTENT_OPF_TEMPLATE = _read_template("content.opf.xml")
@@ -17,3 +23,5 @@ NAV_XHTML_TEMPLATE = _read_template("nav.xhtml")
 PAGE_HTML_TEMPLATE = _read_template("page.html")
 BRANCH_HTML_TEMPLATE = _read_template("branch.html")
 STYLE_CSS = _read_template("style.css")
+COVER_HTML_TEMPLATE = _read_template("cover.html")
+COVER_IMAGE = _read_binary_template("cover.jpg")

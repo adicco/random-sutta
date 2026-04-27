@@ -18,7 +18,7 @@ class TocBuilder:
             
         nav_points = build_nav_points(toc_entries, 2)
         return TOC_NCX_TEMPLATE.format(
-            uuid=uuid_str, depth=5, title="Random Sutta TPK", nav_points=nav_points
+            uuid=uuid_str, depth=5, title="SuttaCentral Tipitaka", nav_points=nav_points
         )
 
     @staticmethod
