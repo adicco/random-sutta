@@ -116,7 +116,8 @@ class EpubGenerator:
                 child_uids.extend(list(children.keys()))
 
         # Update branch page content with links
-        if meta.get("type", "branch") == "branch":
+        m_type = meta.get("type", "branch")
+        if m_type in ["branch", "root", "group"]:
             links_html = ""
             for cid in child_uids:
                 cmeta = self.all_meta.get(cid, {})

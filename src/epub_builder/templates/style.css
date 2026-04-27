@@ -35,12 +35,22 @@ h2 { font-size: 1.5em; }
     font-size: 0.9em;
     color: #888;
     letter-spacing: 1px;
+    margin-top: 1.5em;
     margin-bottom: 0.2em;
     text-transform: uppercase;
 }
 
 .invisible-segment {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .branch-list {
