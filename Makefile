@@ -37,6 +37,7 @@ help:
 	@echo "  make re             - Quick Re-build (Vite Only)"
 	@echo "  make dev            - Vite Dev Server with HMR"
 	@echo "  make view           - Preview Vite Production Build"
+	@echo "  make epub           - Generate EPUB Book"
 	@echo ""
 	@echo "🚀 RELEASE & DEPLOY:"
 	@echo "  make deploy         - Build & Deploy Web to GH-Pages"
@@ -146,6 +147,10 @@ dev:
 view:
 	@echo "🌍 Starting Vite Preview Server on port 8001..."
 	npm run preview -- --port 8001
+
+epub:
+	@echo "📚 Building EPUB Book..."
+	$(PYTHON) -m src.epub_builder
 
 # ==============================================================================
 # 🚀 RELEASE ACTIONS

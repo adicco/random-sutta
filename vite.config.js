@@ -56,7 +56,7 @@ export default defineConfig(({ mode }) => {
         },
 
         build: {
-            outDir: '../dist', 
+            outDir: '../dist/web', 
             emptyOutDir: true,
             target: 'es2022', 
             minify: 'esbuild',

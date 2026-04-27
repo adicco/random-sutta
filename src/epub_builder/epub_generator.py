@@ -50,7 +50,7 @@ class EpubGenerator:
             return f"{acronym} - {base_title}"
         return base_title
 
-    def _build_segment_html(self, segment: Dict[str, Any]) -> str:
+    def _build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0) -> str:
         html_tag = segment.get("html", "")
         pli = segment.get("pli") or ""
         eng = segment.get("eng") or ""
@@ -61,20 +61,29 @@ class EpubGenerator:
 
         content = ""
         if pli:
-            content += f'<p class="pli">{pli}</p>'
+            pli_text = pli
+            # Attach footnote to Pali if no English is present
+            if not eng and footnote_idx > 0:
+                pli_text += f' <a class="footnote-link" href="#fn_{segment_id}" id="ref_{segment_id}">[{footnote_idx}]</a>'
+            content += f'<p class="pli">{pli_text}</p>'
+            
         if eng:
-            content += f'<p class="eng">{eng}</p>'
+            eng_text = eng
+            if footnote_idx > 0:
+                eng_text += f' <a class="footnote-link" href="#fn_{segment_id}" id="ref_{segment_id}">[{footnote_idx}]</a>'
+            content += f'<p class="eng">{eng_text}</p>'
             
-        # Determine if segment should be invisible (e.g. ends with :0.1, :0.2, etc.)
-        invisible_class = ""
-        if any(segment_id.endswith(ext) for ext in [":0.1", ":0.2", ":0.3", ":0.4"]):
-            invisible_class = " invisible-segment"
-            
-        inner_html = f'<div class="segment{invisible_class}" id="{segment_id}">\n{content}\n</div>'
+        inner_html = f'<div class="segment" id="{segment_id}">\n{content}\n</div>'
         
-        # If the html column has `{}` pattern (like `<h1>{}</h1>`)
-        if html_tag and "{}" in html_tag:
-            return html_tag.format(inner_html)
+        if html_tag:
+            # Hide the <ul> containing meta division headers in EPUB
+            if "<header><ul" in html_tag:
+                html_tag = html_tag.replace("<header><ul", '<header><ul class="invisible-segment"')
+            
+            # If the html column has `{}` pattern (like `<h1>{}</h1>`)
+            if "{}" in html_tag:
+                return html_tag.format(inner_html)
+                
         return inner_html
 
     def _generate_page(self, uid: str) -> Optional[Tuple[str, List[Dict[str, str]]]]:
@@ -103,6 +112,7 @@ class EpubGenerator:
             segments = self.db.get_segments(uid, meta.get("book_id", ""))
             
             html_parts = []
+            current_footnotes = []
             
             # Prepend acronym if it exists
             acronym = meta.get("acronym")
@@ -111,15 +121,32 @@ class EpubGenerator:
                 
             for seg in segments:
                 html_tag = seg.get("html", "")
-                # Collect headers for TOC (h1, h2, h3)
+                
+                # Check for comm (footnotes)
+                comm = seg.get("comm")
+                footnote_idx = 0
+                if comm:
+                    current_footnotes.append((seg.get("segment_id", ""), comm))
+                    footnote_idx = len(current_footnotes)
+                
+                # Collect headers for TOC (h1, h2, h3), excluding sutta-titles
                 if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3"]):
-                    # Strip HTML tags to get pure text from segment (pli or eng)
-                    header_text = seg.get("pli") or seg.get("eng") or "Section"
-                    collected_headers.append({
-                        "title": header_text,
-                        "anchor": seg.get("segment_id", "")
-                    })
-                html_parts.append(self._build_segment_html(seg))
+                    if "class='sutta-title'" not in html_tag and 'class="sutta-title"' not in html_tag:
+                        # Strip HTML tags to get pure text from segment (pli or eng)
+                        header_text = seg.get("pli") or seg.get("eng") or "Section"
+                        collected_headers.append({
+                            "title": header_text,
+                            "anchor": seg.get("segment_id", "")
+                        })
+                        
+                html_parts.append(self._build_segment_html(seg, footnote_idx))
+                
+            if current_footnotes:
+                fn_html = '<div class="footnotes-section">\n'
+                for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
+                    fn_html += f'<div class="footnote-item" id="fn_{seg_id}"><a class="footnote-back" href="#ref_{seg_id}">^{idx}</a> {comm_text}</div>\n'
+                fn_html += '</div>'
+                html_parts.append(fn_html)
                 
             content_html = "\n".join(html_parts)
             if not content_html.strip():

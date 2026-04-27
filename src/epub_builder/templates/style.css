@@ -1,0 +1,130 @@
+/* Tối giản EPUB Style */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    margin: 20px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #111;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+h1 { font-size: 1.8em; text-align: center; }
+h2 { font-size: 1.5em; }
+
+.sutta-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.branch-container {
+    text-align: center;
+}
+
+.blurb {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 2em;
+}
+
+.low-profile-acronym {
+    text-align: center;
+    font-size: 0.9em;
+    color: #888;
+    letter-spacing: 1px;
+    margin-bottom: 1em;
+    text-transform: uppercase;
+}
+
+.invisible-segment {
+    display: none;
+}
+
+.branch-list {
+    list-style-type: none;
+    padding: 0;
+    text-align: left;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.branch-list li {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.branch-list a {
+    text-decoration: none;
+    color: #0056b3;
+    font-weight: bold;
+    display: block;
+}
+
+.branch-list .child-blurb {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Bilingual Segment Styling */
+.segment {
+    margin-bottom: 1.2em;
+    padding-bottom: 0.5em;
+}
+
+.pli {
+    font-style: italic;
+    color: #000;
+    margin: 0 0 0.4em 0;
+}
+
+.eng {
+    margin: 0;
+    color: #444;
+}
+
+/* Các trường hợp HTML có tag sẵn (vd <h1>{}</h1>) */
+.segment h1, .segment h2, .segment h3 {
+    text-align: center;
+}
+
+.segment h1 .pli, .segment h2 .pli, .segment h3 .pli {
+    font-style: normal;
+    font-weight: bold;
+}
+
+.segment blockquote {
+    margin-left: 1.5em;
+    border-left: 3px solid #ccc;
+    padding-left: 1em;
+    color: #555;
+}
+
+/* Footnotes styling */
+.footnote-link {
+    font-size: 0.8em;
+    vertical-align: super;
+    text-decoration: none;
+    color: #0056b3;
+}
+
+.footnotes-section {
+    margin-top: 3em;
+    padding-top: 1em;
+    border-top: 1px solid #ccc;
+    font-size: 0.9em;
+}
+
+.footnote-item {
+    margin-bottom: 0.5em;
+}
+
+.footnote-item a.footnote-back {
+    text-decoration: none;
+    color: #0056b3;
+    margin-right: 5px;
+}
