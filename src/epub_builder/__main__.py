@@ -18,6 +18,9 @@ def main():
         logger.error("Please run the Sutta Processor build first to generate databases.")
         sys.exit(1)
         
+    # Ensure output directory exists
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+        
     generator = EpubGenerator(output_path=args.output, db_dir=args.db_dir)
     
     try:

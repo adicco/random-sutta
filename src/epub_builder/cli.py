@@ -14,7 +14,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("random_sutta.epub"),
+        default=Path("dist/random_sutta.epub"),
         help="Output path for the generated EPUB file"
     )
     return parser.parse_args()
