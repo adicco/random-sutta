@@ -8,7 +8,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--db-dir",
         type=Path,
-        default=Path("dist/db"),
+        default=Path("web/public/assets/db"),
         help="Directory containing the sqlite databases (sutta_core.db, etc.)"
     )
     parser.add_argument(

@@ -33,6 +33,7 @@ class EpubGenerator:
         self.play_order = 1
         self.spine_items = []
         self.manifest_items = []
+        self.visited_uids = set()
 
     def _get_title(self, uid: str, meta: Dict[str, Any]) -> str:
         translated = meta.get("translated_title")
@@ -119,6 +120,18 @@ class EpubGenerator:
                     self._traverse_tree(item, parent_toc_list, depth)
 
     def _process_node(self, uid: str, children: Any, parent_toc_list: List[Dict[str, Any]], depth: int):
+        if uid in self.visited_uids:
+            return
+        self.visited_uids.add(uid)
+
+        if not children:
+            book_structure = self.db.get_structure(uid)
+            if book_structure:
+                if isinstance(book_structure, dict) and uid in book_structure:
+                    children = book_structure[uid]
+                elif isinstance(book_structure, list):
+                    children = book_structure
+
         filename = self._generate_page(uid)
         if not filename:
             # If it's an alias or failed, still process children if any
