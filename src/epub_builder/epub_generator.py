@@ -137,6 +137,50 @@ class EpubGenerator:
                     page["content"] = page["content"].replace("{children_links}", links_html)
                     break
 
+    def _flatten_single_chains(self, structure: Any, meta_map: Dict[str, Dict[str, Any]]) -> Any:
+        if not structure:
+            return structure
+            
+        if isinstance(structure, list):
+            return [self._flatten_single_chains(child, meta_map) for child in structure]
+            
+        if isinstance(structure, dict):
+            keys = list(structure.keys())
+            if len(keys) == 1:
+                parent_id = keys[0]
+                content = structure[parent_id]
+                
+                if isinstance(content, list) and len(content) == 1:
+                    child = content[0]
+                    child_id = None
+                    if isinstance(child, str):
+                        child_id = child
+                    elif isinstance(child, dict):
+                        child_id = list(child.keys())[0]
+                        
+                    if child_id:
+                        p_meta = meta_map.get(parent_id, {})
+                        c_meta = meta_map.get(child_id, {})
+                        
+                        if p_meta and c_meta:
+                            p_title = p_meta.get("translated_title") or p_meta.get("acronym") or parent_id.upper()
+                            if not c_meta.get("_is_merged"):
+                                c_title = c_meta.get("translated_title") or c_meta.get("acronym") or child_id
+                                c_meta["translated_title"] = f"{p_title} / {c_title}"
+                                c_meta["_is_merged"] = True
+                                
+                            if not c_meta.get("blurb") and p_meta.get("blurb"):
+                                c_meta["blurb"] = p_meta.get("blurb")
+                                
+                            if not c_meta.get("acronym") and p_meta.get("acronym"):
+                                c_meta["acronym"] = p_meta.get("acronym")
+                                
+                        return self._flatten_single_chains(child, meta_map)
+                        
+            return {k: self._flatten_single_chains(v, meta_map) for k, v in structure.items()}
+            
+        return structure
+
     def build(self):
         logger.info("📚 Starting EPUB build process...")
         with DbReader(self.db_dir) as db:
@@ -158,6 +202,9 @@ class EpubGenerator:
             if not tpk_tree:
                 logger.error("❌ TPK tree not found in structure table.")
                 return
+
+            # Apply flattening to skip intermediate branch nodes (like long, middle)
+            tpk_tree = self._flatten_single_chains(tpk_tree, self.all_meta)
 
             logger.info("🌳 Processing TPK tree...")
             self._traverse_tree(tpk_tree, self.toc_entries)
