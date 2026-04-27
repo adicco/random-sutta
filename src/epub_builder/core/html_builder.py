@@ -94,12 +94,19 @@ class HtmlBuilder:
                     current_footnotes.append((seg.get("segment_id", ""), comm))
                     footnote_idx = len(current_footnotes)
                 
-                if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3"]):
+                if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6"]):
                     if "class='sutta-title'" not in html_tag and 'class="sutta-title"' not in html_tag:
                         header_text = seg.get("pli") or seg.get("eng") or "Section"
+                        level = 1
+                        if "<h2" in html_tag: level = 2
+                        elif "<h3" in html_tag: level = 3
+                        elif "<h4" in html_tag: level = 4
+                        elif "<h5" in html_tag: level = 5
+                        elif "<h6" in html_tag: level = 6
                         collected_headers.append({
                             "title": header_text,
-                            "anchor": seg.get("segment_id", "")
+                            "anchor": seg.get("segment_id", ""),
+                            "level": level
                         })
                         
                 html_parts.append(self.build_segment_html(seg, footnote_idx))
@@ -118,7 +125,7 @@ class HtmlBuilder:
             page_html = PAGE_HTML_TEMPLATE.format(title=title, content=content_html)
             pages_list.append({"filename": filename, "content": page_html})
             
-        elif m_type == "branch":
+        elif m_type in ["branch", "root", "group"]:
             blurb = meta.get("blurb") or ""
             page_html = BRANCH_HTML_TEMPLATE.format(
                 title=title, 

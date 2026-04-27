@@ -85,16 +85,24 @@ class EpubGenerator:
         self.spine_items.append(f'<itemref idref="item_{uid}"/>')
         self.manifest_items.append(f'<item id="item_{uid}" href="Text/{filename}" media-type="application/xhtml+xml"/>')
 
-        # Add headers found in this leaf to the TOC
+        # Add headers found in this leaf to the TOC preserving hierarchy
+        header_stack = [(toc_entry, 0)]
         for header in collected_headers:
-            toc_entry["children"].append({
+            h_level = header.get("level", 1)
+            new_entry = {
                 "uid": f"{uid}_{header['anchor']}",
                 "title": header["title"],
                 "filename": f"{filename}#{header['anchor']}",
                 "play_order": self.play_order,
                 "children": []
-            })
+            }
             self.play_order += 1
+            
+            while len(header_stack) > 1 and header_stack[-1][1] >= h_level:
+                header_stack.pop()
+                
+            header_stack[-1][0]["children"].append(new_entry)
+            header_stack.append((new_entry, h_level))
 
         child_uids = []
         if children:
