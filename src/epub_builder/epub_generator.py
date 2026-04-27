@@ -38,9 +38,17 @@ class EpubGenerator:
     def _get_title(self, uid: str, meta: Dict[str, Any]) -> str:
         translated = meta.get("translated_title")
         original = meta.get("original_title")
+        acronym = meta.get("acronym")
+        
+        base_title = ""
         if translated and original:
-            return f"{translated} - {original}"
-        return translated or original or uid.upper()
+            base_title = f"{translated} - {original}"
+        else:
+            base_title = translated or original or uid.upper()
+            
+        if acronym:
+            return f"{acronym} - {base_title}"
+        return base_title
 
     def _build_segment_html(self, segment: Dict[str, Any]) -> str:
         html_tag = segment.get("html", "")
