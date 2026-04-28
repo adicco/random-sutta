@@ -19,24 +19,25 @@ class StructureProcessor:
             return [StructureProcessor.flatten_single_chains(child, meta_map) for child in structure]
             
         if isinstance(structure, dict):
-            keys = list(structure.keys())
-            if len(keys) == 1:
-                parent_id = keys[0]
-                content = structure[parent_id]
-                
+            new_dict = {}
+            for parent_id, content in structure.items():
+                # Check if this parent has a single child to merge with
                 if isinstance(content, list) and len(content) == 1:
                     child = content[0]
                     child_id = None
+                    grandchildren = None
+                    
                     if isinstance(child, str):
                         child_id = child
-                    elif isinstance(child, dict):
+                    elif isinstance(child, dict) and len(child) == 1:
                         child_id = list(child.keys())[0]
-                        
-                    if child_id:
+                        grandchildren = child[child_id]
+                    
+                    if child_id and parent_id != child_id:
                         p_meta = meta_map.get(parent_id, {})
                         c_meta = meta_map.get(child_id, {})
                         
-                        if p_meta and c_meta and parent_id != child_id:
+                        if p_meta and c_meta:
                             p_title = p_meta.get("translated_title") or p_meta.get("acronym") or parent_id.upper()
                             if not c_meta.get("_is_merged"):
                                 c_title = c_meta.get("translated_title") or c_meta.get("acronym") or child_id
@@ -52,9 +53,23 @@ class StructureProcessor:
                             if not c_meta.get("child_range") and p_meta.get("child_range"):
                                 c_meta["child_range"] = p_meta.get("child_range")
                                 
-                        return StructureProcessor.flatten_single_chains(child, meta_map)
-                        
-            return {k: StructureProcessor.flatten_single_chains(v, meta_map) for k, v in structure.items()}
+                        # RECURSE from child level instead of keeping parent_id
+                        if grandchildren is not None:
+                            # It was a dict, keep flattening grandchildren
+                            res = StructureProcessor.flatten_single_chains({child_id: grandchildren}, meta_map)
+                            new_dict.update(res)
+                        else:
+                            # It was a string, parent is now replaced by child string
+                            # But wait, new_dict is a mapping. A leaf is just a UID.
+                            # In _traverse_tree, a dict {uid: children} is a branch.
+                            # If we replace parent_id with child_id, we need to know children.
+                            # If child was a string, it has no children.
+                            new_dict[child_id] = None
+                        continue
+                
+                # Normal recursion
+                new_dict[parent_id] = StructureProcessor.flatten_single_chains(content, meta_map)
+            return new_dict
             
         return structure
 
