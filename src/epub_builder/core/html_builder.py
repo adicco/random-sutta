@@ -28,7 +28,7 @@ class HtmlBuilder:
             return f"{acronym} - {base_title}"
         return base_title
 
-    def build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0, acronym: str = "") -> str:
+    def build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0) -> str:
         html_tag = segment.get("html", "")
         pli = segment.get("pli") or ""
         eng = segment.get("eng") or ""
@@ -52,22 +52,8 @@ class HtmlBuilder:
             
         inner_html = f'<div class="segment" id="{segment_id}">\n{content}\n</div>'
         
-        if html_tag:
-            # Replace UL block (usually containing division info) with the acronym
-            if "<header>" in html_tag and "ul" in html_tag:
-                acronym_html = f'<div class="low-profile-acronym">{acronym}</div>' if acronym else ""
-                # More robust regex to catch <ul class="..."> and multi-line ULs
-                new_tag, count = re.subn(r'<ul.*?>.*?</ul>', acronym_html, html_tag, flags=re.DOTALL)
-                if count > 0:
-                    html_tag = new_tag
-                    # If we replaced the part containing {}, we need to make sure we don't lose the segment content if it's NOT just division info.
-                    # But usually :0.1 is exactly for division. 
-                    # If html_tag no longer has {}, we just return the acronym block.
-                    if "{}" not in html_tag:
-                        return html_tag
-            
-            if "{}" in html_tag:
-                return html_tag.format(inner_html)
+        if html_tag and "{}" in html_tag:
+            return html_tag.format(inner_html)
                 
         return inner_html
 
@@ -105,7 +91,9 @@ class HtmlBuilder:
                     footnote_idx = len(current_footnotes)
                 
                 if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6"]):
-                    if "class='sutta-title'" not in html_tag and 'class="sutta-title"' not in html_tag:
+                    if "class='sutta-title'" in html_tag or 'class="sutta-title"' in html_tag:
+                        pass # Don't add sutta-title to TOC
+                    else:
                         header_text = seg.get("pli") or seg.get("eng") or "Section"
                         level = 1
                         if "<h2" in html_tag: level = 2
@@ -119,7 +107,7 @@ class HtmlBuilder:
                             "level": level
                         })
                         
-                html_parts.append(self.build_segment_html(seg, footnote_idx, acronym))
+                html_parts.append(self.build_segment_html(seg, footnote_idx))
                 
             if current_footnotes:
                 fn_html = '<div class="footnotes-section">\n'
@@ -129,6 +117,19 @@ class HtmlBuilder:
                 html_parts.append(fn_html)
                 
             content_html = "\n".join(html_parts)
+            
+            # Post-process: Remove UL block from header and insert Acronym
+            if acronym:
+                acronym_div = f'<div class="low-profile-acronym">{acronym}</div>'
+                # Robust regex to catch multi-segment <ul> blocks inside <header>
+                content_html, count = re.subn(r'(<header>.*?)<ul.*?>.*?</ul>', f'\\1{acronym_div}', content_html, flags=re.DOTALL)
+                if count == 0:
+                    # If no UL found, prepend acronym to header content
+                    content_html = re.sub(r'(<header>)', f'\\1{acronym_div}', content_html, flags=re.DOTALL)
+            else:
+                # Still remove UL even if no acronym
+                content_html = re.sub(r'(<header>.*?)<ul.*?>.*?</ul>', r'\1', content_html, flags=re.DOTALL)
+
             if not content_html.strip():
                 content_html = "<p><i>[No content available]</i></p>"
                 

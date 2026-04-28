@@ -2,7 +2,7 @@
 :root {
     --text-main: #000000;
     --text-pali: #000000;
-    --text-muted: #555555;
+    --text-muted: #444444;
     --bg-main: #ffffff;
     --border-color: #000000;
     --link-color: #0000ee;
@@ -12,7 +12,7 @@
     :root {
         --text-main: #ffffff;
         --text-pali: #ffffff;
-        --text-muted: #bbbbbb;
+        --text-muted: #cccccc;
         --bg-main: #121212;
         --border-color: #ffffff;
         --link-color: #aaaaff;
