@@ -1,5 +1,6 @@
 # Path: src/epub_builder/core/html_builder.py
 import logging
+import re
 from typing import Dict, Any, List, Tuple, Optional
 from ..templates import PAGE_HTML_TEMPLATE, BRANCH_HTML_TEMPLATE
 from .link_resolver import resolve_internal_links
@@ -27,7 +28,7 @@ class HtmlBuilder:
             return f"{acronym} - {base_title}"
         return base_title
 
-    def build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0) -> str:
+    def build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0, acronym: str = "") -> str:
         html_tag = segment.get("html", "")
         pli = segment.get("pli") or ""
         eng = segment.get("eng") or ""
@@ -40,20 +41,31 @@ class HtmlBuilder:
         if pli:
             pli_text = pli
             if not eng and footnote_idx > 0:
-                pli_text += f' <a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">[{footnote_idx}]</a>'
+                pli_text += f' <sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
             content += f'<p class="pli">{pli_text}</p>'
             
         if eng:
             eng_text = eng
             if footnote_idx > 0:
-                eng_text += f' <a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">[{footnote_idx}]</a>'
+                eng_text += f' <sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
             content += f'<p class="eng">{eng_text}</p>'
             
         inner_html = f'<div class="segment" id="{segment_id}">\n{content}\n</div>'
         
         if html_tag:
-            if "<header><ul" in html_tag:
-                html_tag = html_tag.replace("<header><ul", '<header><ul class="invisible-segment"')
+            # Replace UL block (usually containing division info) with the acronym
+            if "<header>" in html_tag and "ul" in html_tag:
+                acronym_html = f'<div class="low-profile-acronym">{acronym}</div>' if acronym else ""
+                # More robust regex to catch <ul class="..."> and multi-line ULs
+                new_tag, count = re.subn(r'<ul.*?>.*?</ul>', acronym_html, html_tag, flags=re.DOTALL)
+                if count > 0:
+                    html_tag = new_tag
+                    # If we replaced the part containing {}, we need to make sure we don't lose the segment content if it's NOT just division info.
+                    # But usually :0.1 is exactly for division. 
+                    # If html_tag no longer has {}, we just return the acronym block.
+                    if "{}" not in html_tag:
+                        return html_tag
+            
             if "{}" in html_tag:
                 return html_tag.format(inner_html)
                 
@@ -81,9 +93,7 @@ class HtmlBuilder:
             html_parts = []
             current_footnotes = []
             
-            acronym = meta.get("acronym")
-            if acronym:
-                html_parts.append(f'<div class="low-profile-acronym">{acronym}</div>')
+            acronym = meta.get("acronym") or ""
                 
             for seg in segments:
                 html_tag = seg.get("html", "")
@@ -109,12 +119,12 @@ class HtmlBuilder:
                             "level": level
                         })
                         
-                html_parts.append(self.build_segment_html(seg, footnote_idx))
+                html_parts.append(self.build_segment_html(seg, footnote_idx, acronym))
                 
             if current_footnotes:
                 fn_html = '<div class="footnotes-section">\n'
                 for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
-                    fn_html += f'<aside epub:type="footnote" id="fn_{seg_id}" class="footnote-item"><a class="footnote-back" href="#ref_{seg_id}">^{idx}</a> {comm_text}</aside>\n'
+                    fn_html += f'<div class="footnote-wrapper"><aside epub:type="footnote" id="fn_{seg_id}" class="footnote-item"><a class="footnote-back" href="#ref_{seg_id}">{idx}</a> {comm_text}</aside></div>\n'
                 fn_html += '</div>'
                 html_parts.append(fn_html)
                 

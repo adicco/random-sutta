@@ -1,23 +1,46 @@
-/* Tối giản EPUB Style */
+/* EPUB Style Optimized for E-ink and Dark Mode */
+:root {
+    --text-main: #000000;
+    --text-pali: #000000;
+    --text-muted: #555555;
+    --bg-main: #ffffff;
+    --border-color: #000000;
+    --link-color: #0000ee;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --text-main: #ffffff;
+        --text-pali: #ffffff;
+        --text-muted: #bbbbbb;
+        --bg-main: #121212;
+        --border-color: #ffffff;
+        --link-color: #aaaaff;
+    }
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.6;
-    color: #333;
+    color: var(--text-main);
+    background-color: var(--bg-main);
     margin: 20px;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: #111;
-    margin-top: 1.5em;
+    color: var(--text-main);
+    margin-top: 1.2em;
     margin-bottom: 0.5em;
+    font-weight: bold;
 }
 
-h1 { font-size: 1.8em; text-align: center; }
+h1 { font-size: 1.6em; text-align: center; }
 h1.sutta-title { margin-top: 0.1em; }
-h2 { font-size: 1.5em; }
+h2 { font-size: 1.4em; }
+h3 { font-size: 1.2em; }
 
 .sutta-container {
-    max-width: 800px;
+    max-width: 850px;
     margin: 0 auto;
 }
 
@@ -27,78 +50,70 @@ h2 { font-size: 1.5em; }
 
 .blurb {
     font-style: italic;
-    color: #555;
+    color: var(--text-muted);
     margin-bottom: 2em;
 }
 
 .low-profile-acronym {
     text-align: center;
-    font-size: 0.9em;
-    color: #888;
-    letter-spacing: 1px;
-    margin-top: 1.5em;
-    margin-bottom: 0.2em;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+    margin-top: 1em;
+    margin-bottom: 0.1em;
     text-transform: uppercase;
 }
 
+/* Fallback for safety */
 .invisible-segment {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    border: 0;
-    opacity: 0;
-    pointer-events: none;
+    display: none !important;
+    visibility: hidden;
 }
 
 .branch-list {
     list-style-type: none;
     padding: 0;
     text-align: left;
-    max-width: 600px;
+    max-width: 650px;
     margin: 0 auto;
 }
 
 .branch-list li {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .branch-list a {
     text-decoration: none;
-    color: #0056b3;
+    color: var(--link-color);
     font-weight: bold;
     display: block;
 }
 
 .branch-list .child-blurb {
     font-size: 0.9em;
-    color: #666;
+    color: var(--text-muted);
     margin-top: 4px;
 }
 
 /* Bilingual Segment Styling */
 .segment {
-    margin-bottom: 1.2em;
-    padding-bottom: 0.5em;
+    margin-bottom: 1em;
 }
 
 .pli {
     font-style: italic;
-    color: #000;
-    margin: 0 0 0.4em 0;
+    color: var(--text-pali);
+    margin: 0 0 0.3em 0;
 }
 
 .eng {
     margin: 0;
-    color: #444;
+    color: var(--text-main);
 }
 
-/* Các trường hợp HTML có tag sẵn (vd <h1>{}</h1>) */
+/* Cases where HTML has tags */
 .segment h1, .segment h2, .segment h3 {
     text-align: center;
 }
@@ -110,32 +125,43 @@ h2 { font-size: 1.5em; }
 
 .segment blockquote {
     margin-left: 1.5em;
-    border-left: 3px solid #ccc;
+    border-left: 2px solid var(--border-color);
     padding-left: 1em;
-    color: #555;
+    color: var(--text-muted);
 }
 
 /* Footnotes styling */
-.footnote-link {
-    font-size: 0.8em;
+.footnote-ref {
+    font-size: 0.75em;
+    line-height: 0;
     vertical-align: super;
+}
+
+.footnote-link {
     text-decoration: none;
-    color: #0056b3;
+    color: var(--link-color);
+    font-weight: normal;
 }
 
 .footnotes-section {
     margin-top: 3em;
-    padding-top: 1em;
-    border-top: 1px solid #ccc;
+    padding-top: 1.5em;
+    border-top: 1px solid var(--border-color);
     font-size: 0.9em;
 }
 
+.footnote-wrapper {
+    margin-bottom: 1em;
+    padding: 0.5em 0;
+}
+
 .footnote-item {
-    margin-bottom: 0.5em;
+    color: var(--text-main);
 }
 
 .footnote-item a.footnote-back {
     text-decoration: none;
-    color: #0056b3;
-    margin-right: 5px;
+    color: var(--link-color);
+    margin-right: 8px;
+    font-weight: bold;
 }
