@@ -186,6 +186,15 @@ class EpubGenerator:
         with DbReader(self.db_dir) as db:
             self.db = db
             self.all_meta = db.get_all_metadata()
+            
+            # Correct type heuristic: if it's a branch but has segments, it's actually a leaf
+            # (e.g. pli-tv-bu-pm and pli-tv-bi-pm)
+            for m_uid, m_data in self.all_meta.items():
+                if m_data.get("type") == "branch":
+                    if db.has_segments(m_uid, m_data.get("book_id", "")):
+                        m_data["type"] = "leaf"
+                        logger.info(f"🔄 Corrected branch to leaf: {m_uid}")
+
             self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename)
             
             # Map existing files so link_resolver can find them even if processed out of order?

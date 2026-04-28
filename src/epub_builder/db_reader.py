@@ -72,3 +72,13 @@ class DbReader:
             (sutta_uid,)
         )
         return [dict(row) for row in cursor.fetchall()]
+
+    def has_segments(self, sutta_uid: str, book_id: str) -> bool:
+        category = self._get_category(book_id)
+        conn = self._get_content_conn(category)
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT 1 FROM content_segments WHERE sutta_uid = ? LIMIT 1", 
+            (sutta_uid,)
+        )
+        return cursor.fetchone() is not None
