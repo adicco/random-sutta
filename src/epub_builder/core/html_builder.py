@@ -1,6 +1,7 @@
 # Path: src/epub_builder/core/html_builder.py
 import logging
 import re
+import json
 from typing import Dict, Any, List, Tuple, Optional
 from ..templates import PAGE_HTML_TEMPLATE, BRANCH_HTML_TEMPLATE
 from .link_resolver import resolve_internal_links
@@ -17,7 +18,12 @@ class HtmlBuilder:
         translated = meta.get("translated_title")
         original = meta.get("original_title")
         acronym = meta.get("acronym")
+        m_type = meta.get("type")
         
+        # For subleafs, usually acronym is enough and avoids "AN 1.1 - AN 1.1" redundancy
+        if m_type == "subleaf" and acronym:
+            return acronym
+
         base_title = ""
         if translated and original:
             base_title = f"{translated} - {original}"
@@ -86,13 +92,14 @@ class HtmlBuilder:
             if children_json:
                 try:
                     child_uids = json.loads(children_json)
-                    for cuid in child_uids:
-                        cmeta = self.all_meta.get(cuid)
-                        if cmeta and cmeta.get("type") == "subleaf":
-                            has_subleaf_children = True
-                            break
-                except:
-                    pass
+                    if child_uids:
+                        for cuid in child_uids:
+                            cmeta = self.all_meta.get(cuid)
+                            if cmeta and cmeta.get("type") == "subleaf":
+                                has_subleaf_children = True
+                                break
+                except Exception as e:
+                    logger.warning(f"Failed to parse children for {uid}: {e}")
 
             segments = self.db.get_segments(uid, meta.get("book_id", ""))
             html_parts = []
@@ -111,8 +118,8 @@ class HtmlBuilder:
                 
                 # Only extract headers if the leaf doesn't have virtual subleaf children
                 if not has_subleaf_children and html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6"]):
-                    if "class='sutta-title'" in html_tag or 'class="sutta-title"' in html_tag:
-                        pass # Don't add sutta-title to TOC
+                    if any(cls in html_tag for cls in ["class='sutta-title'", 'class="sutta-title"', "class='range-title'", 'class="range-title"']):
+                        pass # Don't add titles to TOC if they are already represented by the page/subleaf entry
                     else:
                         header_text = seg.get("pli") or seg.get("eng") or "Section"
                         level = 1
