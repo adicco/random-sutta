@@ -22,6 +22,9 @@ class SuttaMeta(TypedDict):
     
     # [NEW] Dùng cho Alias: ID của phần tử HTML cần cuộn tới (Anchor)
     hash_id: Optional[str]
+    
+    # [NEW] Dùng cho Branch: Phạm vi suttas con (lấy từ child_range.json)
+    child_range: Optional[str]
 
 class SuttaSegment(TypedDict, total=False):
     pli: str

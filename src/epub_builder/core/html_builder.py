@@ -26,6 +26,11 @@ class HtmlBuilder:
             
         if acronym:
             return f"{acronym} - {base_title}"
+            
+        child_range = meta.get("child_range")
+        if child_range and meta.get("type") in ["branch", "root", "group"]:
+            return f"{child_range} - {base_title}"
+            
         return base_title
 
     def build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0) -> str:

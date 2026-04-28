@@ -49,6 +49,9 @@ class StructureProcessor:
                             if not c_meta.get("acronym") and p_meta.get("acronym"):
                                 c_meta["acronym"] = p_meta.get("acronym")
                                 
+                            if not c_meta.get("child_range") and p_meta.get("child_range"):
+                                c_meta["child_range"] = p_meta.get("child_range")
+                                
                         return StructureProcessor.flatten_single_chains(child, meta_map)
                         
             return {k: StructureProcessor.flatten_single_chains(v, meta_map) for k, v in structure.items()}

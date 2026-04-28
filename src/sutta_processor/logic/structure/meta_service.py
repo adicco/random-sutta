@@ -29,5 +29,9 @@ def ensure_meta_entry(
     eid = info.get("extract_id")
     if eid:
         entry["extract_id"] = eid
-        
+
+    crange = info.get("child_range")
+    if crange:
+        entry["child_range"] = crange
+
     target_dict[uid] = entry

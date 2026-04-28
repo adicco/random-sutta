@@ -28,6 +28,7 @@ class BilaraConfig:
         "sc_bilara_data/translation/en/kelly": "translation/en/kelly",
         "sc_bilara_data/translation/en/sujato/sutta": "translation/en/sujato/sutta",
         "structure/tree": "tree",
+        "structure/child_range.json": "child_range.json",
     }
     IGNORE_PATTERNS: Dict[str, List[str]] = {
         "root": ["xplayground"], 

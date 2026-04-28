@@ -4,10 +4,20 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from ..shared.app_config import RAW_API_JSON_DIR, CONFIG_AUTHOR_PRIORITY
+from ..shared.app_config import RAW_API_JSON_DIR, CONFIG_AUTHOR_PRIORITY, RAW_BILARA_DIR
 from ..shared.domain_types import SuttaMeta
 
 logger = logging.getLogger("SuttaProcessor.Ingestion.Meta")
+
+def _load_child_range() -> Dict[str, str]:
+    child_range_file = RAW_BILARA_DIR / "child_range.json"
+    if child_range_file.exists():
+        try:
+            with open(child_range_file, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"❌ Error loading child_range.json: {e}")
+    return {}
 
 def _find_best_author(translations: List[Dict[str, Any]]) -> Optional[str]:
     if not translations: return None
@@ -26,6 +36,7 @@ def load_names_map() -> Dict[str, SuttaMeta]:
         return {}
 
     logger.info("📚 Parsing metadata & resolving authors...")
+    child_range_map = _load_child_range()
     meta_map: Dict[str, SuttaMeta] = {}
     json_files = sorted(list(RAW_API_JSON_DIR.rglob("*.json")))
 
@@ -57,7 +68,8 @@ def load_names_map() -> Dict[str, SuttaMeta]:
                     "blurb": item.get("blurb"),
                     "best_author_uid": best_author,
                     "author_uid": None, 
-                    "extract_id": final_scroll_target 
+                    "extract_id": final_scroll_target,
+                    "child_range": child_range_map.get(uid)
                 }
                 meta_map[uid] = entry
 
