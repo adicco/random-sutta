@@ -1,9 +1,9 @@
 // Path: web/assets/modules/ui/components/familiarity_bar.js
-import { HistoryManager } from "ui/managers/history_manager.js";
+import { ReadManager } from "ui/managers/read_manager.js";
 
 export const FamiliarityBar = {
     generateHtml(uid, isHeader = true) {
-        const currentLevel = HistoryManager.getFamiliarity(uid);
+        const currentLevel = ReadManager.getFamiliarity(uid);
         
         // Tạo các nút 0 đến 5
         let buttonsHtml = '';
@@ -41,7 +41,7 @@ export const FamiliarityBar = {
                     const acronym = acronymEl ? acronymEl.textContent.trim() : uid.toUpperCase();
                     const title = titleEl ? titleEl.textContent.trim() : "";
 
-                    HistoryManager.setFamiliarity(uid, level, acronym, title);
+                    ReadManager.setFamiliarity(uid, level, acronym, title);
                     this.updateUIState(uid, level);
                 };
             });

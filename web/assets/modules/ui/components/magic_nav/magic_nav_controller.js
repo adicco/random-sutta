@@ -5,7 +5,7 @@ import { UIManager } from './ui_manager.js';
 import { AppConfig } from 'core/app_config.js';
 import { BookmarkManager } from 'ui/managers/bookmark_manager.js';
 
-import { HistoryManager } from 'ui/managers/history_manager.js';
+import { ReadManager } from 'ui/managers/read_manager.js';
 
 export const MagicNav = {
     _closeTimer: null,
@@ -129,7 +129,7 @@ export const MagicNav = {
         const bookmarkedSet = new Set(bookmarks.map(b => b.id));
         
         // [NEW] Lấy lịch sử độ quen thuộc
-        const historyMap = HistoryManager.getHistory();
+        const historyMap = ReadManager.getHistory();
 
         const tocHtml = TocRenderer.render(localTree, currentUid, finalMeta, 0, bookmarkedSet, historyMap);
         UIManager.updateContent(bcHtml, tocHtml);

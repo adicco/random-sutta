@@ -1,9 +1,9 @@
-// Path: web/assets/modules/ui/managers/history_manager.js
+// Path: web/assets/modules/ui/managers/read_manager.js
 import { getLogger } from "utils/logger.js";
 
-const logger = getLogger("HistoryManager");
+const logger = getLogger("ReadManager");
 
-export const HistoryManager = {
+export const ReadManager = {
     STORAGE_KEY: "sutta_history",
     
     // Config: rejection probabilities for Random
@@ -17,18 +17,18 @@ export const HistoryManager = {
     },
 
     init() {
-        logger.info("Init", "Initializing HistoryManager...");
+        logger.info("Init", "Initializing ReadManager...");
         this.tabToc = document.getElementById("tab-magic-toc");
         this.tabBookmarks = document.getElementById("tab-magic-bookmarks");
-        this.tabHistory = document.getElementById("tab-magic-history");
+        this.tabRead = document.getElementById("tab-magic-read");
         
         this.contentToc = document.getElementById("magic-toc-content");
         this.contentBookmarks = document.getElementById("magic-bookmarks-content");
-        this.contentHistory = document.getElementById("magic-history-content");
-        this.listContainer = document.getElementById("history-list");
+        this.contentRead = document.getElementById("magic-read-content");
+        this.listContainer = document.getElementById("read-list");
 
-        if (this.tabHistory) {
-            this.tabHistory.onclick = () => this.switchTab("history");
+        if (this.tabRead) {
+            this.tabRead.onclick = () => this.switchTab("read");
         }
 
         // We also need to hook into the other tabs to handle switching
@@ -51,19 +51,19 @@ export const HistoryManager = {
     },
 
     switchTab(tab) {
-        if (!this.tabToc || !this.tabBookmarks || !this.tabHistory) return;
+        if (!this.tabToc || !this.tabBookmarks || !this.tabRead) return;
         
         this.tabToc.classList.remove("active");
         this.tabBookmarks.classList.remove("active");
-        this.tabHistory.classList.remove("active");
+        this.tabRead.classList.remove("active");
         
         this.contentToc.classList.add("hidden");
         this.contentBookmarks.classList.add("hidden");
-        this.contentHistory.classList.add("hidden");
+        this.contentRead.classList.add("hidden");
 
-        if (tab === "history") {
-            this.tabHistory.classList.add("active");
-            this.contentHistory.classList.remove("hidden");
+        if (tab === "read") {
+            this.tabRead.classList.add("active");
+            this.contentRead.classList.remove("hidden");
             this.renderList();
         } else if (tab === "toc") {
             this.tabToc.classList.add("active");
@@ -170,18 +170,18 @@ export const HistoryManager = {
                 weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
             });
 
-            html += `<div class="history-date-header">${displayDate}</div>`;
+            html += `<div class="read-date-header">${displayDate}</div>`;
             
             html += items.map(b => {
                 const displayTitle = b.title || "";
                 return `
-                    <div class="history-item fam-level-${b.level}" data-id="${b.id}" data-level="${b.level}" data-acronym="${b.acronym}" data-title="${displayTitle.replace(/"/g, '&quot;')}">
-                        <div class="history-indicator"></div>
-                        <div class="history-info">
-                            <div class="history-id">${b.acronym}</div>
-                            ${displayTitle ? `<div class="history-title">${displayTitle}</div>` : ''}
+                    <div class="read-item fam-level-${b.level}" data-id="${b.id}" data-level="${b.level}" data-acronym="${b.acronym}" data-title="${displayTitle.replace(/"/g, '&quot;')}">
+                        <div class="read-indicator"></div>
+                        <div class="read-info">
+                            <div class="read-id">${b.acronym}</div>
+                            ${displayTitle ? `<div class="read-title">${displayTitle}</div>` : ''}
                         </div>
-                        <div class="history-actions">
+                        <div class="read-actions">
                             <button class="fam-adjust-btn fam-dec" title="Decrease Familiarity">-</button>
                             <button class="fam-adjust-btn fam-inc" title="Increase Familiarity">+</button>
                         </div>
@@ -193,7 +193,7 @@ export const HistoryManager = {
         this.listContainer.innerHTML = html;
 
         // Add event listeners
-        this.listContainer.querySelectorAll(".history-item").forEach(item => {
+        this.listContainer.querySelectorAll(".read-item").forEach(item => {
             const id = item.getAttribute("data-id");
             const currentLevel = parseInt(item.getAttribute("data-level"), 10);
             const acronym = item.getAttribute("data-acronym");

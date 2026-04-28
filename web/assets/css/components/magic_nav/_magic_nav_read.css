@@ -1,12 +1,12 @@
-/* Path: web/assets/css/components/magic_nav/_magic_nav_history.css */
+/* Path: web/assets/css/components/magic_nav/_magic_nav_read.css */
 
-#history-list {
+#read-list {
   display: flex;
   flex-direction: column;
   padding: 8px;
 }
 
-.history-date-header {
+.read-date-header {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-light);
@@ -17,11 +17,11 @@
   letter-spacing: 0.5px;
 }
 
-.history-date-header:first-child {
+.read-date-header:first-child {
   margin-top: 4px;
 }
 
-.history-item {
+.read-item {
   display: flex;
   align-items: center;
   padding: 10px 12px;
@@ -35,11 +35,11 @@
   overflow: hidden;
 }
 
-.history-item:hover {
+.read-item:hover {
   background-color: var(--bg-hover);
 }
 
-.history-indicator {
+.read-indicator {
   width: 6px;
   position: absolute;
   left: 0;
@@ -57,23 +57,23 @@
   --fam-5-color: #4dff4d;
 }
 
-.history-item.fam-level-1 { border-color: rgba(255, 77, 77, 0.4); }
-.history-item.fam-level-1 .history-indicator { background-color: var(--fam-1-color); }
+.read-item.fam-level-1 { border-color: rgba(255, 77, 77, 0.4); }
+.read-item.fam-level-1 .read-indicator { background-color: var(--fam-1-color); }
 
-.history-item.fam-level-2 { border-color: rgba(255, 166, 77, 0.4); }
-.history-item.fam-level-2 .history-indicator { background-color: var(--fam-2-color); }
+.read-item.fam-level-2 { border-color: rgba(255, 166, 77, 0.4); }
+.read-item.fam-level-2 .read-indicator { background-color: var(--fam-2-color); }
 
-.history-item.fam-level-3 { border-color: rgba(255, 210, 77, 0.4); }
-.history-item.fam-level-3 .history-indicator { background-color: var(--fam-3-color); }
+.read-item.fam-level-3 { border-color: rgba(255, 210, 77, 0.4); }
+.read-item.fam-level-3 .read-indicator { background-color: var(--fam-3-color); }
 
-.history-item.fam-level-4 { border-color: rgba(179, 255, 102, 0.4); }
-.history-item.fam-level-4 .history-indicator { background-color: var(--fam-4-color); }
+.read-item.fam-level-4 { border-color: rgba(179, 255, 102, 0.4); }
+.read-item.fam-level-4 .read-indicator { background-color: var(--fam-4-color); }
 
-.history-item.fam-level-5 { border-color: rgba(77, 255, 77, 0.4); }
-.history-item.fam-level-5 .history-indicator { background-color: var(--fam-5-color); }
+.read-item.fam-level-5 { border-color: rgba(77, 255, 77, 0.4); }
+.read-item.fam-level-5 .read-indicator { background-color: var(--fam-5-color); }
 
 
-.history-info {
+.read-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -82,7 +82,7 @@
   padding-left: 8px;
 }
 
-.history-title {
+.read-title {
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--text-main);
@@ -91,7 +91,7 @@
   text-overflow: ellipsis;
 }
 
-.history-id {
+.read-id {
   font-size: 0.8rem;
   color: var(--text-light);
   text-transform: uppercase;
@@ -99,7 +99,7 @@
 }
 
 /* Familiarity Adjust Actions */
-.history-actions {
+.read-actions {
   display: flex;
   gap: 6px;
   margin-left: 12px;
@@ -110,12 +110,12 @@
 
 /* Always show on mobile, show on hover on desktop */
 @media (hover: none) and (pointer: coarse) {
-  .history-actions {
+  .read-actions {
     opacity: 0.8;
   }
 }
 
-.history-item:hover .history-actions {
+.read-item:hover .read-actions {
   opacity: 1;
 }
 

@@ -1,7 +1,7 @@
 import { PRIMARY_BOOKS, SECONDARY_BOOKS, SUB_BOOKS } from 'data/constants.js';
 import { getLogger } from 'utils/logger.js';
 import { SuttaDB } from 'data/sutta_db.js';
-import { HistoryManager } from 'ui/managers/history_manager.js';
+import { ReadManager } from 'ui/managers/read_manager.js';
 
 const logger = getLogger("RandomHelper");
 
@@ -44,7 +44,7 @@ export const RandomHelper = {
                 
                 if (results.length > 0) {
                     const row = results[0];
-                    const prob = HistoryManager.getKeepProbability(row.sutta_uid);
+                    const prob = ReadManager.getKeepProbability(row.sutta_uid);
                     
                     // Rejection Sampling
                     if (Math.random() <= prob) {

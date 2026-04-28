@@ -14,7 +14,7 @@ import {
   FontSizeManager,
   GestureManager,
   BookmarkManager,
-  HistoryManager,
+  ReadManager,
 } from "ui/managers/index.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   FontSizeManager.init();
   GestureManager.init();
   BookmarkManager.init();
-  HistoryManager.init();
+  ReadManager.init();
 
   FilterComponent.init();
   initPopupSystem();
