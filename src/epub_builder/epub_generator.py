@@ -95,6 +95,44 @@ class EpubGenerator:
             return
         self.visited_uids.add(uid)
 
+        meta = self.all_meta.get(uid, {})
+        m_type = meta.get("type", "branch")
+
+        # Skip Alias types as they are not suitable for the EPUB structure
+        if m_type == "alias":
+            return
+
+        # Handle Subleaf: point to parent leaf with anchor
+        if m_type == "subleaf":
+            parent_uid = meta.get("parent_uid")
+            if not parent_uid:
+                logger.warning(f"Subleaf {uid} missing parent_uid")
+                return
+            
+            parent_filename = self.uid_to_filename.get(parent_uid)
+            if not parent_filename:
+                # Parent might not be in the current tree traversal or meta_map
+                logger.warning(f"Parent leaf {parent_uid} for subleaf {uid} not found in mappings")
+                return
+
+            anchor = meta.get("extract_id") or uid
+            filename = f"{parent_filename}#{anchor}"
+            title = self.html_builder.get_title(uid, meta)
+            
+            toc_entry = {
+                "uid": uid,
+                "title": title,
+                "filename": filename,
+                "play_order": self.play_order,
+                "children": []
+            }
+            self.play_order += 1
+            parent_toc_list.append(toc_entry)
+            
+            if children:
+                self._traverse_tree(children, toc_entry["children"], depth + 1)
+            return
+
         # Lazy-load children if not provided (e.g. for sub-books)
         if not children:
             book_structure = self.db.get_structure(uid)

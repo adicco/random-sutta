@@ -80,6 +80,20 @@ class HtmlBuilder:
         collected_headers = []
         
         if m_type == "leaf":
+            # Detect if this leaf has subleaf children to avoid duplicate TOC entries
+            has_subleaf_children = False
+            children_json = meta.get("children")
+            if children_json:
+                try:
+                    child_uids = json.loads(children_json)
+                    for cuid in child_uids:
+                        cmeta = self.all_meta.get(cuid)
+                        if cmeta and cmeta.get("type") == "subleaf":
+                            has_subleaf_children = True
+                            break
+                except:
+                    pass
+
             segments = self.db.get_segments(uid, meta.get("book_id", ""))
             html_parts = []
             current_footnotes = []
@@ -95,7 +109,8 @@ class HtmlBuilder:
                     current_footnotes.append((seg.get("segment_id", ""), comm))
                     footnote_idx = len(current_footnotes)
                 
-                if html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6"]):
+                # Only extract headers if the leaf doesn't have virtual subleaf children
+                if not has_subleaf_children and html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6"]):
                     if "class='sutta-title'" in html_tag or 'class="sutta-title"' in html_tag:
                         pass # Don't add sutta-title to TOC
                     else:
