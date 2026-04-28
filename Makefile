@@ -38,6 +38,7 @@ help:
 	@echo "  make dev            - Vite Dev Server with HMR"
 	@echo "  make view           - Preview Vite Production Build"
 	@echo "  make epub           - Generate EPUB Book"
+	@echo "  make calibre        - Build and Copy EPUB to Calibre Library"
 	@echo ""
 	@echo "🚀 RELEASE & DEPLOY:"
 	@echo "  make deploy         - Build & Deploy Web to GH-Pages"
@@ -151,6 +152,12 @@ view:
 epub:
 	@echo "📚 Building EPUB Book..."
 	$(PYTHON) -m src.epub_builder
+
+calibre: epub
+	@echo "🚚 Copying EPUB to Calibre Library..."
+	@mkdir -p "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)"
+	cp dist/epub/random_sutta.epub "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)/SuttaCentral Tipitaka - Random Sutta.epub"
+	@echo "✅ EPUB copied to Calibre Library."
 
 # ==============================================================================
 # 🚀 RELEASE ACTIONS
