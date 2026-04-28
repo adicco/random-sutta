@@ -103,6 +103,10 @@ class EpubGenerator:
                     children = book_structure[uid]
                 elif isinstance(book_structure, list):
                     children = book_structure
+                
+                # Flatten lazy-loaded structure to stay consistent with top-level tree
+                if children:
+                    children = StructureProcessor.flatten_single_chains(children, self.all_meta)
 
         # Generate HTML page
         page_result = self.html_builder.generate_page(uid, self.pages)

@@ -36,7 +36,7 @@ class StructureProcessor:
                         p_meta = meta_map.get(parent_id, {})
                         c_meta = meta_map.get(child_id, {})
                         
-                        if p_meta and c_meta:
+                        if p_meta and c_meta and parent_id != child_id:
                             p_title = p_meta.get("translated_title") or p_meta.get("acronym") or parent_id.upper()
                             if not c_meta.get("_is_merged"):
                                 c_title = c_meta.get("translated_title") or c_meta.get("acronym") or child_id
