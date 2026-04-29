@@ -30,11 +30,13 @@ class HtmlBuilder:
         else:
             base_title = translated or original or uid.upper()
             
-        if acronym:
+        omit_prefix_uids = {"tpk", "sutta", "vinaya", "abhidhamma", "pli-tv-vi", "pli-tv-ab"}
+        
+        if acronym and uid not in omit_prefix_uids:
             return f"{acronym} - {base_title}"
             
         child_range = meta.get("child_range")
-        if child_range and meta.get("type") in ["branch", "root", "group"]:
+        if child_range and meta.get("type") in ["branch", "root", "group"] and uid not in omit_prefix_uids:
             return f"{child_range} - {base_title}"
             
         return base_title
