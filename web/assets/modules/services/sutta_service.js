@@ -183,7 +183,7 @@ export const SuttaService = {
         }
 
         let content = await SuttaRepository.fetchContent(uid);
-        if (!content && metaEntry.parent_uid) {
+        if (!content && metaEntry.type === 'subleaf' && metaEntry.parent_uid) {
             const parentUid = metaEntry.parent_uid;
             const parentContent = await SuttaRepository.fetchContent(parentUid);
             if (parentContent) {

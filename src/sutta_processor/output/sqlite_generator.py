@@ -129,6 +129,8 @@ class SqliteGenerator:
         children_map = defaultdict(list)
         self._extract_all_children_from_tree(structure, children_map)
         
+        parent_map = self._build_parent_map(structure)
+        
         # 1. CORE DATA
         with self._get_core_connection() as conn:
             cursor = conn.cursor()
@@ -140,6 +142,10 @@ class SqliteGenerator:
                     cursor.execute("INSERT OR REPLACE INTO random_pools (book_id, sutta_uid) VALUES (?, ?)", (book_id, uid))
             
             for uid, m in meta_dict.items():
+                # [FIX] Populate parent_uid from tree hierarchy
+                if uid in parent_map:
+                    m["parent_uid"] = parent_map[uid]
+
                 nav = m.get("nav", {})
                 children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                 cursor.execute("""
@@ -181,6 +187,8 @@ class SqliteGenerator:
         
         children_map = defaultdict(list)
         self._extract_all_children_from_tree(structure, children_map)
+        
+        parent_map = self._build_parent_map(structure)
 
         with self._get_core_connection() as conn:
             cursor = conn.cursor()
@@ -188,6 +196,9 @@ class SqliteGenerator:
                          (book_id, json.dumps(structure, ensure_ascii=False)))
             
             for uid, m in meta_dict.items():
+                if uid in parent_map:
+                    m["parent_uid"] = parent_map[uid]
+
                 nav = m.get("nav", {})
                 children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                 cursor.execute("""
@@ -218,6 +229,26 @@ class SqliteGenerator:
         with self._get_core_connection() as conn:
             conn.execute("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)", (key, json.dumps(value, ensure_ascii=False)))
             conn.commit()
+
+    def _build_parent_map(self, node: Any, current_parent: Optional[str] = None, parent_map: Optional[Dict[str, str]] = None) -> Dict[str, str]:
+        """Extracts parent mappings based on the tree hierarchy."""
+        if parent_map is None:
+            parent_map = {}
+        
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if current_parent:
+                    parent_map[k] = current_parent
+                self._build_parent_map(v, k, parent_map)
+        elif isinstance(node, list):
+            for item in node:
+                if isinstance(item, str):
+                    if current_parent:
+                        parent_map[item] = current_parent
+                else:
+                    self._build_parent_map(item, current_parent, parent_map)
+        
+        return parent_map
 
     def _extract_all_children_from_tree(self, node: Any, result: Dict[str, List[str]]):
         if isinstance(node, dict):

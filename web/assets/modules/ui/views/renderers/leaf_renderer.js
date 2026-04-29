@@ -2,7 +2,7 @@
 import { ContentCompiler } from "data/content_compiler.js";
 
 function createContextFooter(currentUid, metaEntry, contextMeta) {
-    if (!metaEntry || !metaEntry.parent_uid) return "";
+    if (!metaEntry || metaEntry.type !== 'subleaf' || !metaEntry.parent_uid) return "";
 
     const parentId = metaEntry.parent_uid;
     const parentMeta = contextMeta[parentId] || {};
