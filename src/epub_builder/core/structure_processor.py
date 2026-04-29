@@ -6,6 +6,21 @@ logger = logging.getLogger("EpubBuilder.StructureProcessor")
 
 class StructureProcessor:
     @staticmethod
+    def _merge_titles(p_title: str, c_title: str) -> str:
+        """Merge titles intelligently by collapsing overlapping suffix/prefix."""
+        p_words = p_title.split()
+        c_words = c_title.split()
+        
+        max_overlap = 0
+        for i in range(1, min(len(p_words), len(c_words)) + 1):
+            if p_words[-i:] == c_words[:i]:
+                max_overlap = i
+                
+        if max_overlap > 0:
+            return " ".join(p_words + c_words[max_overlap:])
+        return f"{p_title} / {c_title}"
+
+    @staticmethod
     def flatten_single_chains(structure: Any, meta_map: Dict[str, Dict[str, Any]]) -> Any:
         """
         Flattens hierarchy levels that have only one child, merging their titles.
@@ -41,7 +56,7 @@ class StructureProcessor:
                             p_title = p_meta.get("translated_title") or p_meta.get("acronym") or parent_id.upper()
                             if not c_meta.get("_is_merged"):
                                 c_title = c_meta.get("translated_title") or c_meta.get("acronym") or child_id
-                                c_meta["translated_title"] = f"{p_title} / {c_title}"
+                                c_meta["translated_title"] = StructureProcessor._merge_titles(str(p_title).strip(), str(c_title).strip())
                                 c_meta["_is_merged"] = True
                                 
                             if not c_meta.get("blurb") and p_meta.get("blurb"):
