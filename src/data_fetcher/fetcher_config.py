@@ -24,6 +24,8 @@ class BilaraConfig:
         "sc_bilara_data/html/pli/ms": "html/pli/ms",
         "sc_bilara_data/html/pli/vri/vinaya": "html/pli/ms/vinaya",
         "sc_bilara_data/comment/en": "comment/en",
+        "sc_bilara_data/variant/pli/ms": "variant/pli/ms",
+        "sc_bilara_data/reference/pli/ms": "reference/pli/ms",
         "sc_bilara_data/translation/en/brahmali": "translation/en/brahmali",
         "sc_bilara_data/translation/en/kelly": "translation/en/kelly",
         "sc_bilara_data/translation/en/sujato/sutta": "translation/en/sujato/sutta",

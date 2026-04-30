@@ -14,17 +14,19 @@ EXTRA_BOOKS = {
     "pli-tv-bu-pm": "vinaya/pli-tv-bu-pm"
 }
 
-def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], Dict[str, Path], Dict[str, Path]]:
+def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], Dict[str, Path], Dict[str, Path], Dict[str, Path], Dict[str, Path]]:
     """
     Scans the raw data directories ONCE to build lookup maps for all file types.
-    Returns: (root_index, trans_index, html_index, comment_index)
+    Returns: (root_index, trans_index, html_index, comment_index, variant_index, reference_index)
     """
-    logger.info("⚡ Indexing ALL raw files (Root, Trans, HTML, Comment)...")
+    logger.info("⚡ Indexing ALL raw files (Root, Trans, HTML, Comment, Variant, Reference)...")
     
     root_index = {}
     trans_index = {}
     html_index = {}
     comment_index = {}
+    variant_index = {}
+    reference_index = {}
 
     # 1. Index Root Files
     if RAW_BILARA_TEXT_DIR.exists():
@@ -66,7 +68,23 @@ def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], 
                 sutta_id = file_path.name.split("_")[0]
                 comment_index[sutta_id] = file_path
 
-    return root_index, trans_index, html_index, comment_index
+    # 5. Index Variant Files
+    variant_dir = RAW_BILARA_DIR / "variant"
+    if variant_dir.exists():
+        for file_path in variant_dir.rglob("*_variant-*.json"):
+            if file_path.is_file():
+                sutta_id = file_path.name.split("_")[0]
+                variant_index[sutta_id] = file_path
+
+    # 6. Index Reference Files
+    reference_dir = RAW_BILARA_DIR / "reference"
+    if reference_dir.exists():
+        for file_path in reference_dir.rglob("*_reference.json"):
+            if file_path.is_file():
+                sutta_id = file_path.name.split("_")[0]
+                reference_index[sutta_id] = file_path
+
+    return root_index, trans_index, html_index, comment_index, variant_index, reference_index
 
 def _identify_book_group_from_tree(tree_file: Path) -> str:
     try:
@@ -94,7 +112,7 @@ def _get_priority_score(group_name: str) -> int:
     if group_name.startswith("abhidhamma"): return 2
     return 3
 
-def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[str]]]]:
+def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]]]:
     # [UPDATED]
     tree_dir = RAW_BILARA_DIR / "tree"
     if not tree_dir.exists():
@@ -102,7 +120,7 @@ def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, P
         return {}
 
     # Build comprehensive indices once
-    root_index, trans_index, html_index, comment_index = _build_file_indices()
+    root_index, trans_index, html_index, comment_index, variant_index, reference_index = _build_file_indices()
     
     logger.info(f"🌲 Scanning Tree files...")
     
@@ -131,13 +149,15 @@ def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, P
                     # Resolve paths immediately
                     html_path = html_index.get(uid)
                     comment_path = comment_index.get(uid)
+                    variant_path = variant_index.get(uid)
+                    reference_path = reference_index.get(uid)
                     
                     trans_path = None
                     if author_uid and uid in trans_index:
                         trans_path = trans_index[uid].get(author_uid)
 
                     # Expanded Tuple
-                    tasks.append((uid, root_path, trans_path, html_path, comment_path, author_uid))
+                    tasks.append((uid, root_path, trans_path, html_path, comment_path, variant_path, reference_path, author_uid))
             
             if tasks:
                 raw_tasks_list.append((group_id, tasks))
@@ -153,11 +173,14 @@ def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, P
             
             html_path = html_index.get(book_id)
             comment_path = comment_index.get(book_id)
+            variant_path = variant_index.get(book_id)
+            reference_path = reference_index.get(book_id)
+            
             trans_path = None
             if author_uid and book_id in trans_index:
                 trans_path = trans_index[book_id].get(author_uid)
             
-            tasks = [(book_id, root_path, trans_path, html_path, comment_path, author_uid)]
+            tasks = [(book_id, root_path, trans_path, html_path, comment_path, variant_path, reference_path, author_uid)]
             raw_tasks_list.append((group_name, tasks))
             total_suttas += 1
 

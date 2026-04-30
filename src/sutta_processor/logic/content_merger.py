@@ -113,8 +113,8 @@ def _sanitize_links(text: str, current_sutta_id: str, segment_id: str, missing_a
 
     return re.sub(pattern, repl, text, flags=re.IGNORECASE)
 
-def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[str]]) -> Tuple[str, str, Optional[Dict[str, Any]], List[MissingItem]]:
-    sutta_id, root_path, trans_path, html_path, comment_path, author_uid = args
+def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]) -> Tuple[str, str, Optional[Dict[str, Any]], List[MissingItem]]:
+    sutta_id, root_path, trans_path, html_path, comment_path, variant_path, reference_path, author_uid = args
     missing_refs: List[MissingItem] = []
     
     try:
@@ -125,6 +125,8 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
         data_trans = load_json(trans_path)
         data_html = load_json(html_path)
         data_comment = load_json(comment_path)
+        data_variant = load_json(variant_path)
+        data_reference = load_json(reference_path)
 
         all_keys = set(data_root.keys()) | set(data_html.keys())
         if data_trans:
@@ -140,6 +142,8 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
             eng = data_trans.get(key)
             html = data_html.get(key)
             comm = data_comment.get(key)
+            variant = data_variant.get(key)
+            reference = data_reference.get(key)
             
             if not (pali or eng or html):
                 continue
@@ -154,6 +158,8 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
             if html: entry["html"] = html
             
             if comm: entry["comm"] = _sanitize_links(comm, sutta_id, key, missing_refs)
+            if variant: entry["variant"] = variant
+            if reference: entry["reference"] = reference
             
             segments_dict[key] = entry
 

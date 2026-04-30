@@ -84,6 +84,8 @@ class SqliteGenerator:
                 eng TEXT,
                 html TEXT,
                 comm TEXT,
+                variant TEXT,
+                reference TEXT,
                 PRIMARY KEY (sutta_uid, segment_id)
             )
         """)
@@ -173,9 +175,9 @@ class SqliteGenerator:
             for seg_id, seg in segments.items():
                 cursor_content.execute("""
                     INSERT OR REPLACE INTO content_segments (
-                        sutta_uid, segment_id, segment_order, pli, eng, html, comm
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """, (uid, seg_id, order, seg.get("pli"), seg.get("eng"), seg.get("html"), seg.get("comm")))
+                        sutta_uid, segment_id, segment_order, pli, eng, html, comm, variant, reference
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (uid, seg_id, order, seg.get("pli"), seg.get("eng"), seg.get("html"), seg.get("comm"), seg.get("variant"), seg.get("reference")))
                 order += 1
         conn_content.commit()
         logger.info(f"   📦 [SQLite] {book_id} -> Core + Content({category})")
@@ -212,7 +214,8 @@ class SqliteGenerator:
                         translated_title=excluded.translated_title, original_title=excluded.original_title,
                         blurb=excluded.blurb, author_uid=excluded.author_uid,
                         parent_uid=excluded.parent_uid, target_uid=excluded.target_uid,
-                        children=excluded.children, hash_id=excluded.hash_id,
+                        children=CASE WHEN excluded.children = '[]' THEN metadata.children ELSE excluded.children END,
+                        hash_id=excluded.hash_id,
                         extract_id=excluded.extract_id, nav_prev=excluded.nav_prev, nav_next=excluded.nav_next,
                         child_range=excluded.child_range
                 """, (
