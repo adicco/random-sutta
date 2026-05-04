@@ -34,13 +34,30 @@ def publish_release(version_tag: str, is_official: bool = False) -> bool:
     logger.info(f"🚀 Publishing {release_type} {version_tag} to GitHub...")
     logger.info(f"   📦 Uploading artifact: {zip_filename}")
 
+    artifacts = [str(full_zip_path)]
+    
+    # Tìm kiếm các artifact phụ (APK, EPUB, MacOS)
+    optional_artifacts = [
+        PROJECT_ROOT / "dist" / "apk" / "randomsutta.apk",
+        PROJECT_ROOT / "dist" / "epub" / "random_sutta.epub",
+    ]
+    
+    macos_dir = PROJECT_ROOT / "dist" / "macos"
+    if macos_dir.exists():
+        for dmg in macos_dir.glob("*.dmg"):
+            optional_artifacts.append(dmg)
+            
+    for art_path in optional_artifacts:
+        if art_path.exists():
+            artifacts.append(str(art_path))
+            logger.info(f"   📦 Additional artifact: {art_path.name}")
+
     # Xây dựng lệnh gh
     cmd = [
         "gh", "release", "create", version_tag,
-        str(full_zip_path),
         "--title", f"Release {version_tag}",
         "--generate-notes"
-    ]
+    ] + artifacts
 
     # [LOGIC MỚI] Kiểm tra cờ official
     if is_official:
