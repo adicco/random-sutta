@@ -227,3 +227,15 @@ open-apk:
 # Dọn dẹp cache Android
 clean-apk:
 	cd android && ./gradlew clean
+
+# ==============================================================================
+# 🍏 MACOS / TAURI COMMANDS
+# ==============================================================================
+
+# Biên dịch ứng dụng MacOS bằng Tauri
+macos:
+	@echo "🍏 Đang biên dịch ứng dụng MacOS (Tauri)..."
+	export PATH="$$HOME/.cargo/bin:$$PATH" && npx tauri build
+	@echo "✅ XONG! Ứng dụng MacOS của bạn nằm tại:"
+	@echo "📍 src-tauri/target/release/bundle/macos/random-sutta.app"
+	@echo "📍 src-tauri/target/release/bundle/dmg/"
