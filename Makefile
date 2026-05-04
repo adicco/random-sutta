@@ -168,19 +168,18 @@ deploy: re
 	npm run deploy
 
 # Publish Pre-release
-beta:
+beta: apk epub
 	@echo "🚀 PUBLISHING BETA..."
 	$(PYTHON) -m src.release_system --publish
 
 # Publish Official
-official:
+official: apk epub
 	@echo "🚀 PUBLISHING OFFICIAL..."
 	$(PYTHON) -m src.release_system --official
 
 # Publish + Deploy
-publish:
-	@echo "🌟 PUBLISHING OFFICIAL..."
-	$(PYTHON) -m src.release_system --official --web
+publish: official deploy
+	@echo "🌟 PUBLISHED AND DEPLOYED!"
 
 # ==============================================================================
 # 🧹 CLEANUP
