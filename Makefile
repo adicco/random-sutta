@@ -236,6 +236,10 @@ clean-apk:
 macos:
 	@echo "🍏 Đang biên dịch ứng dụng MacOS (Tauri)..."
 	export PATH="$$HOME/.cargo/bin:$$PATH" && npx tauri build
+	@echo "📦 Đang chép file cài đặt vào thư mục dist/macos..."
+	@mkdir -p dist/macos
+	@cp -R src-tauri/target/release/bundle/macos/random-sutta.app dist/macos/
+	@cp src-tauri/target/release/bundle/dmg/*.dmg dist/macos/
 	@echo "✅ XONG! Ứng dụng MacOS của bạn nằm tại:"
-	@echo "📍 src-tauri/target/release/bundle/macos/random-sutta.app"
-	@echo "📍 src-tauri/target/release/bundle/dmg/"
+	@echo "📍 dist/macos/random-sutta.app"
+	@echo "📍 dist/macos/"
