@@ -124,6 +124,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
   }
 
+  // [NEW] Capacitor App Links
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      import('@capacitor/app').then(({ App }) => {
+          App.addListener('appUrlOpen', async data => {
+              logger.info("App", "App opened with URL: " + data.url);
+              try {
+                  const url = new URL(data.url);
+                  const q = url.searchParams.get('q');
+                  if (q) {
+                      switchView('reader');
+                      let loadId = q;
+                      if (url.hash) loadId += url.hash;
+                      await SuttaController.loadSutta(loadId, true);
+                  }
+              } catch (e) {
+                  logger.error("App", "Failed to parse app URL", e);
+              }
+          });
+      }).catch(e => logger.warn("App", "Failed to load Capacitor App plugin", e));
+  }
+
   try {
     console.time("📡 Service Init");
     await SuttaService.init();
