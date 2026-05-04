@@ -28,6 +28,6 @@ def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_
         if anchor:
             link += f"#{anchor}"
                 
-        return f'href="{link}"'
+        return f'href="{link}" target="_blank"'
         
     return re.sub(pattern, repl, html_text)
