@@ -145,6 +145,30 @@ document.addEventListener("DOMContentLoaded", async () => {
       }).catch(e => logger.warn("App", "Failed to load Capacitor App plugin", e));
   }
 
+  // [NEW] Tauri Deep Links
+  if (window.__TAURI_INTERNALS__) {
+      import('@tauri-apps/plugin-deep-link').then(({ onOpenUrl }) => {
+          onOpenUrl(async (urls) => {
+              logger.info("Tauri App", "Tauri deep link opened: " + JSON.stringify(urls));
+              try {
+                  for (const urlStr of urls) {
+                      const url = new URL(urlStr);
+                      const q = url.searchParams.get('q');
+                      if (q) {
+                          switchView('reader');
+                          let loadId = q;
+                          if (url.hash) loadId += url.hash;
+                          await SuttaController.loadSutta(loadId, true);
+                          break;
+                      }
+                  }
+              } catch (e) {
+                  logger.error("Tauri App", "Failed to parse Tauri app URL", e);
+              }
+          });
+      }).catch(e => logger.warn("Tauri App", "Failed to load Tauri Deep Link plugin", e));
+  }
+
   try {
     console.time("📡 Service Init");
     await SuttaService.init();
