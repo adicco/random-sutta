@@ -15,12 +15,20 @@
   gap: 8px;
 }
 
+#btn-sync-login:not(.hidden) {
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px solid var(--border-color);
+  border-radius: 0;
+}
+
 #sync-manual-controls {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-left: 6px;
-  border-left: 1px solid var(--border-color);
+  padding-right: 8px;
+  margin-right: 4px;
+  border-right: 1px solid var(--border-color);
 }
 
 .sync-widget .icon-only-btn {
