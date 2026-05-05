@@ -4,7 +4,7 @@ import { getLogger } from "utils/logger.js";
 const logger = getLogger("GoogleAuthManager");
 
 export const GoogleAuthManager = {
-    CLIENT_ID: "", // To be filled by user in UI or via config
+    CLIENT_ID: "103021460212-ki69q4b1mfn72qn6f8lg8a199s3f6t5d.apps.googleusercontent.com", 
     SCOPES: "https://www.googleapis.com/auth/drive.appdata",
     REDIRECT_URI: window.location.origin + window.location.pathname,
     AUTH_URL: "https://accounts.google.com/o/oauth2/v2/auth",

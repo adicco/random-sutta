@@ -37,6 +37,12 @@ export const SyncUIManager = {
     _setupEventListeners() {
         this.els.btnLogin.onclick = (e) => {
             e.stopPropagation();
+            // If we have a hardcoded ID, just login. Otherwise, show input.
+            if (GoogleAuthManager.CLIENT_ID) {
+                GoogleAuthManager.login();
+                return;
+            }
+
             if (this.els.inputArea.classList.contains("hidden")) {
                 this.els.inputArea.classList.remove("hidden");
                 this.els.clientIdInput.focus();
