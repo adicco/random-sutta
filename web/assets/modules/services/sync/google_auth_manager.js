@@ -94,10 +94,16 @@ export const GoogleAuthManager = {
         const url = `${this.AUTH_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(this.SCOPES)}&prompt=consent&state=${encodeURIComponent(state)}`;
         
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-            // Use Browser plugin for Capacitor to open in external browser
-            Browser.open({ url }).catch(e => {
-                logger.error("Login", "Failed to open Capacitor Browser", e);
-            });
+            if (window.Capacitor.getPlatform() === 'android') {
+                // Force external browser app via Android Intent to bypass Custom Tabs bugs (e.g. Brave blocking OAuth)
+                const intentUrl = `intent://${url.replace(/^https?:\/\//, '')}#Intent;scheme=https;action=android.intent.action.VIEW;end;`;
+                window.location.href = intentUrl;
+            } else {
+                // iOS uses SFSafariViewController which works fine
+                Browser.open({ url }).catch(e => {
+                    logger.error("Login", "Failed to open Capacitor Browser", e);
+                });
+            }
         } else {
             window.location.href = url;
         }
