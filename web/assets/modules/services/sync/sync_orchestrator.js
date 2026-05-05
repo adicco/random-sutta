@@ -35,6 +35,7 @@ export const SyncOrchestrator = {
     async autoSync() {
         if (this.isSyncing) return;
         this.isSyncing = true;
+        window.dispatchEvent(new CustomEvent("sync-start"));
         logger.info("AutoSync", "Starting auto-sync...");
         
         try {
@@ -46,8 +47,10 @@ export const SyncOrchestrator = {
                 logger.info("AutoSync", "No cloud data found. Preparing first push.");
                 await this.forcePush();
             }
+            window.dispatchEvent(new CustomEvent("sync-end"));
         } catch (e) {
             logger.error("AutoSync", e);
+            window.dispatchEvent(new CustomEvent("sync-error"));
         } finally {
             this.isSyncing = false;
         }
@@ -63,12 +66,15 @@ export const SyncOrchestrator = {
     async autoPush() {
         if (this.isSyncing) return;
         this.isSyncing = true;
+        window.dispatchEvent(new CustomEvent("sync-start"));
         try {
             const localData = this.packData();
             await GoogleDriveSync.uploadData(localData);
             logger.info("AutoPush", "Success");
+            window.dispatchEvent(new CustomEvent("sync-end"));
         } catch (e) {
             logger.error("AutoPush", e);
+            window.dispatchEvent(new CustomEvent("sync-error"));
         } finally {
             this.isSyncing = false;
         }

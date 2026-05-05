@@ -8,7 +8,7 @@ const logger = getLogger("SyncUIManager");
 export const SyncUIManager = {
     init() {
         this.els = {
-            status: document.getElementById("sync-status"),
+            widget: document.getElementById("sync-widget"),
             btnLogin: document.getElementById("btn-sync-login"),
             btnLogout: document.getElementById("btn-sync-logout"),
             btnPush: document.getElementById("btn-sync-push"),
@@ -25,49 +25,65 @@ export const SyncUIManager = {
         
         // Initialize Orchestrator
         SyncOrchestrator.init();
+
+        // Global Sync Listeners for Animation
+        window.addEventListener("sync-start", () => this._setVisualState("syncing"));
+        window.addEventListener("sync-end", () => this._setVisualState("authed"));
+        window.addEventListener("sync-error", () => this._setVisualState("sync-error"));
     },
 
     _setupEventListeners() {
-        this.els.btnLogin.onclick = () => {
+        this.els.btnLogin.onclick = (e) => {
+            e.stopPropagation();
             const clientId = this.els.clientIdInput.value.trim();
-            if (!clientId) {
+            if (!clientId || this.els.clientIdInput.classList.contains("hidden")) {
                 this.els.clientIdInput.classList.remove("hidden");
                 this.els.clientIdInput.focus();
-                alert("Please enter your Google Client ID first.");
                 return;
             }
             GoogleAuthManager.setClientId(clientId);
             GoogleAuthManager.login();
         };
 
-        this.els.btnLogout.onclick = () => {
+        this.els.btnLogout.onclick = (e) => {
+            e.stopPropagation();
             if (confirm("Logout from Google Sync?")) {
                 GoogleAuthManager.logout();
                 this._updateUI();
             }
         };
 
-        this.els.btnPush.onclick = async () => {
+        this.els.btnPush.onclick = async (e) => {
+            e.stopPropagation();
             if (confirm("Overwrite Cloud data with Local data?")) {
-                this._setStatus("Pushing...");
-                await SyncOrchestrator.forcePush();
-                this._setStatus("Cloud Updated");
-                setTimeout(() => this._updateUI(), 2000);
+                window.dispatchEvent(new CustomEvent("sync-start"));
+                try {
+                    await SyncOrchestrator.forcePush();
+                    window.dispatchEvent(new CustomEvent("sync-end"));
+                } catch (e) {
+                    window.dispatchEvent(new CustomEvent("sync-error"));
+                }
             }
         };
 
-        this.els.btnPull.onclick = async () => {
+        this.els.btnPull.onclick = async (e) => {
+            e.stopPropagation();
             if (confirm("Overwrite Local data with Cloud data? This will refresh your bookmarks and settings.")) {
-                this._setStatus("Pulling...");
-                await SyncOrchestrator.forcePull();
-                this._setStatus("Local Updated");
-                setTimeout(() => this._updateUI(), 2000);
+                window.dispatchEvent(new CustomEvent("sync-start"));
+                try {
+                    await SyncOrchestrator.forcePull();
+                    window.dispatchEvent(new CustomEvent("sync-end"));
+                } catch (e) {
+                    window.dispatchEvent(new CustomEvent("sync-error"));
+                }
             }
         };
 
         this.els.clientIdInput.onchange = (e) => {
             GoogleAuthManager.setClientId(e.target.value.trim());
         };
+
+        this.els.clientIdInput.onclick = (e) => e.stopPropagation();
 
         // Listen for Auth Events
         window.addEventListener("google-auth-success", () => this._updateUI());
@@ -78,8 +94,6 @@ export const SyncUIManager = {
         const savedId = GoogleAuthManager.loadClientId();
         if (savedId) {
             this.els.clientIdInput.value = savedId;
-        } else {
-            this.els.clientIdInput.classList.remove("hidden");
         }
     },
 
@@ -90,16 +104,17 @@ export const SyncUIManager = {
             this.els.btnLogin.classList.add("hidden");
             this.els.manualControls.classList.remove("hidden");
             this.els.clientIdInput.classList.add("hidden");
-            this._setStatus("Google Sync: On");
+            this._setVisualState("authed");
         } else {
             this.els.btnLogin.classList.remove("hidden");
             this.els.manualControls.classList.add("hidden");
-            this.els.clientIdInput.classList.remove("hidden");
-            this._setStatus("Google Sync: Off");
+            this._setVisualState("off");
         }
     },
 
-    _setStatus(text) {
-        if (this.els.status) this.els.status.textContent = text;
+    _setVisualState(state) {
+        if (!this.els.widget) return;
+        this.els.widget.classList.remove("off", "authed", "syncing", "sync-error");
+        this.els.widget.classList.add(state);
     }
 };

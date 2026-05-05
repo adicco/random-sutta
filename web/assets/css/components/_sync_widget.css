@@ -1,58 +1,79 @@
 /* Path: web/assets/css/components/_sync_widget.css */
 
-.sync-widget {
-  padding: 15px 10px;
-  border-top: 1px solid var(--border-color);
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.sync-status {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.sync-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-#sync-manual-controls {
+.sync-widget.compact {
+  padding: 0;
+  border: none;
+  margin: 0;
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.sync-widget .text-btn {
-  padding: 4px 8px;
-  background: var(--bg-body);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.sync-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.sync-widget .text-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--text-muted);
+#sync-manual-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-color);
 }
 
 .sync-widget .icon-only-btn {
-  padding: 4px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 50%;
   color: var(--text-muted);
   transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
 }
 
 .sync-widget .icon-only-btn:hover {
   background: var(--bg-hover);
   color: var(--text-main);
+}
+
+.sync-status-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+}
+
+/* Status Colors */
+.sync-status-icon svg { color: #666; } /* Off */
+.authed .sync-status-icon svg { color: #4caf50; } /* Online */
+.syncing .sync-status-icon svg { 
+  color: #2196f3; 
+  animation: sync-pulse 1.5s infinite ease-in-out;
+}
+.sync-error .sync-status-icon svg { color: #f44336; }
+
+@keyframes sync-pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.sync-id-input {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  right: 10px;
+  z-index: 100;
+  font-size: 0.8rem;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-drawer);
+  color: var(--text-main);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
