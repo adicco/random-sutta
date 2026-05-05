@@ -21,6 +21,7 @@ export const SyncOrchestrator = {
 
         // Listen for Local Changes
         window.addEventListener("local-data-changed", () => {
+            localStorage.setItem("sync_local_update_timestamp", Date.now().toString());
             if (GoogleAuthManager.isAuthenticated()) {
                 this.scheduleAutoPush();
             }
@@ -116,6 +117,7 @@ export const SyncOrchestrator = {
         
         const localData = this.packData();
         const mergedPayload = { ...localData.payload };
+        const localUpdateTimestamp = parseInt(localStorage.getItem("sync_local_update_timestamp") || "0", 10);
 
         // Special logic for bookmarks (Array merge)
         if (cloudData.payload.sutta_bookmarks && Array.isArray(cloudData.payload.sutta_bookmarks)) {
@@ -151,7 +153,8 @@ export const SyncOrchestrator = {
         Object.entries(cloudData.payload).forEach(([key, value]) => {
             if (key === "sutta_bookmarks" || key === "sutta_history") return; // Already handled
             
-            if (!mergedPayload[key] || cloudData.timestamp > localData.timestamp) {
+            // If local doesn't have it, or cloud data is newer than the last local update
+            if (!mergedPayload[key] || cloudData.timestamp > localUpdateTimestamp) {
                 mergedPayload[key] = value;
             }
         });

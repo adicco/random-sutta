@@ -106,7 +106,7 @@ export const ReadManager = {
 
     getFamiliarity(id) {
         const history = this.getHistory();
-        return history[id] ? history[id].level : 0;
+        return (history[id] && !history[id].deleted) ? history[id].level : 0;
     },
 
     getKeepProbability(id) {
@@ -118,21 +118,29 @@ export const ReadManager = {
         const history = this.getHistory();
         
         if (level === 0) {
-            delete history[id];
-            logger.info("Familiarity", `Removed: ${id}`);
+            if (history[id]) {
+                history[id].deleted = true;
+                history[id].level = 0;
+                history[id].timestamp = Date.now();
+            }
+            logger.info("Familiarity", `Removed (soft-delete): ${id}`);
         } else {
             // ISO Date string: YYYY-MM-DD
             const dateStr = new Date().toISOString().split('T')[0];
             history[id] = {
                 level: level,
                 date: dateStr,
-                acronym: acronym || id.toUpperCase(),
-                title: title || ""
+                acronym: acronym || (history[id] ? history[id].acronym : id.toUpperCase()),
+                title: title || (history[id] ? history[id].title : ""),
+                timestamp: Date.now(),
+                deleted: false
             };
             logger.info("Familiarity", `Set: ${id} to level ${level}`);
         }
         
         this.saveHistory(history);
+        window.dispatchEvent(new CustomEvent("local-data-changed"));
+        
         if (!skipRender) this.renderList();
         
         if (window.MagicNav) {
@@ -155,7 +163,7 @@ export const ReadManager = {
     renderList() {
         if (!this.listContainer) return;
         const history = this.getHistory();
-        const entries = Object.entries(history);
+        const entries = Object.entries(history).filter(([id, data]) => !data.deleted && data.level > 0);
         
         if (entries.length === 0) {
             this.listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">No history yet.</div>`;
