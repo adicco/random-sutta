@@ -12,8 +12,7 @@
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
-            android:launchMode="singleTask"
-            android:taskAffinity="com.randomsutta.app.standalone"
+            android:launchMode="singleInstance"
             android:documentLaunchMode="never"
             android:exported="true">
             <intent-filter>
