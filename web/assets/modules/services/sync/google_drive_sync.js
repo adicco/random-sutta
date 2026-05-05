@@ -49,9 +49,13 @@ export const GoogleDriveSync = {
         const headers = await this.getHeaders();
         
         const metadata = {
-            name: this.FILE_NAME,
-            parents: ["appDataFolder"]
+            name: this.FILE_NAME
         };
+
+        // parents field is only allowed during creation (POST)
+        if (!fileId) {
+            metadata.parents = ["appDataFolder"];
+        }
 
         const boundary = "-------314159265358979323846";
         const delimiter = "\r\n--" + boundary + "\r\n";
