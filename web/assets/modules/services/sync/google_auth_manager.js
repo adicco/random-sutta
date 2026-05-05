@@ -92,6 +92,9 @@ export const GoogleAuthManager = {
             // Use Browser plugin for Capacitor to open in external browser
             import('@capacitor/browser').then(({ Browser }) => {
                 Browser.open({ url });
+            }).catch(e => {
+                logger.error("Login", "Failed to load Capacitor Browser plugin, falling back to location.href", e);
+                window.location.href = url;
             });
         } else {
             window.location.href = url;

@@ -97,16 +97,25 @@ export const BookmarkManager = {
         const index = bookmarks.findIndex(b => b.id === currentId);
 
         if (index > -1) {
-            bookmarks.splice(index, 1);
-            logger.info("Toggle", `Removed: ${currentId}`);
+            bookmarks[index].deleted = true;
+            bookmarks[index].timestamp = Date.now();
+            logger.info("Toggle", `Removed (soft-delete): ${currentId}`);
             if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, false);
         } else {
-            bookmarks.push({ 
-                id: currentId, 
-                acronym: acronym, 
-                title: title, 
-                timestamp: Date.now() 
-            });
+            const existingDeleted = bookmarks.find(b => b.id === currentId && b.deleted);
+            if (existingDeleted) {
+                existingDeleted.deleted = false;
+                existingDeleted.acronym = acronym;
+                existingDeleted.title = title;
+                existingDeleted.timestamp = Date.now();
+            } else {
+                bookmarks.push({ 
+                    id: currentId, 
+                    acronym: acronym, 
+                    title: title, 
+                    timestamp: Date.now() 
+                });
+            }
             logger.info("Toggle", `Added: ${currentId} (${acronym})`);
             if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, true);
         }
@@ -120,7 +129,7 @@ export const BookmarkManager = {
         if (!this.btnSave || !currentId) return;
         const baseId = currentId.split('#')[0];
         const bookmarks = this.getBookmarks();
-        const isSaved = bookmarks.some(b => b.id === baseId);
+        const isSaved = bookmarks.some(b => b.id === baseId && !b.deleted);
         
         if (isSaved) {
             this.btnSave.classList.add("saved");
@@ -135,7 +144,7 @@ export const BookmarkManager = {
 
     renderList() {
         if (!this.listContainer) return;
-        const bookmarks = this.getBookmarks();
+        const bookmarks = this.getBookmarks().filter(b => !b.deleted);
         
         if (bookmarks.length === 0) {
             this.listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">No bookmarks yet.</div>`;
@@ -168,7 +177,12 @@ export const BookmarkManager = {
                 if (e.target.closest(".bookmark-del-btn")) {
                     e.stopPropagation();
                     const currentBookmarks = this.getBookmarks();
-                    this.saveBookmarks(currentBookmarks.filter(b => b.id !== id));
+                    const bIndex = currentBookmarks.findIndex(b => b.id === id);
+                    if (bIndex > -1) {
+                        currentBookmarks[bIndex].deleted = true;
+                        currentBookmarks[bIndex].timestamp = Date.now();
+                        this.saveBookmarks(currentBookmarks);
+                    }
                     this.renderList();
                     
                     if (window.MagicNav) window.MagicNav.updateBookmarkState(id, false);
