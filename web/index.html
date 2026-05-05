@@ -364,6 +364,23 @@
             </button>
           </div>
 
+          <div id="sync-widget" class="sync-widget">
+            <div id="sync-status" class="sync-status">Google Sync: Off</div>
+            <div class="sync-actions">
+              <button id="btn-sync-login" class="text-btn">Login to Sync</button>
+              <div id="sync-manual-controls" class="hidden">
+                <button id="btn-sync-push" class="icon-only-btn" title="Force Push to Cloud">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg>
+                </button>
+                <button id="btn-sync-pull" class="icon-only-btn" title="Force Pull from Cloud">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path></svg>
+                </button>
+                <button id="btn-sync-logout" class="text-btn" style="color: var(--text-muted); font-size: 0.7rem;">Logout</button>
+              </div>
+            </div>
+            <input type="text" id="sync-client-id" placeholder="Google Client ID" class="hidden" style="width: 100%; font-size: 0.7rem; margin-top: 5px; padding: 4px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main);">
+          </div>
+
           <div class="theme-toggle-group">
             <button
               id="btn-theme-toggle"

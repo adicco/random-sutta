@@ -1,0 +1,58 @@
+/* Path: web/assets/css/components/_sync_widget.css */
+
+.sync-widget {
+  padding: 15px 10px;
+  border-top: 1px solid var(--border-color);
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sync-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sync-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#sync-manual-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sync-widget .text-btn {
+  padding: 4px 8px;
+  background: var(--bg-body);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sync-widget .text-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.sync-widget .icon-only-btn {
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.sync-widget .icon-only-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-main);
+}

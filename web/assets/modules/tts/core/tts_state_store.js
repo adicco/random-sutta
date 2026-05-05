@@ -15,6 +15,11 @@ export const TTSStateStore = {
 
     init() {
         this._loadSettings();
+        
+        // Listen for sync updates
+        window.addEventListener("sync-data-applied", () => {
+            this._loadSettings();
+        });
     },
 
     _loadSettings() {
@@ -43,18 +48,21 @@ export const TTSStateStore = {
     setAutoNext(enabled) {
         this.autoNextEnabled = enabled;
         localStorage.setItem("tts_auto_next", enabled);
+        window.dispatchEvent(new CustomEvent("local-data-changed"));
         console.log("StateStore: Saved AutoNext ->", enabled); // LOG
     },
     
     setPlaybackMode(mode) {
         this.playbackMode = mode;
         localStorage.setItem("tts_playback_mode", mode);
+        window.dispatchEvent(new CustomEvent("local-data-changed"));
         console.log("StateStore: Saved Mode ->", mode); // LOG
     },
 
     setActiveEngine(engineId) {
         this.activeEngine = engineId;
         localStorage.setItem("tts_active_engine", engineId);
+        window.dispatchEvent(new CustomEvent("local-data-changed"));
         console.log("StateStore: Saved Engine ->", engineId); // LOG
     },
 

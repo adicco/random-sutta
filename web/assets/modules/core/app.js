@@ -15,6 +15,7 @@ import {
   GestureManager,
   BookmarkManager,
   ReadManager,
+  SyncUIManager,
 } from "ui/managers/index.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
@@ -39,6 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   GestureManager.init();
   BookmarkManager.init();
   ReadManager.init();
+  SyncUIManager.init();
 
   FilterComponent.init();
   initPopupSystem();

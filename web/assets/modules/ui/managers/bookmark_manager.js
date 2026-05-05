@@ -8,6 +8,15 @@ export const BookmarkManager = {
 
     init() {
         logger.info("Init", "Initializing BookmarkManager...");
+
+        // Listen for external sync updates
+        window.addEventListener("sync-data-applied", () => {
+            logger.info("Sync", "Sync data applied, re-rendering list");
+            this.renderList();
+            const params = new URLSearchParams(window.location.search);
+            this.updateButtonState(params.get("q"));
+        });
+
         this.btnSave = document.getElementById("btn-save-bookmark");
         this.listContainer = document.getElementById("bookmarks-list");
         this.tabToc = document.getElementById("tab-magic-toc");
@@ -63,6 +72,7 @@ export const BookmarkManager = {
 
     saveBookmarks(bookmarks) {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(bookmarks));
+        window.dispatchEvent(new CustomEvent("local-data-changed"));
     },
 
     toggleCurrentSutta() {

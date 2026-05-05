@@ -230,6 +230,7 @@ export const SuttaController = {
         };
         
         localStorage.setItem("last_read_sutta", JSON.stringify(progress));
+        window.dispatchEvent(new CustomEvent("local-data-changed"));
         logger.debug("Progress", `Saved: ${suttaId} at ${currentScroll}`);
     } catch (e) {
         console.warn("Could not save progress:", e);
