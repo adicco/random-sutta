@@ -78,21 +78,12 @@ export const GoogleAuthManager = {
         let redirectUri = this.REDIRECT_URI;
         let state = "";
 
-        // For Native apps, we use the web version of the app as intermediate redirect
-        // This is because Google OAuth restricts redirect_uris to https/localhost
         if (this.isNative()) {
-            // Assume the web version is at a known URL or configured
-            // If the app is hosted on GH Pages, use that.
-            // For now, let's try to use the current origin if it's https
-            if (window.location.origin.startsWith("https")) {
-                redirectUri = window.location.origin + window.location.pathname;
-                state = "origin=native";
-            } else {
-                // Fallback for local development or if origin is null (file://)
-                // You might need to hardcode the production URL here if origin is not available
-                redirectUri = "https://hieucao.github.io/random_sutta/"; 
-                state = "origin=native";
-            }
+            // Force use the production web URL as proxy for native apps
+            // IMPORTANT: This must EXACTLY match what's in Google Cloud Console
+            redirectUri = "https://vjjda.github.io/random-sutta/"; 
+            state = "origin=native";
+            logger.info("Login", "Native mode detected. Using Proxy Redirect:", redirectUri);
         }
 
         const url = `${this.AUTH_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(this.SCOPES)}&prompt=consent&state=${encodeURIComponent(state)}`;
@@ -139,7 +130,10 @@ export const GoogleAuthManager = {
     },
 
     loadClientId() {
-        this.CLIENT_ID = localStorage.getItem("google_sync_client_id") || "";
+        const saved = localStorage.getItem("google_sync_client_id");
+        if (saved) {
+            this.CLIENT_ID = saved;
+        }
         return this.CLIENT_ID;
     }
 };
