@@ -89,7 +89,10 @@ class ContentManager:
         ignore_func = shutil.ignore_patterns(*ignore_list) if ignore_list else None
         
         dest_path.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(src_path, dest_path, ignore=ignore_func, dirs_exist_ok=True)
+        if src_path.is_file():
+            shutil.copy2(src_path, dest_path)
+        else:
+            shutil.copytree(src_path, dest_path, ignore=ignore_func, dirs_exist_ok=True)
         
         return f"   -> Copied: {dest_rel}"
 
