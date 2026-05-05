@@ -18,6 +18,22 @@ export const ReadManager = {
 
     init() {
         logger.info("Init", "Initializing ReadManager...");
+
+        // Listen for external sync updates
+        window.addEventListener("sync-data-applied", () => {
+            logger.info("Sync", "Sync data applied, re-rendering list");
+            this.renderList();
+            
+            // Also need to update the familiarity bar UI for the current sutta if open
+            const params = new URLSearchParams(window.location.search);
+            const currentId = params.get("q");
+            if (currentId && window.FamiliarityBar) {
+                 const baseId = currentId.split('#')[0];
+                 const level = this.getFamiliarity(baseId);
+                 window.FamiliarityBar.updateUIState(baseId, level);
+            }
+        });
+
         this.tabToc = document.getElementById("tab-magic-toc");
         this.tabBookmarks = document.getElementById("tab-magic-bookmarks");
         this.tabRead = document.getElementById("tab-magic-read");
