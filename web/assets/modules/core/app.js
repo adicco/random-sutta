@@ -17,6 +17,7 @@ import {
   ReadManager,
   SyncUIManager,
 } from "ui/managers/index.js";
+import { GoogleAuthManager } from "services/sync/google_auth_manager.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
 
@@ -131,6 +132,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       import('@capacitor/app').then(({ App }) => {
           App.addListener('appUrlOpen', async data => {
               logger.info("App", "App opened with URL: " + data.url);
+              
+              if (data.url.includes('auth-callback')) {
+                  GoogleAuthManager.handleNativeCallback(data.url);
+                  return;
+              }
+
               try {
                   const url = new URL(data.url);
                   const q = url.searchParams.get('q');
@@ -152,8 +159,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       import('@tauri-apps/plugin-deep-link').then(({ onOpenUrl }) => {
           onOpenUrl(async (urls) => {
               logger.info("Tauri App", "Tauri deep link opened: " + JSON.stringify(urls));
-              try {
-                  for (const urlStr of urls) {
+              
+              for (const urlStr of urls) {
+                  if (urlStr.includes('auth-callback')) {
+                      GoogleAuthManager.handleNativeCallback(urlStr);
+                      continue;
+                  }
+
+                  try {
                       const url = new URL(urlStr);
                       const q = url.searchParams.get('q');
                       if (q) {
@@ -163,9 +176,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                           await SuttaController.loadSutta(loadId, true);
                           break;
                       }
+                  } catch (e) {
+                      logger.error("Tauri App", "Failed to parse Tauri app URL", e);
                   }
-              } catch (e) {
-                  logger.error("Tauri App", "Failed to parse Tauri app URL", e);
               }
           });
       }).catch(e => logger.warn("Tauri App", "Failed to load Tauri Deep Link plugin", e));
