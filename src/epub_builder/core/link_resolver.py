@@ -2,19 +2,19 @@
 import re
 from typing import Dict, Any
 
-def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_meta: Dict[str, Dict[str, Any]]) -> str:
+def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_meta: Dict[str, Dict[str, Any]], use_apk_links: bool = False) -> str:
     """
-    Finds links like <a href="index.html?q=dn6#1.1"> and resolves them to external app links like href="https://vjjda.github.io/random-sutta/?q=dn6#1.1".
+    Finds links like <a href="index.html?q=dn6#1.1"> and resolves them to external app links like href="https://vjjda.github.io/random-sutta/?q=dn6#1.1" or "randomsutta://?q=dn6#1.1".
     """
     if not html_text or "index.html?q=" not in html_text:
         return html_text
-        
+
     pattern = r'''href=["']index\.html\?q=([^#"']+)#?([^"']*)["']'''
-    
+
     def repl(match):
         uid = match.group(1)
         anchor = match.group(2)
-        
+
         # Resolve aliases if necessary
         meta = all_meta.get(uid)
         if meta:
@@ -23,11 +23,11 @@ def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_
                 target_uid = meta.get("target_uid")
                 if target_uid:
                     uid = target_uid
-                    
-        link = f"https://vjjda.github.io/random-sutta/?q={uid}"
+
+        base_url = "randomsutta://" if use_apk_links else "https://vjjda.github.io/random-sutta/"
+        link = f"{base_url}?q={uid}"
         if anchor:
             link += f"#{anchor}"
-                
-        return f'href="{link}" target="_blank"'
-        
+
+        return f'href="{link}" target="_blank"'        
     return re.sub(pattern, repl, html_text)

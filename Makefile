@@ -150,8 +150,10 @@ view:
 	npm run preview -- --port 8001
 
 epub:
-	@echo "📚 Building EPUB Book..."
-	$(PYTHON) -m src.epub_builder
+	@echo "📚 Building standard EPUB Book..."
+	$(PYTHON) -m src.epub_builder --output dist/epub/random_sutta.epub
+	@echo "📱 Building APK EPUB Book..."
+	$(PYTHON) -m src.epub_builder --output dist/epub/random_sutta_apk.epub --apk-links
 
 calibre: epub
 	@echo "🚚 Copying EPUB to Calibre Library..."

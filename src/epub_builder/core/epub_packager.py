@@ -18,6 +18,7 @@ class EpubPackager:
         self.date_str = date_str
 
     def package(self, 
+                title: str,
                 pages: List[Dict[str, str]], 
                 toc_entries: List[Dict[str, Any]], 
                 manifest_items: List[str], 
@@ -75,7 +76,7 @@ class EpubPackager:
             
             # OPF
             opf_content = CONTENT_OPF_TEMPLATE.format(
-                title="SuttaCentral Tipitaka",
+                title=title,
                 author="Random Sutta",
                 language="en",
                 uuid=self.epub_uuid,
