@@ -6,7 +6,7 @@ import { GoogleDriveSync } from "services/sync/google_drive_sync.js";
 const logger = getLogger("SyncOrchestrator");
 
 export const SyncOrchestrator = {
-    SYNC_KEYS: ["sutta_bookmarks", "last_read_sutta", "tts_auto_next", "tts_playback_mode", "tts_active_engine", "tts_rate", "tts_pitch", "tts_voice_uri"],
+    SYNC_KEYS: ["sutta_bookmarks", "sutta_history", "last_read_sutta", "tts_auto_next", "tts_playback_mode", "tts_active_engine", "tts_rate", "tts_pitch", "tts_voice_uri"],
     DEBOUNCE_MS: 5000,
     debounceTimer: null,
     isSyncing: false,
@@ -133,9 +133,23 @@ export const SyncOrchestrator = {
             mergedPayload.sutta_bookmarks = Array.from(bookmarkMap.values());
         }
 
+        // Special logic for history (Object merge by ID)
+        if (cloudData.payload.sutta_history && typeof cloudData.payload.sutta_history === 'object') {
+            const localHistory = localData.payload.sutta_history || {};
+            const cloudHistory = cloudData.payload.sutta_history;
+            const mergedHistory = { ...localHistory };
+            
+            Object.keys(cloudHistory).forEach(id => {
+                if (!mergedHistory[id] || cloudHistory[id].timestamp > mergedHistory[id].timestamp) {
+                    mergedHistory[id] = cloudHistory[id];
+                }
+            });
+            mergedPayload.sutta_history = mergedHistory;
+        }
+
         // For other keys, if not present in local or cloud is newer (overall)
         Object.entries(cloudData.payload).forEach(([key, value]) => {
-            if (key === "sutta_bookmarks") return; // Already handled
+            if (key === "sutta_bookmarks" || key === "sutta_history") return; // Already handled
             
             if (!mergedPayload[key] || cloudData.timestamp > localData.timestamp) {
                 mergedPayload[key] = value;
