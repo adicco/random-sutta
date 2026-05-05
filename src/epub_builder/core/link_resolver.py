@@ -2,9 +2,9 @@
 import re
 from typing import Dict, Any
 
-def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_meta: Dict[str, Dict[str, Any]], use_apk_links: bool = False) -> str:
+def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_meta: Dict[str, Dict[str, Any]]) -> str:
     """
-    Finds links like <a href="index.html?q=dn6#1.1"> and resolves them to external app links like href="https://vjjda.github.io/random-sutta/?q=dn6#1.1" or "randomsutta://?q=dn6#1.1".
+    Finds links like <a href="index.html?q=dn6#1.1"> and resolves them to external app links like href="https://vjjda.github.io/random-sutta/?q=dn6#1.1".
     """
     if not html_text or "index.html?q=" not in html_text:
         return html_text
@@ -24,8 +24,7 @@ def resolve_internal_links(html_text: str, uid_to_filename: Dict[str, str], all_
                 if target_uid:
                     uid = target_uid
 
-        base_url = "randomsutta://" if use_apk_links else "https://vjjda.github.io/random-sutta/"
-        link = f"{base_url}?q={uid}"
+        link = f"https://vjjda.github.io/random-sutta/?q={uid}"
         if anchor:
             link += f"#{anchor}"
 

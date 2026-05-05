@@ -150,17 +150,13 @@ view:
 	npm run preview -- --port 8001
 
 epub:
-	@echo "📚 Building standard EPUB Book..."
-	$(PYTHON) -m src.epub_builder --output dist/epub/random_sutta.epub
-	@echo "📱 Building APK EPUB Book..."
-	$(PYTHON) -m src.epub_builder --output dist/epub/random_sutta_apk.epub --apk-links
+	@echo "📚 Building EPUB Book..."
+	$(PYTHON) -m src.epub_builder
 
 calibre: epub
 	@echo "🚚 Copying EPUB to Calibre Library..."
 	@mkdir -p "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)"
 	cp dist/epub/random_sutta.epub "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)/SuttaCentral Tipitaka - Random Sutta.epub"
-	@mkdir -p "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka [APK] (3582)"
-	cp dist/epub/random_sutta_apk.epub "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka [APK] (3582)/SuttaCentral Tipitaka [APK] - Random Sutta.epub"
 	@echo "✅ EPUB copied to Calibre Library."
 
 # ==============================================================================

@@ -115,7 +115,7 @@ class HtmlBuilder:
                 comm = seg.get("comm")
                 footnote_idx = 0
                 if comm:
-                    comm = resolve_internal_links(comm, self.uid_to_filename, self.all_meta, self.use_apk_links)
+                    comm = resolve_internal_links(comm, self.uid_to_filename, self.all_meta)
                     current_footnotes.append((seg.get("segment_id", ""), comm))
                     footnote_idx = len(current_footnotes)
                 

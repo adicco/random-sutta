@@ -17,13 +17,11 @@ class EpubGenerator:
     Main orchestrator for EPUB generation.
     Coordinates database reading, tree traversal, HTML building, and packaging.
     """
-    def __init__(self, output_path: Path, db_dir: Path, use_apk_links: bool = False):
+    def __init__(self, output_path: Path, db_dir: Path):
         self.output_path = output_path
         self.db_dir = db_dir
-        self.use_apk_links = use_apk_links
         self.epub_uuid = str(uuid.uuid4())
         self.date_str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-        self.title = "SuttaCentral Tipitaka [APK]" if use_apk_links else "SuttaCentral Tipitaka"
         
         # Build state
         self.pages: List[Dict[str, Any]] = []
@@ -59,14 +57,13 @@ class EpubGenerator:
             tpk_tree = StructureProcessor.flatten_single_chains(tpk_tree, self.all_meta)
 
             # 2. Generate Content
-            self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename, self.use_apk_links)
+            self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename)
             logger.info("🌳 Processing TPK tree...")
             self._traverse_tree(tpk_tree, self.toc_entries)
 
             # 3. Package EPUB
             packager = EpubPackager(self.output_path, self.epub_uuid, self.date_str)
             packager.package(
-                title=self.title,
                 pages=self.pages,
                 toc_entries=self.toc_entries,
                 manifest_items=self.manifest_items,

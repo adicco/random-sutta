@@ -21,7 +21,7 @@ def main():
     # Ensure output directory exists
     args.output.parent.mkdir(parents=True, exist_ok=True)
         
-    generator = EpubGenerator(output_path=args.output, db_dir=args.db_dir, use_apk_links=args.apk_links)
+    generator = EpubGenerator(output_path=args.output, db_dir=args.db_dir)
     
     try:
         generator.build()

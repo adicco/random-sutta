@@ -17,9 +17,4 @@ def parse_args() -> argparse.Namespace:
         default=Path("dist/epub/random_sutta.epub"),
         help="Output path for the generated EPUB file"
     )
-    parser.add_argument(
-        "--apk-links",
-        action="store_true",
-        help="Generate links using the randomsutta:// protocol (for the Android app) and add an [APK] tag to the title."
-    )
     return parser.parse_args()
