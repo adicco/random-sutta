@@ -1,5 +1,6 @@
 // Path: web/assets/modules/services/sync/google_auth_manager.js
 import { getLogger } from "utils/logger.js";
+import { Browser } from '@capacitor/browser';
 
 const logger = getLogger("GoogleAuthManager");
 
@@ -49,6 +50,10 @@ export const GoogleAuthManager = {
             if (token) {
                 logger.info("NativeCallback", "Received token from deep link");
                 this._processToken(token, expiresIn);
+                
+                if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+                    Browser.close().catch(e => logger.warn("NativeCallback", "Failed to close browser", e));
+                }
             }
         } catch (e) {
             logger.error("NativeCallback", "Failed to parse native callback URL", e);
@@ -90,11 +95,8 @@ export const GoogleAuthManager = {
         
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
             // Use Browser plugin for Capacitor to open in external browser
-            import('@capacitor/browser').then(({ Browser }) => {
-                Browser.open({ url });
-            }).catch(e => {
-                logger.error("Login", "Failed to load Capacitor Browser plugin, falling back to location.href", e);
-                window.location.href = url;
+            Browser.open({ url }).catch(e => {
+                logger.error("Login", "Failed to open Capacitor Browser", e);
             });
         } else {
             window.location.href = url;
