@@ -10,10 +10,12 @@ export const SyncUIManager = {
         this.els = {
             widget: document.getElementById("sync-widget"),
             btnLogin: document.getElementById("btn-sync-login"),
+            btnConnect: document.getElementById("btn-sync-connect"),
             btnLogout: document.getElementById("btn-sync-logout"),
             btnPush: document.getElementById("btn-sync-push"),
             btnPull: document.getElementById("btn-sync-pull"),
             manualControls: document.getElementById("sync-manual-controls"),
+            inputArea: document.getElementById("sync-input-area"),
             clientIdInput: document.getElementById("sync-client-id")
         };
 
@@ -35,10 +37,19 @@ export const SyncUIManager = {
     _setupEventListeners() {
         this.els.btnLogin.onclick = (e) => {
             e.stopPropagation();
-            const clientId = this.els.clientIdInput.value.trim();
-            if (!clientId || this.els.clientIdInput.classList.contains("hidden")) {
-                this.els.clientIdInput.classList.remove("hidden");
+            if (this.els.inputArea.classList.contains("hidden")) {
+                this.els.inputArea.classList.remove("hidden");
                 this.els.clientIdInput.focus();
+            } else {
+                this.els.inputArea.classList.add("hidden");
+            }
+        };
+
+        this.els.btnConnect.onclick = (e) => {
+            e.stopPropagation();
+            const clientId = this.els.clientIdInput.value.trim();
+            if (!clientId) {
+                alert("Please paste your Google Client ID.");
                 return;
             }
             GoogleAuthManager.setClientId(clientId);
@@ -103,7 +114,7 @@ export const SyncUIManager = {
         if (isAuthed) {
             this.els.btnLogin.classList.add("hidden");
             this.els.manualControls.classList.remove("hidden");
-            this.els.clientIdInput.classList.add("hidden");
+            this.els.inputArea.classList.add("hidden");
             this._setVisualState("authed");
         } else {
             this.els.btnLogin.classList.remove("hidden");

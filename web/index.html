@@ -268,7 +268,7 @@
         <div id="drawer-header">
           <div id="sync-widget" class="sync-widget compact">
             <div id="sync-actions" class="sync-actions">
-              <button id="btn-sync-login" class="icon-only-btn" title="Login to Google Sync">
+              <button id="btn-sync-login" class="icon-only-btn" title="Google Sync">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
               </button>
               <div id="sync-manual-controls" class="hidden">
@@ -286,7 +286,10 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
               </span>
             </div>
-            <input type="text" id="sync-client-id" placeholder="Paste Client ID..." class="hidden sync-id-input">
+            <div id="sync-input-area" class="hidden sync-input-area">
+              <input type="text" id="sync-client-id" placeholder="Paste Client ID here..." class="sync-id-input">
+              <button id="btn-sync-connect" class="text-btn sync-connect-btn">Connect</button>
+            </div>
           </div>
 
           <button id="btn-save-bookmark" class="icon-trigger" title="Save Bookmark" style="opacity: 1; padding: 0; margin-left: auto;">
@@ -385,8 +388,6 @@
                 ></path>
               </svg>
             </button>
-          </div>
-
           </div>
 
           <div class="theme-toggle-group">
