@@ -35,6 +35,7 @@ help:
 	@echo "🏗️  BUILD & PREVIEW:"
 	@echo "  make build          - Run Full Build (Data + Vite)"
 	@echo "  make re             - Quick Re-build (Vite Only)"
+	@echo "  make app            - Build MacOS App & Install to /Applications"
 	@echo "  make dev            - Vite Dev Server with HMR"
 	@echo "  make view           - Preview Vite Production Build"
 	@echo "  make epub           - Generate EPUB Book"
@@ -243,3 +244,12 @@ macos:
 	@echo "✅ XONG! Ứng dụng MacOS của bạn nằm tại:"
 	@echo "📍 dist/macos/Random Sutta.app"
 	@echo "📍 dist/macos/"
+
+	# Cài đặt ứng dụng vào /Applications và cập nhật Launch Services
+	app: macos
+	@echo "🚚 Đang cài đặt ứng dụng vào /Applications..."
+	@rm -rf "/Applications/Random Sutta.app"
+	@cp -R "src-tauri/target/release/bundle/macos/Random Sutta.app" "/Applications/"
+	@echo "🔄 Đang cập nhật Launch Services để nhận diện deep link..."
+	@/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "/Applications/Random Sutta.app"
+	@echo "✅ Đã cài đặt và đăng ký giao thức randomsutta:// thành công!"
