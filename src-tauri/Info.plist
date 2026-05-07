@@ -12,6 +12,14 @@
                 <string>randomsutta</string>
             </array>
         </dict>
+        <dict>
+            <key>CFBundleURLName</key>
+            <string>Google OAuth Redirect</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle</string>
+            </array>
+        </dict>
     </array>
 </dict>
 </plist>
