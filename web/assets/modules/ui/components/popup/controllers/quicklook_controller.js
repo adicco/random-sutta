@@ -1,6 +1,7 @@
 // Path: web/assets/modules/ui/components/popup/controllers/quicklook_controller.js
 import { PopupState } from '../state/popup_state.js';
 import { QuicklookUI } from '../ui/quicklook_ui.js';
+import { CommentUI } from '../ui/comment_ui.js';
 import { NavigationController } from './navigation_controller.js';
 import { SuttaService } from 'services/sutta_service.js';
 import { LeafRenderer } from 'ui/views/renderers/leaf_renderer.js';
