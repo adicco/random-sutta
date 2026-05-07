@@ -111,7 +111,7 @@ body.popup-open #quicklook-popup {
   padding-bottom: calc(30vh + env(safe-area-inset-bottom, 20px));
 }
 
-/* [NEW] Quicklook Specific: Add extra breathing room at bottom for comfortable scrolling */
+/* [NEW] Quicklook Specific: Add extra breathing room at bottom for comfortable scrolling *g/
 #quicklook-popup .popup-body {
   padding-bottom: 80px !important;
 }

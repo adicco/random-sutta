@@ -27,6 +27,8 @@ export const PopupState = {
 
     clearActive() {
         this.activeType = 'none';
+        this.activeIndex = -1;
+        this.activeUrl = null;
     },
 
     saveSnapshot() {
