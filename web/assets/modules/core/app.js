@@ -133,7 +133,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           App.addListener('appUrlOpen', async data => {
               logger.info("App", "App opened with URL: " + data.url);
               
-              if (data.url.includes('auth-callback')) {
+              // Handle Google Auth Callbacks (both custom and standard Android redirect)
+              if (data.url.includes('auth-callback') || data.url.includes('oauth2redirect')) {
                   GoogleAuthManager.handleNativeCallback(data.url);
                   return;
               }
@@ -161,7 +162,8 @@ document.addEventListener("DOMContentLoaded", async () => {
               logger.info("Tauri App", "Tauri deep link opened: " + JSON.stringify(urls));
               
               for (const urlStr of urls) {
-                  if (urlStr.includes('auth-callback')) {
+                  // Handle Google Auth Callbacks
+                  if (urlStr.includes('auth-callback') || urlStr.includes('oauth2redirect')) {
                       GoogleAuthManager.handleNativeCallback(urlStr);
                       continue;
                   }

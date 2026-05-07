@@ -35,6 +35,14 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="randomsutta" />
             </intent-filter>
+
+            <!-- Google OAuth Redirect -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.randomsutta.mac" />
+            </intent-filter>
         </activity>
 
         <provider
