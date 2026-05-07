@@ -26,8 +26,39 @@ export const QuicklookController = {
             },
             onOpenOriginal: (href) => {
                 NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all')));
+            },
+            onCommentClick: (text) => {
+                this.openNestedComment(text);
             }
         });
+    },
+
+    openNestedComment(text) {
+        // 1. Scan markers specifically inside Quicklook content
+        const qlContent = QuicklookUI.elements.content;
+        if (!qlContent) return;
+
+        const markers = Array.from(qlContent.querySelectorAll(".comment-marker"));
+        const index = markers.findIndex(m => m.dataset.comment === text);
+
+        if (index !== -1) {
+            // Store nested state
+            PopupState.nestedActiveIndex = index;
+            PopupState.nestedActiveText = text;
+
+            // Activate Comment UI with this content
+            // We use a helper to render without affecting the main 'activeIndex' in PopupState if possible,
+            // but for simplicity, let's just render. 
+            // NOTE: This will overlay the existing comment popup if one is open.
+            CommentUI.render(text, index, markers.length, "Note from Preview");
+
+            // [CRITICAL] Manage stacking: Comment must be above Quicklook
+            const commentEl = document.getElementById("comment-popup");
+            const quicklookEl = document.getElementById("quicklook-popup");
+            
+            if (commentEl) commentEl.classList.add("is-top-layer");
+            if (quicklookEl) quicklookEl.classList.remove("is-top-layer");
+        }
     },
 
     async handleLinkRequest(href, isRestoring = false) {

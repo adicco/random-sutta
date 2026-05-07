@@ -72,6 +72,25 @@ export const CommentController = {
     },
 
     navigate(dir) {
+        // [NEW] Nested Comment Navigation (Inside Quicklook)
+        if (QuicklookUI.isVisible() && PopupState.nestedActiveIndex !== -1) {
+            const qlContent = QuicklookUI.elements.content;
+            const markers = Array.from(qlContent.querySelectorAll(".comment-marker"));
+            
+            const nextIdx = PopupState.nestedActiveIndex + dir;
+            if (nextIdx >= 0 && nextIdx < markers.length) {
+                const marker = markers[nextIdx];
+                PopupState.nestedActiveIndex = nextIdx;
+                PopupState.nestedActiveText = marker.dataset.comment;
+                
+                CommentUI.render(marker.dataset.comment, nextIdx, markers.length, "Note from Preview");
+                
+                // Scroll Quicklook to the marker
+                marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+
         let currentIdx = PopupState.activeIndex;
         const comments = PopupState.getComments();
         
@@ -91,6 +110,27 @@ export const CommentController = {
     },
 
     close() {
+        // [NEW] Closing Nested Comment
+        if (QuicklookUI.isVisible() && PopupState.nestedActiveIndex !== -1) {
+            PopupState.nestedActiveIndex = -1;
+            PopupState.nestedActiveText = null;
+            
+            // If there was a main comment active, restore it
+            if (PopupState.activeIndex !== -1) {
+                this.activate(PopupState.activeIndex);
+                // Return top layer to Quicklook as it was "under" the nested comment
+                const qlEl = document.getElementById("quicklook-popup");
+                if (qlEl) qlEl.classList.add("is-top-layer");
+                const commentEl = document.getElementById("comment-popup");
+                if (commentEl) commentEl.classList.remove("is-top-layer");
+            } else {
+                CommentUI.hide();
+                const qlEl = document.getElementById("quicklook-popup");
+                if (qlEl) qlEl.classList.add("is-top-layer");
+            }
+            return;
+        }
+
         CommentUI.hide();
         QuicklookUI.hide(); // Close child popup (Quicklook)
         PopupState.clearActive();

@@ -36,6 +36,14 @@ export const QuicklookUI = {
         }
         
         this.elements.content.addEventListener("click", (e) => {
+             if (e.target.classList.contains("comment-marker")) {
+                 e.stopPropagation();
+                 if (callbacks.onCommentClick) {
+                     callbacks.onCommentClick(e.target.dataset.comment);
+                 }
+                 return;
+             }
+
              const link = e.target.closest("a");
              if (link && link.href) {
                  e.preventDefault();
@@ -52,6 +60,8 @@ export const QuicklookUI = {
         this.currentSourceUrl = sourceUrl;
 
         this.elements.popup.classList.remove("hidden");
+        this.elements.popup.classList.add("is-top-layer"); // [NEW] Ensure it is top layer when opened
+        
         if (this.elements.popupBody) this.elements.popupBody.scrollTop = 0;
     },
 

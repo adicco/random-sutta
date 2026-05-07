@@ -11,6 +11,10 @@ export const PopupState = {
     activeUrl: null,
     loadingUid: null, 
 
+    // Secondary state for Nested Comments (Quicklook -> Comment)
+    nestedActiveIndex: -1,
+    nestedActiveText: null,
+
     setComments(list) { this.comments = list || []; },
     getComments() { return this.comments; },
 
@@ -29,6 +33,8 @@ export const PopupState = {
         this.activeType = 'none';
         this.activeIndex = -1;
         this.activeUrl = null;
+        this.nestedActiveIndex = -1;
+        this.nestedActiveText = null;
     },
 
     saveSnapshot() {
