@@ -157,17 +157,6 @@ export const GestureManager = {
             }
         }, { passive: true });
         
-        // 3. Mouse Back/Forward Navigation
-        document.addEventListener('mouseup', (e) => {
-            if (e.button === 3) {
-                logger.debug("Mouse", "Back button clicked");
-                window.history.back();
-            } else if (e.button === 4) {
-                logger.debug("Mouse", "Forward button clicked");
-                window.history.forward();
-            }
-        });
-
         logger.info("Init", "GestureManager initialized.");
     }
 };

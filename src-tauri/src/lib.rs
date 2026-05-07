@@ -10,6 +10,22 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      #[cfg(target_os = "macos")]
+      {
+        use tauri::Manager;
+        // Attempt to find the main window and enable native gestures
+        for window in app.webview_windows().values() {
+          let _ = window.with_webview(|webview| {
+            #[cfg(target_os = "macos")]
+            unsafe {
+              let wk_webview = webview.inner() as *mut objc2::runtime::AnyObject;
+              let _: () = objc2::msg_send![wk_webview, setAllowsBackForwardNavigationGestures: true];
+            }
+          });
+        }
+      }
+
       Ok(())
     })
     .run(tauri::generate_context!())
