@@ -9,7 +9,11 @@ import { AppConfig } from 'core/app_config.js';
 import { Scroller } from 'ui/common/scroller.js'; // [NEW] Import Scroller
 
 export const PopupOrchestrator = {
+    isInitialized: false,
+
     init() {
+        if (this.isInitialized) return;
+        
         this._applyLayoutConfig();
         // 1. Init Controllers
         CommentController.init();
@@ -23,6 +27,8 @@ export const PopupOrchestrator = {
         });
         // 3. Bind Global Interactions
         this._bindGlobalEvents();
+
+        this.isInitialized = true;
     },
 
     restoreState() {
@@ -50,7 +56,17 @@ export const PopupOrchestrator = {
             container.addEventListener("click", (e) => {
                 if (e.target.classList.contains("comment-marker")) {
                     e.stopPropagation();
-                    CommentController.openByText(e.target.dataset.comment);
+                    
+                    // [FIXED] Identify exact index of clicked marker to avoid "jumping" on duplicate texts
+                    const markers = Array.from(container.querySelectorAll(".comment-marker"));
+                    const index = markers.indexOf(e.target);
+                    
+                    if (index !== -1) {
+                        CommentController.openByIndex(index);
+                    } else {
+                        // Fallback to text if index search fails
+                        CommentController.openByText(e.target.dataset.comment);
+                    }
                 } else {
                     // Click Outside Logic
                     if (QuicklookUI.isVisible() && !QuicklookUI.elements.popup.contains(e.target)) {

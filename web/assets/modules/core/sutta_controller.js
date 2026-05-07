@@ -4,14 +4,13 @@ import { RandomBuffer } from "services/random_buffer.js";
 import { renderSutta } from "ui/views/renderer.js";
 import { Router } from "core/router.js";
 import { FilterComponent } from "ui/components/filters/index.js";
-import { initPopupSystem } from "ui/components/popup/index.js";
+import { PopupAPI } from "ui/components/popup/index.js";
 import { Scroller } from "ui/common/scroller.js";
 import { getLogger } from "utils/logger.js";
 import { TTSOrchestrator } from "tts/core/tts_orchestrator.js";
 import { BookmarkManager } from "ui/managers/bookmark_manager.js";
 
 const logger = getLogger("SuttaController");
-const PopupAPI = initPopupSystem();
 
 export const SuttaController = {
   isRestoring: false, // [NEW] Guard flag
