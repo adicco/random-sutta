@@ -33,30 +33,32 @@
 .popup-resize-handle {
     position: absolute;
     top: 0;
-    left: 0;
-    right: 0;
-    height: 24px; /* Larger hit area */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px; /* Constrain width to center to avoid blocking side buttons */
+    height: 12px; /* Smaller hit area */
     cursor: ns-resize;
-    z-index: 100;
+    z-index: 110;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 4px;
 }
 
 .popup-resize-handle:after {
     content: '';
-    width: 36px;
-    height: 5px;
+    width: 32px;
+    height: 4px;
     background-color: var(--text-muted);
-    border-radius: 3px;
-    opacity: 0.2;
+    border-radius: 2px;
+    opacity: 0.15; /* More subtle */
     transition: all 0.2s ease;
 }
 
 .popup-resize-handle:hover:after {
-    opacity: 0.5;
+    opacity: 0.4;
     background-color: var(--primary-color);
-    width: 48px;
+    width: 40px;
 }
 
 body.is-resizing {
