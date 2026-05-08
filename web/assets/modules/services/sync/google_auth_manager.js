@@ -5,14 +5,18 @@ import { Browser } from '@capacitor/browser';
 const logger = getLogger("GoogleAuthManager");
 
 export const GoogleAuthManager = {
-    // [UNIFIED] Always use Web Client ID for all platforms to support HTTPS proxy
-    CLIENT_ID: "103021460212-ki69q4b1mfn72qn6f8lg8a199s3f6t5d.apps.googleusercontent.com", 
+    // Default IDs
+    WEB_CLIENT_ID: "103021460212-ki69q4b1mfn72qn6f8lg8a199s3f6t5d.apps.googleusercontent.com",
+    MACOS_CLIENT_ID: "103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle.apps.googleusercontent.com",
+    ANDROID_CLIENT_ID: "103021460212-57t5bgbgr9ug2h4qke5603c5bj51pqqr.apps.googleusercontent.com",
+    
+    CLIENT_ID: "", 
+    REDIRECT_URI: "",
     SCOPES: "https://www.googleapis.com/auth/drive.appdata",
     AUTH_URL: "https://accounts.google.com/o/oauth2/v2/auth",
     TOKEN_URL: "https://oauth2.googleapis.com/token",
     TOKEN_KEY: "google_sync_token",
     VERIFIER_KEY: "google_auth_verifier",
-    // Standard Custom Scheme for the app itself
     CUSTOM_SCHEME: "randomsutta://auth-callback",
 
     init() {
@@ -25,20 +29,30 @@ export const GoogleAuthManager = {
     },
 
     _loadPlatformConfig() {
-        // [IMPORTANT] In Native mode, we use the GitHub Pages URL as a PROXY
-        // This solves all "Access blocked" and "Redirect failed" issues.
-        if (this.isNative()) {
-            this.REDIRECT_URI = "https://vjjda.github.io/random-sutta/";
-        } else {
-            this.REDIRECT_URI = window.location.origin + window.location.pathname;
+        // macOS (Tauri)
+        if (window.__TAURI_INTERNALS__) {
+            this.CLIENT_ID = this.MACOS_CLIENT_ID;
+            // Native ID requires exactly one slash after colon
+            this.REDIRECT_URI = `com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle:/oauth2redirect`;
+            return;
         }
-        
-        // Allow user-overridden Client ID
+
+        // Android (Capacitor)
+        if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+            this.CLIENT_ID = this.ANDROID_CLIENT_ID;
+            // Android Native ID requires package name as scheme
+            this.REDIRECT_URI = "com.randomsutta.mac:/oauth2redirect";
+            return;
+        }
+
+        // Web (or PWA)
         const savedId = localStorage.getItem("google_sync_client_id");
-        if (savedId) this.CLIENT_ID = savedId;
+        this.CLIENT_ID = savedId || this.WEB_CLIENT_ID;
+        this.REDIRECT_URI = window.location.origin + window.location.pathname;
     },
 
     handleCallback() {
+        // In Web mode, code comes in the query string
         const url = new URL(window.location.href.replace("#", "?"));
         const code = url.searchParams.get("code");
         
@@ -49,8 +63,10 @@ export const GoogleAuthManager = {
 
     handleNativeCallback(urlStr) {
         try {
-            logger.info("NativeCallback", "Received URL: " + urlStr);
-            const url = new URL(urlStr.replace("#", "?")); 
+            logger.info("NativeCallback", "Intercepted: " + urlStr);
+            // Deep links from Google can be "com.pkg:/..." or "randomsutta://..."
+            // We normalize them to URL objects
+            const url = new URL(urlStr.replace("#", "?").replace(":/", "://")); 
             const code = url.searchParams.get("code");
             
             if (code) {
@@ -68,20 +84,19 @@ export const GoogleAuthManager = {
     async login() {
         this._loadPlatformConfig();
         
-        // PKCE Flow
         const verifier = this._generateVerifier();
         localStorage.setItem(this.VERIFIER_KEY, verifier);
         const challenge = await this._generateChallenge(verifier);
 
-        // State carries the 'origin=native' flag to tell the Proxy to redirect back
+        // State can help keep track of the flow
         const state = this.isNative() ? "origin=native" : "origin=web";
 
         const url = `${this.AUTH_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(this.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(this.SCOPES)}&code_challenge=${challenge}&code_challenge_method=S256&prompt=consent&access_type=offline&state=${state}`;
         
-        logger.info("Login", "Opening Auth URL with PKCE:", url);
+        logger.info("Login", "Starting OAuth with PKCE for Client:", this.CLIENT_ID);
 
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-             // On Android, use system browser to avoid disallowed_useragent
+             // Browser.open opens a Chrome Custom Tab which is officially supported by Google for OAuth
              Browser.open({ url }).catch(e => logger.error("Login", "Failed to open browser", e));
         } else {
             window.location.href = url;
@@ -91,12 +106,11 @@ export const GoogleAuthManager = {
     async _exchangeCodeForToken(code) {
         const verifier = localStorage.getItem(this.VERIFIER_KEY);
         if (!verifier) {
-            logger.error("Auth", "No verifier found in storage. Session might have expired.");
+            logger.error("Auth", "No PKCE verifier found. The session may have expired.");
             return;
         }
 
         try {
-            // [NOTE] Web Client IDs with PKCE usually don't need client_secret for public flows
             const body = {
                 client_id: this.CLIENT_ID,
                 code: code,
@@ -130,9 +144,9 @@ export const GoogleAuthManager = {
         };
 
         this.saveToken(tokenData);
-        logger.info("Auth", "Authentication successful. Refresh Token: " + (!!tokenData.refreshToken ? "YES" : "NO"));
+        logger.info("Auth", "Login successful. Session persisted: " + !!tokenData.refreshToken);
         
-        // Cleanup UI/URL
+        // Clean URL in browser
         if (!this.isNative()) {
             window.history.replaceState(null, null, window.location.pathname);
         }
@@ -161,18 +175,18 @@ export const GoogleAuthManager = {
 
         const data = JSON.parse(dataStr);
         
-        // If token is still valid (with 5 min buffer)
+        // If token is still valid (5 min buffer)
         if (Date.now() < data.expiryTime - 300000) {
             return data.token;
         }
 
-        // Try to refresh if we have a refresh token
+        // Attempt refresh
         if (data.refreshToken) {
-            logger.info("Auth", "Token expired, attempting refresh...");
+            logger.info("Auth", "Refreshing expired token...");
             return await this._refreshToken(data.refreshToken);
         }
 
-        logger.warn("Token", "Token expired and no refresh token available");
+        logger.warn("Token", "Token expired. Manual login required.");
         this.logout();
         return null;
     },
@@ -195,7 +209,7 @@ export const GoogleAuthManager = {
             this._processToken({
                 access_token: data.access_token,
                 expires_in: data.expires_in,
-                refresh_token: refreshToken // Keep same refresh token
+                refresh_token: refreshToken 
             });
 
             return data.access_token;
