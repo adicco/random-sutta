@@ -127,7 +127,7 @@ export const PaliEntryRenderer = {
                         return `<span class="dpd-construction-item clickable" data-lookup="${match}">${match}</span>`;
                     });
                 })
-                .join(' <span class="dpd-operator">||</span> ');
+                .join(' <span class="dpd-operator">|</span> ');
             line2 = `<div class="dpd-summary-line-2"><span class="dpd-construction">${constrLines}</span></div>`;
         }
 
