@@ -147,6 +147,9 @@ export const LookupManager = {
         const cleanText = text.toLowerCase().normalize('NFC').replace(/[.,;:"'‘’“”\—?!()…]/g, '').trim();
         
         if (cleanText.length > 50 || cleanText.length < 1) return; 
+
+        // Provide immediate visual feedback while loading
+        LookupUI.showLoading(cleanText);
         
         // Ensure Dictionaries are ready
         const isReady = await DictProvider.init();
@@ -161,9 +164,11 @@ export const LookupManager = {
         let results = [];
         const seenIds = new Set();
         
-        // Use loop to ensure sequential lookups (state safety for SQLite _lookup_params)
-        for (const term of searchTerms) {
-            const res = await DictProvider.search(term, contextNode);
+        // [UPDATED] Run lookups in parallel
+        const initialPromises = searchTerms.map(term => DictProvider.search(term, contextNode));
+        const initialResArrays = await Promise.all(initialPromises);
+        
+        initialResArrays.forEach((res, index) => {
             res.forEach(r => {
                 // If searching for components, mark them as exact so they show up at top
                 if (searchTerms.length > 1) r.is_exact = true;
@@ -178,7 +183,7 @@ export const LookupManager = {
                     if (existing) existing.is_exact = true;
                 }
             });
-        }
+        });
         
         // [DECONSTRUCTION] Auto-lookup components for DECON results
         if (results && results.length > 0) {
@@ -202,9 +207,11 @@ export const LookupManager = {
                 });
 
                 if (componentWords.size > 0) {
-                    // [IMPORTANT] Sequential lookup to avoid SQLite state collision in _lookup_params
-                    for (const word of componentWords) {
-                        const resArray = await DictProvider.search(word, contextNode);
+                    // [UPDATED] Run component lookups in parallel now that the SQLite query is atomic
+                    const promises = Array.from(componentWords).map(word => DictProvider.search(word, contextNode));
+                    const resArrays = await Promise.all(promises);
+                    
+                    resArrays.forEach(resArray => {
                         for (const r of resArray) {
                             // Ensure component matches are treated as exact matches in the final list
                             r.is_exact = true;
@@ -217,7 +224,7 @@ export const LookupManager = {
                                 existing.is_exact = true;
                             }
                         }
-                    }
+                    });
                 }
             }
         }
