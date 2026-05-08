@@ -1,21 +1,10 @@
 // Path: web/assets/modules/services/sqlite_helper.js
 import { Factory } from '@journeyapps/wa-sqlite/src/sqlite-api.js';
-import { IDBBatchAtomicVFS } from '@journeyapps/wa-sqlite/src/examples/IDBBatchAtomicVFS.js';
+import { OPFSAnyContextVFS } from '@journeyapps/wa-sqlite/src/examples/OPFSAnyContextVFS.js';
 import SQLiteESMFactory from '@journeyapps/wa-sqlite/dist/wa-sqlite-async.mjs'; 
 import * as SQLiteConstants from '@journeyapps/wa-sqlite/src/sqlite-constants.js';
 
 const wasmUrlAsync = new URL('@journeyapps/wa-sqlite/dist/wa-sqlite-async.wasm?url', import.meta.url).href;
-
-// --- MONKEY PATCH VFS ---
-// Fix for: TypeError: Cannot read properties of undefined (reading 'flags') at _IDBBatchAtomicVFS.jClose
-// This happens when open_v2 fails and tries to close a file that wasn't successfully registered.
-const originalJClose = IDBBatchAtomicVFS.prototype.jClose;
-IDBBatchAtomicVFS.prototype.jClose = async function(fileId) {
-    if (!this.mapIdToFile || !this.mapIdToFile.has(fileId)) {
-        return SQLiteConstants.SQLITE_OK;
-    }
-    return originalJClose.call(this, fileId);
-};
 
 // --- SINGLETON STATE & MUTEX ---
 let initPromise = null;
@@ -46,9 +35,9 @@ async function getSharedSqlite() {
         });
         const sqlite = Factory(sqliteModule);
         
-        // Tạo một VFS chung cho toàn bộ App
-        // IDBBatchAtomicVFS cần được khởi tạo async
-        const vfs = new IDBBatchAtomicVFS("RS_Persistent_Storage", sqliteModule);
+        // Tạo một VFS chung cho toàn bộ App sử dụng OPFS (Origin Private File System)
+        // Thay vì IndexedDB (chậm hơn cho random read lớn), ta dùng OPFSAnyContextVFS hỗ trợ mọi luồng.
+        const vfs = new OPFSAnyContextVFS("RS_Persistent_Storage", sqliteModule);
         await vfs.isReady(); // QUAN TRỌNG: Chờ VFS sẵn sàng trước khi register
         
         sqlite.vfs_register(vfs, true); 
