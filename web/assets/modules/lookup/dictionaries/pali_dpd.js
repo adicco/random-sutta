@@ -49,7 +49,7 @@ export const PaliDPD = {
                             0 as priority,
                             0 as rank
                         FROM deconstructions
-                        WHERE word = $term
+                        WHERE word = ?1
                         LIMIT 1
                     ),
                     keys_main AS (
@@ -58,7 +58,7 @@ export const PaliDPD = {
                             1 as priority,
                             rank
                         FROM lookups_fts
-                        WHERE lookups_fts MATCH $term
+                        WHERE lookups_fts MATCH ?2
                     ),
                     all_keys AS (
                         SELECT * FROM keys_decon
@@ -128,12 +128,12 @@ export const PaliDPD = {
                     
                     -- Meta
                     k.priority,
-                    (k.key = $term) AS is_exact,
+                    (k.key = ?1) AS is_exact,
                     (
-                        k.key = $term OR
-                        k.key LIKE $term || ' %' OR
-                        k.key LIKE '% ' || $term OR
-                        k.key LIKE '% ' || $term || ' %'
+                        k.key = ?1 OR
+                        k.key LIKE ?1 || ' %' OR
+                        k.key LIKE '% ' || ?1 OR
+                        k.key LIKE '% ' || ?1 || ' %'
                     ) AS has_word,
                     l.inflection_map
                 FROM all_keys k
@@ -148,8 +148,11 @@ export const PaliDPD = {
                     k.rank ASC;
             `;
 
-            // 2. Fetch Results (Pass parameter via object for named binding)
-            const results = await this.connection.run(sql, { $term: cleanTerm });
+            // 2. Fetch Results (Pass parameter via array)
+            // ?1 = cleanTerm (for exact equality and LIKE)
+            // ?2 = ftsTerm (wrapped in quotes for FTS5 MATCH)
+            const ftsTerm = '"' + cleanTerm + '"';
+            const results = await this.connection.run(sql, [cleanTerm, ftsTerm]);
 
             if (!results.length) return [];
 
