@@ -43,11 +43,14 @@ class HtmlBuilder:
         return base_title
 
     def build_segment_html(self, segment: Dict[str, Any], footnote_idx: int = 0) -> str:
-        html_tag = segment.get("html", "")
+        segment_id = segment.get("segment_id", "")
+        content_items = segment.get("content_items", []) # We should probably pass the aggregated list here
+        
+        # If segment is already aggregated (horizontal format)
         pli = segment.get("pli") or ""
         eng = segment.get("eng") or ""
-        segment_id = segment.get("segment_id", "")
-        
+        html_tag = segment.get("html", "")
+
         if not pli and not eng:
             return ""
 

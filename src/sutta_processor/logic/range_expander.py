@@ -58,13 +58,20 @@ def _extract_unique_article_ids(content: Dict[str, Any]) -> List[str]:
     sorted_keys = sorted(content.keys(), key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x)])
 
     for seg_key in sorted_keys:
-        html = content[seg_key].get("html", "")
-        if not html: continue
-        matches = ARTICLE_ID_PATTERN.findall(html)
-        for aid in matches:
-            if aid not in seen_ids:
-                seen_ids.add(aid)
-                found_ids.append(aid)
+        # [UPDATED] content[seg_key] is now a list of objects
+        content_items = content[seg_key]
+        if not isinstance(content_items, list):
+            continue
+            
+        for item in content_items:
+            if item.get("type") == "html":
+                html = item.get("content", "")
+                if html:
+                    matches = ARTICLE_ID_PATTERN.findall(html)
+                    for aid in matches:
+                        if aid not in seen_ids:
+                            seen_ids.add(aid)
+                            found_ids.append(aid)
     return found_ids
 
 def _generate_smart_acronym(parent_acronym: str, start: int, end: int, replacement: str) -> str:

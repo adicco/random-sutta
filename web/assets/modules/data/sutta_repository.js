@@ -74,6 +74,26 @@ export const SuttaRepository = {
         };
     },
 
+    /**
+     * Cache cho author_priority để tránh query liên tục
+     */
+    _authorPriority: null,
+
+    async _getAuthorPriority() {
+        if (this._authorPriority) return this._authorPriority;
+
+        try {
+            const results = await SuttaDB.query("SELECT value FROM config WHERE key = 'author_priority'");
+            if (results.length > 0) {
+                this._authorPriority = JSON.parse(results[0].value);
+                return this._authorPriority;
+            }
+        } catch (e) {
+            logger.error("Failed to fetch author_priority", e);
+        }
+        return [];
+    },
+
     async fetchContent(uid) {
         if (!uid) return null;
 
@@ -82,32 +102,57 @@ export const SuttaRepository = {
         if (!loc) return null;
 
         const [bookId] = loc;
-        const category = this._get_category(bookId);
+        const category = this._getCategory(bookId);
+        const priorityList = await this._getAuthorPriority();
 
         // 2. Query từ Content Shard tương ứng (Vertical Schema)
-        const sql = "SELECT segment_id, type, content FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order";
+        const sql = "SELECT segment_id, type, lang, author_uid, content FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order";
         const results = await SuttaDB.queryShard(category, sql, [uid]);
 
         if (results.length === 0) return null;
 
         const contentMap = {};
+        // Lưu trữ tạm thời để so sánh độ ưu tiên: { segId: { author: 'sujato', score: 0, content: '...' } }
+        const transTemp = {};
+
         for (const row of results) {
             const segId = row.segment_id;
             if (!contentMap[segId]) {
                 contentMap[segId] = {};
             }
 
-            // Map types to legacy horizontal keys for UI compatibility
-            if (row.type === 'root') contentMap[segId].pli = row.content;
-            else if (row.type === 'translation') contentMap[segId].eng = row.content;
-            else if (row.type === 'html') contentMap[segId].html = row.content;
-            else if (row.type === 'comment') contentMap[segId].comm = row.content;
-            else if (row.type === 'variant') contentMap[segId].variant = row.content;
-            else if (row.type === 'reference') contentMap[segId].reference = row.content;
+            const type = row.type;
+            const author = row.author_uid;
+
+            if (type === 'root') {
+                contentMap[segId].pli = row.content;
+            } else if (type === 'html') {
+                contentMap[segId].html = row.content;
+            } else if (type === 'comment') {
+                contentMap[segId].comm = row.content;
+            } else if (type === 'variant') {
+                contentMap[segId].variant = row.content;
+            } else if (type === 'reference') {
+                contentMap[segId].reference = row.content;
+            } else if (type === 'translation') {
+                // Logic xử lý ưu tiên bản dịch
+                const currentScore = priorityList.indexOf(author);
+                const bestScoreSoFar = transTemp[segId] ? priorityList.indexOf(transTemp[segId].author) : 999;
+
+                // Nếu author này có trong list và có điểm ưu tiên cao hơn (index thấp hơn)
+                // Hoặc nếu chưa có bản dịch nào cho segment này
+                if (currentScore !== -1 && (currentScore < (bestScoreSoFar === -1 ? 999 : bestScoreSoFar) || !transTemp[segId])) {
+                    transTemp[segId] = { author: author, content: row.content };
+                    contentMap[segId].eng = row.content;
+                } else if (!transTemp[segId]) {
+                    // Fallback nếu không có author nào trong list priority, lấy đại cái đầu tiên
+                    transTemp[segId] = { author: author, content: row.content };
+                    contentMap[segId].eng = row.content;
+                }
+            }
         }
         return contentMap;
     },
-
 
     async fetchMetaList(uids) {
         const uniqueIds = [...new Set(uids)].filter(id => id);
