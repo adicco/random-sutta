@@ -14,9 +14,11 @@ const logger = getLogger("SuttaController");
 
 export const SuttaController = {
   isRestoring: false, // [NEW] Guard flag
+  isLoading: false, // [NEW] Logical guard
   currentNav: { prev: null, next: null }, // [NEW] Track navigation IDs
 
   navigatePrev: function() {
+    if (this.isLoading) return false;
     if (this.currentNav.prev) {
         this.loadSutta(this.currentNav.prev);
         return true;
@@ -25,6 +27,7 @@ export const SuttaController = {
   },
 
   navigateNext: function() {
+    if (this.isLoading) return false;
     if (this.currentNav.next) {
         this.loadSutta(this.currentNav.next);
         return true;
@@ -33,6 +36,7 @@ export const SuttaController = {
   },
 
   loadSutta: async function (input, shouldUpdateUrl = true, scrollY = 0, options = {}) {
+    if (this.isLoading && !options.force) return;
     this._showLoader(true);
     
     try {
@@ -254,41 +258,42 @@ export const SuttaController = {
       document.getElementById("nav-next")
     ];
 
-    // Luôn khóa/mở khóa nút ngay lập tức để chặn spam
-    btns.forEach(btn => {
-      if (btn) btn.disabled = show;
-    });
-
     if (show) {
-      // Nếu yêu cầu hiện loader, đợi 200ms mới thực sự hiện UI
-      // Điều này giúp tránh hiện tượng "nháy" khi data có sẵn trong buffer
+      if (this.isLoading) return; 
+      this.isLoading = true;
+
       if (this._loaderTimer) clearTimeout(this._loaderTimer);
       this._loaderTimer = setTimeout(() => {
+        // Chỉ disable nút sau 200ms để tránh flashing cho load nhanh
+        btns.forEach(btn => { if (btn) btn.disabled = true; });
+
         if (loader) {
           loader.classList.remove("hidden");
-          // Force reflow for CSS transition
           loader.offsetHeight;
           loader.classList.add("visible");
         }
       }, 200);
     } else {
-      // Tắt loader ngay lập tức
+      this.isLoading = false;
+
       if (this._loaderTimer) {
         clearTimeout(this._loaderTimer);
         this._loaderTimer = null;
       }
+
+      // Re-enable ngay lập tức
+      btns.forEach(btn => { if (btn) btn.disabled = false; });
+
       if (loader) {
         loader.classList.remove("visible");
         setTimeout(() => {
-          if (!this._loaderTimer) loader.classList.add("hidden");
+          if (!this.isLoading) loader.classList.add("hidden");
         }, 300);
       }
     }
   },
 
   loadRandomSutta: async function (shouldUpdateUrl = true) {
-    this._showLoader(true);
-
     try {
       PopupAPI.hideAll();
       logger.timer('Random Process Total');
@@ -296,12 +301,10 @@ export const SuttaController = {
       const filters = FilterComponent.getActiveFilters();
       const input = await RandomBuffer.getPayload(filters);
 
-      // [FIXED] Kiểm tra uid linh hoạt cho cả cấu trúc cũ và mới (buffered)
       const isValid = input && (input.uid || (input.payload && input.payload.uid));
 
       if (!isValid) {
         logger.warn('Random Process Total', 'Payload empty');
-        this._showLoader(false);
         return;
       }
 
@@ -312,8 +315,6 @@ export const SuttaController = {
       logger.timerEnd('Random Process Total');
     } catch (e) {
       logger.error("Random", "Failed to load random sutta", e);
-    } finally {
-      this._showLoader(false);
     }
   }
   };
