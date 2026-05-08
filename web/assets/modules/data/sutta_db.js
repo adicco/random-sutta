@@ -63,10 +63,9 @@ export class SuttaDB {
     }
 
     /**
-     * Logic trung tâm: Lấy DB từ Storage, nếu cũ hoặc chưa có thì tải mới.
-     * Cải tiến: Download và Ghi trước khi Mở kết nối để tránh xung đột.
+     * Logic trung tâm: Đảm bảo DB được tải về và cập nhật trong Storage.
      */
-    static async _getOrUpdateDB(dbName, onProgress) {
+    static async _ensureDbUpdated(dbName, onProgress) {
         const targetHash = this.manifest?.files?.[dbName]?.hash || "dev";
         const currentHash = await this._getStoredHash(dbName);
         
@@ -81,19 +80,46 @@ export class SuttaDB {
             if (empty) needsUpdate = true;
         }
 
-        // 2. Nếu cần update, download và import trước khi mở kết nối chính thức
+        // 2. Nếu cần update, download và import
         if (needsUpdate) {
             logger.info("Storage", `Updating ${dbName}: ${currentHash} -> ${targetHash}`);
             const file = await this._fetchFile(dbName, onProgress);
             const { importToPersistentStorage } = await import('services/sqlite_helper.js');
             await importToPersistentStorage(dbName, file);
             await this._setStoredHash(dbName, targetHash);
+            return true;
         } else {
             logger.info("Storage", `Using persistent DB: ${dbName} (${targetHash})`);
+            if (onProgress) onProgress(100, 100);
+            return false;
         }
-        
+    }
+
+    /**
+     * Lấy DB từ Storage, cập nhật nếu cần, rồi mở kết nối.
+     */
+    static async _getOrUpdateDB(dbName, onProgress) {
+        await this._ensureDbUpdated(dbName, onProgress);
         // 3. Mở kết nối chính thức
         return await initSQLitePersistent({ dbName });
+    }
+
+    /**
+     * Tải Shard về máy (Offline) nhưng KHÔNG mở kết nối giữ chỗ.
+     * Tránh xung đột đóng shard đang dùng.
+     */
+    static async prefetchShard(category, onProgress) {
+        if (this.shards.has(category)) {
+            if (onProgress) onProgress(100, 100);
+            return;
+        }
+        if (this.loadingPromises.has(category)) {
+            await this.loadingPromises.get(category);
+            if (onProgress) onProgress(100, 100);
+            return;
+        }
+        const dbName = `sutta_content_${category}.db`;
+        await this._ensureDbUpdated(dbName, onProgress);
     }
 
     /**

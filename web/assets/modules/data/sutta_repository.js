@@ -205,14 +205,13 @@ export const SuttaRepository = {
         
         logger.info("DownloadAll", "Fetching all content shards for offline use...");
 
-        // [OFFLINE FIX] Load sequentially and CLOSE immediately to prevent iOS out-of-memory crashes
+        // [OFFLINE FIX] Load sequentially and prefetch without keeping connection open to prevent iOS out-of-memory crashes
         for (const category of shards) {
-             await SuttaDB.loadShard(category, (loaded, total) => {
+             await SuttaDB.prefetchShard(category, (loaded, total) => {
                  const base = (shardCount + 1) * 20;
                  if (onProgress) onProgress(base, 100);
              });
-             // Tối ưu RAM: Giải phóng shard ngay sau khi nạp/kiểm tra xong
-             await SuttaDB.closeShard(category);
+             // Không gọi SuttaDB.closeShard(category) ở đây vì prefetchShard không lưu vào RAM
              shardCount++;
         }
 

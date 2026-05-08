@@ -47,7 +47,10 @@ async function getSharedSqlite() {
         const sqlite = Factory(sqliteModule);
         
         // Tạo một VFS chung cho toàn bộ App
+        // IDBBatchAtomicVFS cần được khởi tạo async
         const vfs = new IDBBatchAtomicVFS("RS_Persistent_Storage", sqliteModule);
+        await vfs.isReady(); // QUAN TRỌNG: Chờ VFS sẵn sàng trước khi register
+        
         sqlite.vfs_register(vfs, true); 
 
         return { sqlite, vfs };
@@ -136,34 +139,36 @@ async function run_internal(sqlite, db, sql) {
 }
 
 async function run(core, sql, params) {
-    const { sqlite, db } = core;
-    const results = [];
-    try {
-        for await (const stmt of sqlite.statements(db, sql)) {
-            if (params) {
-                if (Array.isArray(params)) {
-                    sqlite.bind_collection(stmt, params);
-                } else {
-                    for (const [key, value] of Object.entries(params)) {
-                        const idx = sqlite.bind_parameter_index(stmt, key);
-                        if (idx > 0) sqlite.bind_text(stmt, idx, value);
+    return withLock(async () => {
+        const { sqlite, db } = core;
+        const results = [];
+        try {
+            for await (const stmt of sqlite.statements(db, sql)) {
+                if (params) {
+                    if (Array.isArray(params)) {
+                        sqlite.bind_collection(stmt, params);
+                    } else {
+                        for (const [key, value] of Object.entries(params)) {
+                            const idx = sqlite.bind_parameter_index(stmt, key);
+                            if (idx > 0) sqlite.bind_text(stmt, idx, value);
+                        }
                     }
                 }
+                
+                const cols = sqlite.column_names(stmt);
+                while (await sqlite.step(stmt) === SQLiteConstants.SQLITE_ROW) {
+                    const row = sqlite.row(stmt);
+                    results.push(Object.fromEntries(cols.map((key, i) => [key, row[i]])));
+                }
             }
-            
-            const cols = sqlite.column_names(stmt);
-            while (await sqlite.step(stmt) === SQLiteConstants.SQLITE_ROW) {
-                const row = sqlite.row(stmt);
-                results.push(Object.fromEntries(cols.map((key, i) => [key, row[i]])));
+        } catch (e) {
+            console.error(`❌ SQLite Query Error [${core.path}]:`, e, sql);
+            // Nếu lỗi là "memory access out of bounds", thông báo reload
+            if (e.message?.includes("memory access out of bounds")) {
+                console.error("🚨 Critical WASM Memory Error. App requires reload.");
             }
         }
-    } catch (e) {
-        console.error(`❌ SQLite Query Error [${core.path}]:`, e, sql);
-        // Nếu lỗi là "memory access out of bounds", thông báo reload
-        if (e.message?.includes("memory access out of bounds")) {
-            console.error("🚨 Critical WASM Memory Error. App requires reload.");
-        }
-    }
-    return results;
+        return results;
+    });
 }
 
