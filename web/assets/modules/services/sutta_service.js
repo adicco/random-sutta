@@ -5,7 +5,22 @@ import { RandomHelper } from "services/random_helper.js";
 import { StructureStrategy } from "services/structure_strategy.js";
 
 const logger = getLogger("SuttaService");
-// ... (Phần logic còn lại giữ nguyên)
+
+// --- IN-MEMORY CACHE (Shared across App) ---
+const SUTTA_CACHE = new Map(); // UID -> Processed Data Object
+const MAX_CACHE_SIZE = 10;
+
+function addToCache(uid, data) {
+    if (!uid || !data) return;
+    if (SUTTA_CACHE.has(uid)) SUTTA_CACHE.delete(uid); // Refresh position
+    SUTTA_CACHE.set(uid, data);
+    
+    if (SUTTA_CACHE.size > MAX_CACHE_SIZE) {
+        const firstKey = SUTTA_CACHE.keys().next().value;
+        SUTTA_CACHE.delete(firstKey);
+    }
+}
+
 let _tpkCache = null;
 
 function findNodeInTree(structure, targetId) {
@@ -66,6 +81,15 @@ export const SuttaService = {
             hintBook = input.book_id || null;
         } else {
             uid = input;
+        }
+
+        // 0. Check Cache First
+        if (SUTTA_CACHE.has(uid)) {
+            const cached = SUTTA_CACHE.get(uid);
+            if (options.prefetchNav && cached.nav) {
+                this._prefetchNeighbors(cached.nav);
+            }
+            return cached;
         }
 
         if (hintBook === null) {
@@ -219,24 +243,9 @@ export const SuttaService = {
         if (neighborsToFetch.length > 0) {
             const extraMeta = await SuttaRepository.fetchMetaList(neighborsToFetch);
             Object.assign(navMeta, extraMeta);
-            
-            if (options.prefetchNav) {
-                neighborsToFetch.forEach(neighborUid => {
-                     this.loadSutta(neighborUid, { prefetchNav: false })
-                        .catch(e => logger.warn("Prefetch", `Failed to prefetch ${neighborUid}`));
-                });
-            }
         }
         
-        if (options.prefetchNav) {
-             [nav.prev, nav.next].forEach(nid => {
-                 if (nid && bookMeta.meta[nid]) { 
-                     this.loadSutta(nid, { prefetchNav: false }).catch(() => {});
-                 }
-             });
-        }
-
-        return {
+        const result = {
             uid: uid,
             meta: metaEntry,
             content: content,
@@ -253,5 +262,25 @@ export const SuttaService = {
             nav: nav,
             navMeta: navMeta
         };
+
+        // 5. Store in Cache
+        addToCache(uid, result);
+
+        // 6. Proactive Prefetching
+        if (options.prefetchNav && nav) {
+             this._prefetchNeighbors(nav);
+        }
+
+        return result;
+    },
+
+    _prefetchNeighbors(nav) {
+        [nav.prev, nav.next].forEach(nid => {
+            if (nid && !SUTTA_CACHE.has(nid)) {
+                // Silently load and cache without triggering more prefetches
+                this.loadSutta(nid, { prefetchNav: false })
+                    .catch(() => {});
+            }
+        });
     }
 };

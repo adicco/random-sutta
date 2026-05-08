@@ -81,25 +81,19 @@ export const RandomBuffer = {
             const payload = await RandomHelper.getRandomPayload(filters);
             if (!payload) return;
 
-            // [PERF] Background buffer now stores the FULL processed data object
             const result = await SuttaService.loadSutta(payload.uid, { prefetchNav: false });
             if (result) {
-                // Đóng gói cả payload và data xử lý xong
                 this._buffer.push({
                     payload: payload,
                     data: result
                 });
                 logger.debug("Buffer", `Buffered: ${payload.uid} (Size: ${this._buffer.length})`);
-            } else {
-                logger.warn("Buffer", `Skipped invalid item: ${payload.uid}`);
             }
             
+            // Nếu bộ đệm còn quá ít (0 hoặc 1), nạp tiếp ngay lập tức không đợi idle
             if (this._buffer.length < AppConfig.BUFFER_SIZE) {
-               if ('requestIdleCallback' in window) {
-                     requestIdleCallback(() => this._fillBuffer(filters));
-               } else {
-                     setTimeout(() => this._fillBuffer(filters), 100);
-               }
+               const delay = this._buffer.length === 0 ? 0 : 100;
+               setTimeout(() => this._fillBuffer(filters), delay);
             }
         } catch (e) {
             logger.warn("Buffer", "Failed to buffer random sutta", e);
