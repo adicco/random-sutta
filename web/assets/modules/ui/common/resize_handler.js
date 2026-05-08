@@ -23,6 +23,7 @@ export const ResizeHandler = {
             cssVar = null,
             minHeight = 150,
             maxHeightVh = 85,
+            maxHeightPx = null, // Dynamic limit in pixels
             onResize = null
         } = options;
 
@@ -34,9 +35,15 @@ export const ResizeHandler = {
         if (storageKey) {
             const savedHeight = localStorage.getItem(storageKey);
             if (savedHeight) {
-                popup.style.height = savedHeight;
-                if (cssVar) document.documentElement.style.setProperty(cssVar, savedHeight);
-                if (onResize) onResize(parseInt(savedHeight));
+                const h = parseInt(savedHeight);
+                // Apply safety limits to saved height
+                const vhLimit = (window.innerHeight * maxHeightVh) / 100;
+                const finalMax = maxHeightPx ? Math.min(vhLimit, maxHeightPx) : vhLimit;
+                const safeH = Math.max(minHeight, Math.min(h, finalMax));
+                
+                popup.style.height = `${safeH}px`;
+                if (cssVar) document.documentElement.style.setProperty(cssVar, `${safeH}px`);
+                if (onResize) onResize(safeH);
             }
         }
 
@@ -61,9 +68,16 @@ export const ResizeHandler = {
             let newHeight = startHeight + deltaY;
 
             // Constraints
-            const maxHeight = (window.innerHeight * maxHeightVh) / 100;
+            const vhLimit = (window.innerHeight * maxHeightVh) / 100;
+            // Use static option OR dynamic calculated limit
+            const currentMaxPx = (typeof options.maxHeightPx === 'function') 
+                ? options.maxHeightPx() 
+                : (maxHeightPx || vhLimit);
+
+            const finalMax = Math.min(vhLimit, currentMaxPx);
+
             if (newHeight < minHeight) newHeight = minHeight;
-            if (newHeight > maxHeight) newHeight = maxHeight;
+            if (newHeight > finalMax) newHeight = finalMax;
 
             const heightStr = `${newHeight}px`;
             popup.style.height = heightStr;

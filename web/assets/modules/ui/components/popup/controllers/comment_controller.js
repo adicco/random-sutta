@@ -22,7 +22,16 @@ export const CommentController = {
         if (commentPopup && resizeHandle) {
             ResizeHandler.attach(commentPopup, resizeHandle, {
                 storageKey: 'comment_popup_height',
-                cssVar: '--popup-comment-height'
+                cssVar: '--popup-comment-height',
+                maxHeightVh: 80,
+                maxHeightPx: () => {
+                    // [DYNAMIC LIMIT] If Quicklook is open, leave at least 120px for it
+                    if (QuicklookUI.isVisible()) {
+                        const topLimit = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--popup-quicklook-top')) || 70;
+                        return window.innerHeight - topLimit - 120;
+                    }
+                    return window.innerHeight * 0.8;
+                }
             });
         }
     },

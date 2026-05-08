@@ -25,16 +25,17 @@
   
   /* [FIX] Stick to bottom, ignore TTS */
   bottom: 0 !important;
-  border-radius: 0;
+  border-radius: 16px 16px 0 0; /* Unified refined radius */
+  border-top: 1px solid var(--border-light); /* Subtle edge */
 }
 
 /* --- RESIZE HANDLE --- */
 .popup-resize-handle {
     position: absolute;
-    top: -5px;
+    top: 0;
     left: 0;
     right: 0;
-    height: 15px;
+    height: 24px; /* Larger hit area */
     cursor: ns-resize;
     z-index: 100;
     display: flex;
@@ -44,15 +45,18 @@
 
 .popup-resize-handle:after {
     content: '';
-    width: 30px;
-    height: 4px;
+    width: 36px;
+    height: 5px;
     background-color: var(--text-muted);
-    border-radius: 2px;
-    opacity: 0.3;
+    border-radius: 3px;
+    opacity: 0.2;
+    transition: all 0.2s ease;
 }
 
 .popup-resize-handle:hover:after {
-    opacity: 0.6;
+    opacity: 0.5;
+    background-color: var(--primary-color);
+    width: 48px;
 }
 
 body.is-resizing {
