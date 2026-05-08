@@ -133,8 +133,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           App.addListener('appUrlOpen', async data => {
               logger.info("App", "App opened with URL: " + data.url);
               
-              // Handle Google Auth Callbacks (both custom and standard Android redirect)
-              if (data.url.includes('auth-callback') || data.url.includes('oauth2redirect')) {
+              // Handle all Google Auth Callbacks via the stable randomsutta scheme
+              if (data.url.includes('auth-callback')) {
                   GoogleAuthManager.handleNativeCallback(data.url);
                   return;
               }
@@ -163,7 +163,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               
               for (const urlStr of urls) {
                   // Handle Google Auth Callbacks
-                  if (urlStr.includes('auth-callback') || urlStr.includes('oauth2redirect')) {
+                  if (urlStr.includes('auth-callback')) {
                       GoogleAuthManager.handleNativeCallback(urlStr);
                       continue;
                   }
