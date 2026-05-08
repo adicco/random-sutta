@@ -7,7 +7,7 @@ import { getLogger } from 'utils/logger.js';
 import { LookupEventHandler } from './core/lookup_event_handler.js';
 import { LookupNavigator } from './core/lookup_navigator.js';
 import { LookupHighlighter } from './core/lookup_highlighter.js';
-import { LookupState } from './lookup_state.js';
+import { LookupState } from './core/lookup_state.js';
 import { ResizeHandler } from 'ui/common/resize_handler.js';
 
 const logger = getLogger("LookupManager");
