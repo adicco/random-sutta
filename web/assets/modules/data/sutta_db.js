@@ -118,6 +118,8 @@ export class SuttaDB {
         }
     }
 
+    static async _loadManifest() {
+        try {
             const resp = await fetch('assets/db/db_manifest.json');
             this.manifest = await resp.json();
             await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
