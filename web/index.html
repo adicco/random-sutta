@@ -65,33 +65,6 @@
     </div>
 
     <script>
-      // [AUTH PROXY] Handle OAuth redirects back to native app
-      (function() {
-        const url = new URL(window.location.href.replace("#", "?"));
-        const code = url.searchParams.get("code");
-        const token = url.searchParams.get("access_token");
-        
-        // If we are on the web and have auth params, we might be a redirect for the native app
-        if (code || token) {
-            // Check if we came from a native app (optional but safer)
-            const state = url.searchParams.get("state");
-            if (state && state.includes("origin=native")) {
-                const deepLink = "randomsutta://auth-callback" + window.location.search + window.location.hash;
-                console.log("Redirecting to app:", deepLink);
-                window.location.href = deepLink;
-                
-                // Show a message in case redirect is blocked
-                setTimeout(() => {
-                    document.body.innerHTML = '<div style="padding:40px; text-align:center; font-family:sans-serif;">' +
-                        '<h2>Authentication Successful</h2>' +
-                        '<p>Returning to Random Sutta App...</p>' +
-                        '<a href="' + deepLink + '" style="color:#8b4513; font-weight:bold;">Click here if you are not redirected</a>' +
-                        '</div>';
-                }, 500);
-            }
-        }
-      })();
-
       // [CACHE BUSTER] Force clear cache if version changed
       const APP_VERSION = "__APP_VERSION__";
       if (localStorage.getItem("app_version") !== APP_VERSION) {

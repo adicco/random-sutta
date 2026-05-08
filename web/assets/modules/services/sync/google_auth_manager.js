@@ -5,26 +5,23 @@ import { Browser } from '@capacitor/browser';
 const logger = getLogger("GoogleAuthManager");
 
 export const GoogleAuthManager = {
-    // [UNIFIED] Using the Web Client ID for all platforms to leverage HTTPS Proxy
-    CLIENT_ID: "103021460212-ki69q4b1mfn72qn6f8lg8a199s3f6t5d.apps.googleusercontent.com", 
+    // [FINAL CONFIG] Using the iOS-type Client ID for both macOS and Android
+    // This is the only way to get Refresh Tokens (persistent login) without a Client Secret.
+    CLIENT_ID: "103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle.apps.googleusercontent.com", 
     SCOPES: "https://www.googleapis.com/auth/drive.appdata",
     AUTH_URL: "https://accounts.google.com/o/oauth2/v2/auth",
     TOKEN_URL: "https://oauth2.googleapis.com/token",
     TOKEN_KEY: "google_sync_token",
     VERIFIER_KEY: "google_auth_verifier",
-    // Base URL for the HTTPS Proxy
-    PROXY_URL: "https://vjjda.github.io/random-sutta/",
 
     init() {
         this._loadPlatformConfig();
         this.handleCallback();
         
-        // Auto-refresh token on startup if we are already "authenticated"
-        if (this.isAuthenticated()) {
-            this.getToken().then(token => {
-                if (token) logger.info("Init", "Session restored and token refreshed.");
-            });
-        }
+        // Silent refresh on startup if possible
+        this.getToken().then(t => {
+            if (t) logger.info("Init", "Session active.");
+        });
     },
 
     isNative() {
@@ -32,30 +29,29 @@ export const GoogleAuthManager = {
     },
 
     _loadPlatformConfig() {
-        // In Native apps, we ALWAYS use the HTTPS Proxy to avoid security blocks
         if (this.isNative()) {
-            this.REDIRECT_URI = this.PROXY_URL;
+            // Official Google format for iOS/macOS/Android: reversed.client.id:/oauth2redirect
+            // IMPORTANT: Single slash after the colon is mandatory for Google's validation.
+            this.REDIRECT_URI = `com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle:/oauth2redirect`;
         } else {
+            // Web/PWA
+            this.CLIENT_ID = "103021460212-ki69q4b1mfn72qn6f8lg8a199s3f6t5d.apps.googleusercontent.com";
             this.REDIRECT_URI = window.location.origin + window.location.pathname;
         }
-        
-        // Allow developer override via settings
-        const savedId = localStorage.getItem("google_sync_client_id");
-        if (savedId) this.CLIENT_ID = savedId;
     },
 
     handleCallback() {
         const url = new URL(window.location.href.replace("#", "?"));
         const code = url.searchParams.get("code");
-        if (code) {
-            this._exchangeCodeForToken(code);
-        }
+        if (code) this._exchangeCodeForToken(code);
     },
 
     handleNativeCallback(urlStr) {
         try {
-            logger.info("NativeCallback", "Processing deep link: " + urlStr);
-            const url = new URL(urlStr.replace("#", "?")); 
+            logger.info("NativeCallback", "Received: " + urlStr);
+            // Handle different scheme formats
+            const normalizedUrl = urlStr.replace("#", "?").replace(":/", "://");
+            const url = new URL(normalizedUrl); 
             const code = url.searchParams.get("code");
             
             if (code) {
@@ -66,7 +62,7 @@ export const GoogleAuthManager = {
                 Browser.close().catch(e => logger.warn("NativeCallback", "Failed to close browser", e));
             }
         } catch (e) {
-            logger.error("NativeCallback", "Failed to parse native callback URL", e);
+            logger.error("NativeCallback", "Parse error", e);
         }
     },
 
@@ -77,18 +73,13 @@ export const GoogleAuthManager = {
         localStorage.setItem(this.VERIFIER_KEY, verifier);
         const challenge = await this._generateChallenge(verifier);
 
-        // State is vital: it tells the Proxy page to redirect back to the app
-        const state = this.isNative() ? "origin=native" : "origin=web";
-
-        const url = `${this.AUTH_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(this.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(this.SCOPES)}&code_challenge=${challenge}&code_challenge_method=S256&prompt=consent&access_type=offline&state=${state}`;
+        const url = `${this.AUTH_URL}?client_id=${this.CLIENT_ID}&redirect_uri=${encodeURIComponent(this.REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(this.SCOPES)}&code_challenge=${challenge}&code_challenge_method=S256&prompt=consent&access_type=offline`;
         
-        logger.info("Login", "Starting OAuth with Proxy:", this.REDIRECT_URI);
+        logger.info("Login", "Starting OAuth (Native):", this.REDIRECT_URI);
 
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-             // Capacitor Browser opens system browser or custom tab
              Browser.open({ url }).catch(e => logger.error("Login", "Failed to open browser", e));
         } else {
-            // For macOS (Tauri) and Web, simple redirect works best
             window.location.href = url;
         }
     },
@@ -96,21 +87,23 @@ export const GoogleAuthManager = {
     async _exchangeCodeForToken(code) {
         const verifier = localStorage.getItem(this.VERIFIER_KEY);
         if (!verifier) {
-            logger.error("Auth", "PKCE verifier missing. Login session expired.");
+            logger.error("Auth", "Verifier missing. Possible session timeout.");
             return;
         }
 
         try {
+            const body = {
+                client_id: this.CLIENT_ID,
+                code: code,
+                code_verifier: verifier,
+                grant_type: 'authorization_code',
+                redirect_uri: this.REDIRECT_URI
+            };
+
             const response = await fetch(this.TOKEN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    client_id: this.CLIENT_ID,
-                    code: code,
-                    code_verifier: verifier,
-                    grant_type: 'authorization_code',
-                    redirect_uri: this.REDIRECT_URI
-                })
+                body: new URLSearchParams(body)
             });
 
             const data = await response.json();
@@ -132,7 +125,7 @@ export const GoogleAuthManager = {
         };
 
         this.saveToken(tokenData);
-        logger.info("Auth", "Persistence Active: " + !!tokenData.refreshToken);
+        logger.info("Auth", "Success! Persistent session: " + !!tokenData.refreshToken);
         
         if (!this.isNative()) {
             window.history.replaceState(null, null, window.location.pathname);
@@ -161,8 +154,6 @@ export const GoogleAuthManager = {
         if (!dataStr) return null;
 
         const data = JSON.parse(dataStr);
-        
-        // Use 5 minute safety margin
         if (Date.now() < data.expiryTime - 300000) {
             return data.token;
         }
@@ -172,7 +163,6 @@ export const GoogleAuthManager = {
             return await this._refreshToken(data.refreshToken);
         }
 
-        logger.warn("Token", "Session expired.");
         this.logout();
         return null;
     },
@@ -200,7 +190,7 @@ export const GoogleAuthManager = {
 
             return data.access_token;
         } catch (e) {
-            logger.error("Auth", "Auto-refresh failed", e);
+            logger.error("Auth", "Refresh failed", e);
             this.logout();
             return null;
         }
@@ -211,8 +201,7 @@ export const GoogleAuthManager = {
     },
 
     isAuthenticated() {
-        const data = localStorage.getItem(this.TOKEN_KEY);
-        return !!data;
+        return !!localStorage.getItem(this.TOKEN_KEY);
     },
 
     _generateVerifier() {
