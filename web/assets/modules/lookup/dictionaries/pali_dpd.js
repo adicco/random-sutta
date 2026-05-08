@@ -41,7 +41,6 @@ export const PaliDPD = {
             
             const sql = `
                 WITH 
-                    params AS (SELECT ? AS term),
                     keys_decon AS (
                         SELECT 
                             word as key, 
@@ -49,8 +48,8 @@ export const PaliDPD = {
                             -1 as type,
                             0 as priority,
                             0 as rank
-                        FROM deconstructions, params
-                        WHERE word = params.term
+                        FROM deconstructions
+                        WHERE word = $term
                         LIMIT 1
                     ),
                     keys_main AS (
@@ -58,8 +57,8 @@ export const PaliDPD = {
                             key, target_id, type, 
                             1 as priority,
                             rank
-                        FROM lookups_fts, params
-                        WHERE lookups_fts MATCH params.term
+                        FROM lookups_fts
+                        WHERE lookups_fts MATCH $term
                     ),
                     all_keys AS (
                         SELECT * FROM keys_decon
@@ -129,16 +128,15 @@ export const PaliDPD = {
                     
                     -- Meta
                     k.priority,
-                    (k.key = params.term) AS is_exact,
+                    (k.key = $term) AS is_exact,
                     (
-                        k.key = params.term OR
-                        k.key LIKE params.term || ' %' OR
-                        k.key LIKE '% ' || params.term OR
-                        k.key LIKE '% ' || params.term || ' %'
+                        k.key = $term OR
+                        k.key LIKE $term || ' %' OR
+                        k.key LIKE '% ' || $term OR
+                        k.key LIKE '% ' || $term || ' %'
                     ) AS has_word,
                     l.inflection_map
                 FROM all_keys k
-                JOIN params
                 LEFT JOIN entries e ON k.target_id = e.id AND k.type = 1
                 LEFT JOIN roots r ON k.target_id = r.id AND k.type = 0
                 LEFT JOIN deconstructions d ON k.key = d.word AND k.type = -1
@@ -150,8 +148,8 @@ export const PaliDPD = {
                     k.rank ASC;
             `;
 
-            // 2. Fetch Results (Pass parameter via array)
-            const results = await this.connection.run(sql, [cleanTerm]);
+            // 2. Fetch Results (Pass parameter via object for named binding)
+            const results = await this.connection.run(sql, { $term: cleanTerm });
 
             if (!results.length) return [];
 

@@ -106,8 +106,9 @@ export async function initSQLitePersistent(options) {
             // Tối ưu RAM cho iOS (Jetsam safe)
             await run_internal(sqlite, db, "PRAGMA journal_mode = DELETE");
             await run_internal(sqlite, db, "PRAGMA synchronous = NORMAL");
-            await run_internal(sqlite, db, "PRAGMA cache_size = -1000"); // 1MB cache per DB
+            await run_internal(sqlite, db, "PRAGMA cache_size = -5000"); // 5MB cache per DB
             await run_internal(sqlite, db, "PRAGMA temp_store = MEMORY");
+            await run_internal(sqlite, db, "PRAGMA mmap_size = 268435456"); // Mmap 256MB if supported for faster reads
 
             const core = { db, path: dbName, pointer: db, sqlite, vfs };
             return {
