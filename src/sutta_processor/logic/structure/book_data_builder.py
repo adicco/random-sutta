@@ -38,7 +38,8 @@ def build_book_data(
     content_dict = {}
     for uid, payload in raw_data.items():
         if not payload: continue
-        content_dict[uid] = payload.get("data", {})
+        # [UPDATED] Preserve full payload (contains both 'author_uid' and 'data')
+        content_dict[uid] = payload
         
         if uid not in meta_dict:
             ensure_meta_entry(uid, "leaf", names_map, meta_dict)

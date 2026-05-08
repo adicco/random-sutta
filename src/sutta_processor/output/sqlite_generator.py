@@ -80,16 +80,15 @@ class SqliteGenerator:
                 sutta_uid TEXT,
                 segment_id TEXT,
                 segment_order INTEGER,
-                pli TEXT,
-                eng TEXT,
-                html TEXT,
-                comm TEXT,
-                variant TEXT,
-                reference TEXT,
-                PRIMARY KEY (sutta_uid, segment_id)
+                type TEXT,
+                lang TEXT,
+                author_uid TEXT,
+                content TEXT,
+                PRIMARY KEY (sutta_uid, segment_id, type, lang, author_uid)
             )
         """)
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_content_segments_order ON content_segments(sutta_uid, segment_order)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_content_segments_lookup ON content_segments(sutta_uid, segment_order)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_content_segments_meta ON content_segments(type, lang, author_uid)")
         conn.commit()
 
     def finalize(self):
@@ -144,7 +143,6 @@ class SqliteGenerator:
                     cursor.execute("INSERT OR REPLACE INTO random_pools (book_id, sutta_uid) VALUES (?, ?)", (book_id, uid))
             
             for uid, m in meta_dict.items():
-                # [FIX] Populate parent_uid from tree hierarchy
                 if uid in parent_map:
                     m["parent_uid"] = parent_map[uid]
 
@@ -165,22 +163,31 @@ class SqliteGenerator:
                 ))
             conn.commit()
 
-        # 2. CONTENT DATA (Sharded)
+        # 2. CONTENT DATA (Sharded & Vertical)
         category = self._get_category(book_id)
         conn_content = self._get_content_connection(category)
         cursor_content = conn_content.cursor()
         
-        for uid, segments in content_dict.items():
+        for uid, sutta_data in content_dict.items():
+            segments = sutta_data.get("data", {})
             order = 0
-            for seg_id, seg in segments.items():
-                cursor_content.execute("""
-                    INSERT OR REPLACE INTO content_segments (
-                        sutta_uid, segment_id, segment_order, pli, eng, html, comm, variant, reference
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (uid, seg_id, order, seg.get("pli"), seg.get("eng"), seg.get("html"), seg.get("comm"), seg.get("variant"), seg.get("reference")))
+            for seg_id, content_list in segments.items():
+                # content_list is a list of {"type": ..., "lang": ..., "author": ..., "content": ...}
+                for item in content_list:
+                    c_type = item.get("type")
+                    c_lang = item.get("lang")
+                    c_author = item.get("author")
+                    c_text = item.get("content")
+
+                    if c_text:
+                        cursor_content.execute("""
+                            INSERT OR REPLACE INTO content_segments (
+                                sutta_uid, segment_id, segment_order, type, lang, author_uid, content
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (uid, seg_id, order, c_type, c_lang, c_author, c_text))
                 order += 1
         conn_content.commit()
-        logger.info(f"   📦 [SQLite] {book_id} -> Core + Content({category})")
+        logger.info(f"   📦 [SQLite] {book_id} -> Core + Content({category} - Vertical)")
 
     def insert_super_book(self, super_book_data: Dict[str, Any]):
         book_id = super_book_data.get("id", "super")

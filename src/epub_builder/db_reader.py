@@ -67,11 +67,35 @@ class DbReader:
         category = self._get_category(book_id)
         conn = self._get_content_conn(category)
         cursor = conn.cursor()
+        # [UPDATED] Query new vertical schema
         cursor.execute(
-            "SELECT * FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order ASC", 
+            "SELECT segment_id, type, content FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order ASC", 
             (sutta_uid,)
         )
-        return [dict(row) for row in cursor.fetchall()]
+        rows = cursor.fetchall()
+        
+        # Aggregate vertical rows back into horizontal segments
+        segments_map = {}
+        order_list = [] # Maintain segment order
+        
+        for row in rows:
+            seg_id = row["segment_id"]
+            if seg_id not in segments_map:
+                segments_map[seg_id] = {"segment_id": seg_id}
+                order_list.append(seg_id)
+            
+            c_type = row["type"]
+            content = row["content"]
+            
+            # Map back to legacy horizontal keys
+            if c_type == "root": segments_map[seg_id]["pli"] = content
+            elif c_type == "translation": segments_map[seg_id]["eng"] = content
+            elif c_type == "html": segments_map[seg_id]["html"] = content
+            elif c_type == "comment": segments_map[seg_id]["comm"] = content
+            elif c_type == "variant": segments_map[seg_id]["variant"] = content
+            elif c_type == "reference": segments_map[seg_id]["reference"] = content
+            
+        return [segments_map[sid] for sid in order_list]
 
     def has_segments(self, sutta_uid: str, book_id: str) -> bool:
         category = self._get_category(book_id)

@@ -76,31 +76,38 @@ export const SuttaRepository = {
 
     async fetchContent(uid) {
         if (!uid) return null;
-        
+
         // 1. Tìm book_id để biết nạp shard nào
         const loc = await this.resolveLocation(uid);
         if (!loc) return null;
-        
-        const [bookId] = loc;
-        const category = this._getCategory(bookId);
 
-        // 2. Query từ Content Shard tương ứng
-        const sql = "SELECT segment_id, pli, eng, html, comm FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order";
+        const [bookId] = loc;
+        const category = this._get_category(bookId);
+
+        // 2. Query từ Content Shard tương ứng (Vertical Schema)
+        const sql = "SELECT segment_id, type, content FROM content_segments WHERE sutta_uid = ? ORDER BY segment_order";
         const results = await SuttaDB.queryShard(category, sql, [uid]);
-        
+
         if (results.length === 0) return null;
-        
+
         const contentMap = {};
         for (const row of results) {
-            contentMap[row.segment_id] = {
-                pli: row.pli,
-                eng: row.eng,
-                html: row.html,
-                comm: row.comm
-            };
+            const segId = row.segment_id;
+            if (!contentMap[segId]) {
+                contentMap[segId] = {};
+            }
+
+            // Map types to legacy horizontal keys for UI compatibility
+            if (row.type === 'root') contentMap[segId].pli = row.content;
+            else if (row.type === 'translation') contentMap[segId].eng = row.content;
+            else if (row.type === 'html') contentMap[segId].html = row.content;
+            else if (row.type === 'comment') contentMap[segId].comm = row.content;
+            else if (row.type === 'variant') contentMap[segId].variant = row.content;
+            else if (row.type === 'reference') contentMap[segId].reference = row.content;
         }
         return contentMap;
     },
+
 
     async fetchMetaList(uids) {
         const uniqueIds = [...new Set(uids)].filter(id => id);

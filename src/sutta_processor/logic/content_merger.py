@@ -113,6 +113,36 @@ def _sanitize_links(text: str, current_sutta_id: str, segment_id: str, missing_a
 
     return re.sub(pattern, repl, text, flags=re.IGNORECASE)
 
+# [NEW] Helper to extract metadata from Bilara paths
+def extract_bilara_meta(path: Optional[Path], default_type: str) -> Tuple[str, str, str]:
+    if not path or not path.exists():
+        return default_type, "unknown", "unknown"
+    
+    parts = path.parts
+    try:
+        # Expected structure: .../bilara/{type}/{lang}/{author}/...
+        if "bilara" in parts:
+            idx = parts.index("bilara")
+            c_type = parts[idx+1]
+            lang = parts[idx+2]
+            author = parts[idx+3]
+            return c_type, lang, author
+    except (ValueError, IndexError):
+        pass
+
+    # Fallback to filename parsing: {uid}_{type}-{lang}-{author}.json
+    name = path.stem
+    if "_" in name:
+        meta_part = name.split("_")[1]
+        if meta_part == "html":
+            return "html", "pli", "ms"
+        if "-" in meta_part:
+            p = meta_part.split("-")
+            if len(p) >= 3:
+                return p[0], p[1], p[2]
+    
+    return default_type, "pli", "ms"
+
 def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]) -> Tuple[str, str, Optional[Dict[str, Any]], List[MissingItem]]:
     sutta_id, root_path, trans_path, html_path, comment_path, variant_path, reference_path, author_uid = args
     missing_refs: List[MissingItem] = []
@@ -120,6 +150,14 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
     try:
         if not html_path:
             return "skipped", sutta_id, None, []
+
+        # Extract metadata from paths
+        meta_root = extract_bilara_meta(root_path, "root")
+        meta_trans = extract_bilara_meta(trans_path, "translation")
+        meta_html = extract_bilara_meta(html_path, "html")
+        meta_comm = extract_bilara_meta(comment_path, "comment")
+        meta_variant = extract_bilara_meta(variant_path, "variant")
+        meta_ref = extract_bilara_meta(reference_path, "reference")
 
         data_root = load_json(root_path)
         data_trans = load_json(trans_path)
@@ -138,30 +176,72 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
         has_content = False
         
         for key in sorted_keys:
-            pali = data_root.get(key)
-            eng = data_trans.get(key)
-            html = data_html.get(key)
-            comm = data_comment.get(key)
-            variant = data_variant.get(key)
-            reference = data_reference.get(key)
-            
-            if not (pali or eng or html):
-                continue
+            # Each key will store a list of content objects (Vertical structure)
+            content_list = []
 
-            has_content = True
-            
-            entry = {}
-            # [UPDATED] Áp dụng chuẩn hóa Pali
-            if pali: entry["pli"] = _normalize_pali(pali)
-            
-            if eng: entry["eng"] = eng
-            if html: entry["html"] = html
-            
-            if comm: entry["comm"] = _sanitize_links(comm, sutta_id, key, missing_refs)
-            if variant: entry["variant"] = variant
-            if reference: entry["reference"] = reference
-            
-            segments_dict[key] = entry
+            # 1. Root (Pali)
+            pali = data_root.get(key)
+            if pali:
+                content_list.append({
+                    "type": meta_root[0],
+                    "lang": meta_root[1],
+                    "author": meta_root[2],
+                    "content": _normalize_pali(pali)
+                })
+
+            # 2. Translation
+            eng = data_trans.get(key)
+            if eng:
+                content_list.append({
+                    "type": meta_trans[0],
+                    "lang": meta_trans[1],
+                    "author": meta_trans[2],
+                    "content": eng
+                })
+
+            # 3. HTML Template
+            html = data_html.get(key)
+            if html:
+                content_list.append({
+                    "type": meta_html[0],
+                    "lang": meta_html[1],
+                    "author": meta_html[2],
+                    "content": html
+                })
+
+            # 4. Comments
+            comm = data_comment.get(key)
+            if comm:
+                content_list.append({
+                    "type": meta_comm[0],
+                    "lang": meta_comm[1],
+                    "author": meta_comm[2],
+                    "content": _sanitize_links(comm, sutta_id, key, missing_refs)
+                })
+
+            # 5. Variants
+            variant = data_variant.get(key)
+            if variant:
+                content_list.append({
+                    "type": meta_variant[0],
+                    "lang": meta_variant[1],
+                    "author": meta_variant[2],
+                    "content": variant
+                })
+
+            # 6. References
+            ref = data_reference.get(key)
+            if ref:
+                content_list.append({
+                    "type": meta_ref[0],
+                    "lang": meta_ref[1],
+                    "author": meta_ref[2],
+                    "content": ref
+                })
+
+            if content_list:
+                segments_dict[key] = content_list
+                has_content = True
 
         if not has_content:
              return "skipped", sutta_id, None, []
