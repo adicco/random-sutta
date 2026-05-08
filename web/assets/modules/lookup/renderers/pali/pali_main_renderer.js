@@ -32,12 +32,12 @@ export const PaliMainRenderer = {
         // 3. Render Groups
         
         // Exact Matches
-        exactGroup.forEach(d => dictHtml += this.render(d));
+        exactGroup.forEach(d => dictHtml += this.render(d, false, d.lookup_key !== searchTerm));
 
         // Phrases / Compounds
         if (phraseGroup.length > 0) {
             dictHtml += `<div class="dpd-group-header">Phrases</div>`;
-            phraseGroup.forEach(d => dictHtml += this.render(d));
+            phraseGroup.forEach(d => dictHtml += this.render(d, false, d.lookup_key !== searchTerm));
         }
 
         // Similar Words
