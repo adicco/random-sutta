@@ -63,21 +63,26 @@ export const DictProvider = {
                 await REGISTRY[id].close();
             }
         }
-        activeDicts = [];
+        // Do not wipe activeDicts here, as we just closed the connections.
+        // They will be re-initialized in the next DictProvider.init() call.
     },
 
     /**
-     * Checks if the element can trigger a lookup based on active dictionaries.
+     * Checks if the element can trigger a lookup based on configured dictionaries.
      * @param {HTMLElement} element 
      * @returns {boolean}
      */
     canTrigger(element) {
         if (!element) return false;
         
-        for (const id of activeDicts) {
-            const config = dictConfigs[id];
+        const dictConfig = AppConfig.LOOKUP.DICTIONARIES || {};
+        const enabledDicts = Object.values(dictConfig).filter(config => config.enabled);
+        
+        if (enabledDicts.length === 0) return false;
+
+        for (const config of enabledDicts) {
             // If no triggerSelectors defined, it means global trigger -> True
-            if (!config || !config.triggerSelectors || config.triggerSelectors.length === 0) {
+            if (!config.triggerSelectors || config.triggerSelectors.length === 0) {
                 return true;
             }
             
