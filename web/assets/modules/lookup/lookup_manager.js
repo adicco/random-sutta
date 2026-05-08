@@ -227,6 +227,11 @@ export const LookupManager = {
                                 results.push(r);
                             } else {
                                 existing.is_exact = true;
+                                // Upgrade existing result with richer grammatical context from component
+                                if (r.inflection_map && !existing.inflection_map) {
+                                    existing.inflection_map = r.inflection_map;
+                                    existing.lookup_key = r.lookup_key;
+                                }
                             }
                         }
                     });
