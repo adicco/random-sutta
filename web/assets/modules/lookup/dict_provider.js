@@ -10,9 +10,12 @@ const REGISTRY = {
 // Store active dictionary IDs and their configs
 let activeDicts = [];
 let dictConfigs = {}; // ID -> Config
+let isInitialized = false;
 
 export const DictProvider = {
     async init() {
+        if (isInitialized) return true;
+
         const dictConfig = AppConfig.LOOKUP.DICTIONARIES || {};
         const promises = [];
         activeDicts = []; 
@@ -30,7 +33,9 @@ export const DictProvider = {
         if (promises.length === 0) return false;
 
         const results = await Promise.all(promises);
-        return results.every(r => r === true);
+        const success = results.every(r => r === true);
+        if (success) isInitialized = true;
+        return success;
     },
 
     async search(term, contextElement = null) {
@@ -65,6 +70,7 @@ export const DictProvider = {
         }
         // Do not wipe activeDicts here, as we just closed the connections.
         // They will be re-initialized in the next DictProvider.init() call.
+        isInitialized = false;
     },
 
     /**

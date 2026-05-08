@@ -257,6 +257,7 @@ export const PaliDPD = {
     },
 
     async _loadJsonKeys() {
+        if (this._keyMap && this._keyMap.fullToAbbr) return;
         try {
             const res = await this.connection.run("SELECT abbr_key, full_key FROM json_keys");
             if (res.length > 0) {
