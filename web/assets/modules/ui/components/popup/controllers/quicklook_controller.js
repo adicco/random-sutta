@@ -69,10 +69,15 @@ export const QuicklookController = {
 
         if (PopupState.loadingUid === uid) return;
         PopupState.loadingUid = uid;
-        QuicklookUI.showLoading(uid.toUpperCase());
+        
+        // Provide visual feedback if loading takes more than 150ms to prevent flickering
+        const loadingTimer = setTimeout(() => {
+            QuicklookUI.showLoading(uid.toUpperCase());
+        }, 150);
 
         try {
             const data = await SuttaService.loadSutta(uid, { prefetchNav: false });
+            clearTimeout(loadingTimer);
             if (data && data.content) {
                 const renderRes = LeafRenderer.render(data);
                 const displayTitle = this._buildTitle(data.meta, uid);
@@ -92,6 +97,7 @@ export const QuicklookController = {
                 QuicklookUI.showError("Content not available.");
             }
         } catch (e) {
+            clearTimeout(loadingTimer);
             logger.error("Load", e);
             QuicklookUI.showError("Failed to load.");
         } finally {
