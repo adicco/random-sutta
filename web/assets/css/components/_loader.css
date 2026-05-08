@@ -29,19 +29,25 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(var(--bg-rgb, 255, 255, 255), 0.7);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background-color: rgba(var(--bg-rgb, 255, 255, 255), 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 3000; /* Above everything */
+  z-index: 3000;
+  opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none; /* Tránh chặn click khi đang fade out */
+}
+
+#sutta-loader.visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 #sutta-loader.hidden {
   display: none;
-  opacity: 0;
 }
 
 .loader-content {

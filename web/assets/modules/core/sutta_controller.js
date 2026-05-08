@@ -243,22 +243,47 @@ export const SuttaController = {
     }
   },
 
+  _loaderTimer: null,
+
   _showLoader: function (show) {
     const loader = document.getElementById("sutta-loader");
-    if (loader) {
-      if (show) loader.classList.remove("hidden");
-      else loader.classList.add("hidden");
-    }
-
     const btns = [
       document.getElementById("btn-random"),
       document.getElementById("btn-landing-random"),
       document.getElementById("nav-prev"),
       document.getElementById("nav-next")
     ];
+
+    // Luôn khóa/mở khóa nút ngay lập tức để chặn spam
     btns.forEach(btn => {
       if (btn) btn.disabled = show;
     });
+
+    if (show) {
+      // Nếu yêu cầu hiện loader, đợi 200ms mới thực sự hiện UI
+      // Điều này giúp tránh hiện tượng "nháy" khi data có sẵn trong buffer
+      if (this._loaderTimer) clearTimeout(this._loaderTimer);
+      this._loaderTimer = setTimeout(() => {
+        if (loader) {
+          loader.classList.remove("hidden");
+          // Force reflow for CSS transition
+          loader.offsetHeight;
+          loader.classList.add("visible");
+        }
+      }, 200);
+    } else {
+      // Tắt loader ngay lập tức
+      if (this._loaderTimer) {
+        clearTimeout(this._loaderTimer);
+        this._loaderTimer = null;
+      }
+      if (loader) {
+        loader.classList.remove("visible");
+        setTimeout(() => {
+          if (!this._loaderTimer) loader.classList.add("hidden");
+        }, 300);
+      }
+    }
   },
 
   loadRandomSutta: async function (shouldUpdateUrl = true) {
