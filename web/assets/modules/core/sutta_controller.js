@@ -9,6 +9,7 @@ import { Scroller } from "ui/common/scroller.js";
 import { getLogger } from "utils/logger.js";
 import { TTSOrchestrator } from "tts/core/tts_orchestrator.js";
 import { BookmarkManager } from "ui/managers/bookmark_manager.js";
+import { DictProvider } from "lookup/dict_provider.js";
 
 const logger = getLogger("SuttaController");
 
@@ -210,6 +211,13 @@ export const SuttaController = {
         
         // [NEW] Update Bookmark Star
         BookmarkManager.updateButtonState(suttaId);
+
+        // [NEW] Preload dictionary connections in the background to speed up first lookup
+        if (window.requestIdleCallback) {
+            window.requestIdleCallback(() => DictProvider.init(), { timeout: 2000 });
+        } else {
+            setTimeout(() => DictProvider.init(), 1000);
+        }
     } catch (e) {
         logger.error("loadSutta", "Error loading sutta", e);
     } finally {
