@@ -1,15 +1,15 @@
 // Path: web/assets/modules/data/sutta_db.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLite } from 'services/sqlite_helper.js';
+import { initSQLitePersistent } from 'services/sqlite_helper.js';
 import { BlobCache } from 'services/blob_cache.js';
 
 const logger = getLogger("SuttaDB");
 
 export class SuttaDB {
     static core = null;
-    static shards = new Map(); // Category -> DB Instance (Cached in RAM)
+    static shards = new Map(); // Category -> DB Instance (Persistent)
     static isInitializing = false;
-    static loadingPromises = new Map(); // Category -> Promise (Tránh race condition)
+    static loadingPromises = new Map();
 
     /**
      * Khởi động Core Database (Metadata, Structure, Config)
@@ -20,33 +20,10 @@ export class SuttaDB {
 
         this.isInitializing = true;
         try {
-            // [OFFLINE FIX] Try to load Manifest from Cache first if offline
-            let manifestData = null;
-            try {
-                const manifestResp = await fetch('assets/db/db_manifest.json');
-                manifestData = await manifestResp.json();
-                // Cache the manifest
-                await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(manifestData)).buffer);
-            } catch (e) {
-                logger.warn("Init", "Failed to fetch manifest, trying BlobCache...", e);
-                const cachedManifestBuffer = await BlobCache.getBlob('db_manifest');
-                if (cachedManifestBuffer) {
-                    const text = new TextDecoder().decode(cachedManifestBuffer);
-                    manifestData = JSON.parse(text);
-                    logger.info("Init", "Loaded manifest from BlobCache.");
-                }
-            }
+            await this._loadManifest();
 
-            this.manifest = manifestData || {};
-
-            // 2. Load Core DB
-            const coreFileName = "sutta_core.db";
-            const coreFile = await this._fetchFile(coreFileName, onProgress);
-            
-            this.core = await initSQLite({
-                path: coreFileName,
-                file: coreFile
-            });
+            const dbName = "sutta_core.db";
+            this.core = await this._getOrUpdateDB(dbName, onProgress);
 
             this.isInitializing = false;
             return true;
@@ -58,29 +35,19 @@ export class SuttaDB {
     }
 
     /**
-     * Nạp một Content Shard (Memory Caching)
+     * Nạp một Content Shard (Sử dụng Persistent Storage để tiết kiệm RAM)
      */
     static async loadShard(category, onProgress) {
-        // Trả về shard nếu đã có trong RAM
         if (this.shards.has(category)) return this.shards.get(category);
         
-        // Tránh nhiều request nạp cùng 1 shard đồng thời
         if (this.loadingPromises.has(category)) {
              return await this.loadingPromises.get(category);
         }
 
         const loadPromise = (async () => {
             try {
-                const fileName = `sutta_content_${category}.db`;
-                logger.info("LoadShard", `Loading ${fileName} to RAM Cache...`);
-
-                const file = await this._fetchFile(fileName, onProgress);
-                const instance = await initSQLite({
-                    path: fileName,
-                    file: file
-                });
-                
-                // Lưu trữ shard trong RAM để dùng lại (tổng 4 shard ~ 90MB)
+                const dbName = `sutta_content_${category}.db`;
+                const instance = await this._getOrUpdateDB(dbName, onProgress);
                 this.shards.set(category, instance);
                 return instance;
             } catch (e) {
@@ -94,67 +61,85 @@ export class SuttaDB {
         this.loadingPromises.set(category, loadPromise);
         return await loadPromise;
     }
-static async _fetchFile(fileName, onProgress) {
-    // [OPTIMIZED] Dùng hash từ manifest để cache buster chính xác hơn APP_VERSION
-    let fileVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev";
-    let targetHash = null;
-    if (this.manifest && this.manifest.files && this.manifest.files[fileName]) {
-        targetHash = this.manifest.files[fileName].hash;
-        fileVersion = targetHash.substring(0, 8);
+
+    /**
+     * Logic trung tâm: Lấy DB từ Storage, nếu cũ hoặc chưa có thì tải mới.
+     * Cải tiến: Download và Ghi trước khi Mở kết nối để tránh xung đột.
+     */
+    static async _getOrUpdateDB(dbName, onProgress) {
+        const targetHash = this.manifest?.files?.[dbName]?.hash || "dev";
+        const currentHash = await this._getStoredHash(dbName);
+        
+        // 1. Kiểm tra xem có cần update không (dựa trên hash hoặc DB rỗng)
+        let needsUpdate = currentHash !== targetHash;
+        
+        if (!needsUpdate) {
+            // Check nếu file thực sự tồn tại trong VFS bằng cách mở thử
+            const testInstance = await initSQLitePersistent({ dbName });
+            const empty = await testInstance.isEmpty();
+            await testInstance.close();
+            if (empty) needsUpdate = true;
+        }
+
+        // 2. Nếu cần update, download và import trước khi mở kết nối chính thức
+        if (needsUpdate) {
+            logger.info("Storage", `Updating ${dbName}: ${currentHash} -> ${targetHash}`);
+            const file = await this._fetchFile(dbName, onProgress);
+            const { importToPersistentStorage } = await import('services/sqlite_helper.js');
+            await importToPersistentStorage(dbName, file);
+            await this._setStoredHash(dbName, targetHash);
+        } else {
+            logger.info("Storage", `Using persistent DB: ${dbName} (${targetHash})`);
+        }
+        
+        // 3. Mở kết nối chính thức
+        return await initSQLitePersistent({ dbName });
     }
 
-        // [OFFLINE FIX] Read from IndexedDB BlobCache first to bypass SW fetch requirement on iOS
-        const cacheKey = `db_${fileName}_${targetHash || fileVersion}`;
+    static async _loadManifest() {
         try {
-            const cachedBuffer = await BlobCache.getBlob(cacheKey);
-            if (cachedBuffer) {
-                logger.info("FetchFile", `Loaded ${fileName} from local BlobCache (Offline Safe)`);
-                return new File([cachedBuffer], fileName, { type: 'application/x-sqlite3' });
+            const resp = await fetch('assets/db/db_manifest.json');
+            this.manifest = await resp.json();
+            await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
+        } catch (e) {
+            const cached = await BlobCache.getBlob('db_manifest');
+            if (cached) {
+                this.manifest = JSON.parse(new TextDecoder().decode(cached));
             }
-        } catch (e) {
-            logger.warn("FetchFile", "Error reading BlobCache", e);
-        }
-
-    const url = `assets/db/${fileName}?v=${fileVersion}`;
-
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP ${response.status} for ${fileName}`);
-
-    const contentLength = response.headers.get('content-length');
-    const total = contentLength ? parseInt(contentLength, 10) : 0;
-    let loaded = 0;
-
-    const reader = response.body.getReader();
-    const chunks = [];
-
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        chunks.push(value);
-        loaded += value.length;
-        if (onProgress && total > 0) {
-            onProgress(loaded, total);
         }
     }
 
-    const buffer = new Uint8Array(loaded);
-    let offset = 0;
-    for (const chunk of chunks) {
-        buffer.set(chunk, offset);
-        offset += chunk.length;
+    // --- Versioning Helpers ---
+    static async _getStoredHash(dbName) {
+        return await BlobCache.getBlob(`hash_${dbName}`) || null;
     }
 
-        // [OFFLINE FIX] Save to BlobCache for future offline loads
-        try {
-            // Need to store the underlying ArrayBuffer
-            await BlobCache.setBlob(cacheKey, buffer.buffer);
-            logger.info("FetchFile", `Saved ${fileName} to BlobCache`);
-        } catch (e) {
-            logger.warn("FetchFile", "Error writing to BlobCache", e);
+    static async _setStoredHash(dbName, hash) {
+        await BlobCache.setBlob(`hash_${dbName}`, hash);
+    }
+
+    static async _fetchFile(fileName, onProgress) {
+        const url = `assets/db/${fileName}?v=${this.manifest?.files?.[fileName]?.hash || Date.now()}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${fileName}`);
+
+        const total = parseInt(response.headers.get('content-length') || "0", 10);
+        let loaded = 0;
+        const reader = response.body.getReader();
+        const chunks = [];
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            loaded += value.length;
+            if (onProgress && total > 0) onProgress(loaded, total);
         }
 
-        return new File([buffer], fileName, { type: 'application/x-sqlite3' });
+        // Tối ưu RAM: Tạo File trực tiếp từ mảng các chunk thay vì ghép vào Uint8Array mới
+        return new File(chunks, fileName, { type: 'application/x-sqlite3' });
     }
+
     static async _waitForInit() {
         return new Promise(resolve => {
             const interval = setInterval(() => {

@@ -35,7 +35,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupLogging({ level: isDebug ? LogLevel.DEBUG : LogLevel.INFO });
 
   DrawerManager.init();
-  OfflineManager.init();
   ThemeManager.init();
   FontSizeManager.init();
   GestureManager.init();
@@ -45,7 +44,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   FilterComponent.init();
   initPopupSystem();
-  initLookup();
 
   TTSBootstrap.init({
     onAutoNext: async () => {
@@ -190,6 +188,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.time("📡 Service Init");
     await SuttaService.init();
     console.timeEnd("📡 Service Init");
+
+    // Deferred heavy initializations to reduce startup concurrency
+    initLookup();
+    OfflineManager.init();
 
     if (navHeader) navHeader.classList.remove("hidden");
     randomBtn.disabled = false;
