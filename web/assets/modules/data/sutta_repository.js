@@ -193,6 +193,8 @@ export const SuttaRepository = {
             const { DictProvider } = await import('lookup/dict_provider.js');
             await DictProvider.init();
             logger.info("DownloadAll", "✅ Dictionary cached.");
+            // Tối ưu RAM: Đóng ngay sau khi cache xong
+            await DictProvider.closeAll();
         } catch (e) {
             logger.warn("DownloadAll", "Failed to cache dictionary", e);
         }
@@ -203,15 +205,16 @@ export const SuttaRepository = {
         
         logger.info("DownloadAll", "Fetching all content shards for offline use...");
 
-        // [OFFLINE FIX] Load sequentially to prevent iOS out-of-memory crashes
+        // [OFFLINE FIX] Load sequentially and CLOSE immediately to prevent iOS out-of-memory crashes
         for (const category of shards) {
              await SuttaDB.loadShard(category, (loaded, total) => {
-                 // Logic progress đơn giản: Coi mỗi shard là 1/5 tổng tiến trình
                  const base = (shardCount + 1) * 20;
                  if (onProgress) onProgress(base, 100);
              });
+             // Tối ưu RAM: Giải phóng shard ngay sau khi nạp/kiểm tra xong
+             await SuttaDB.closeShard(category);
              shardCount++;
         }
 
         logger.info("DownloadAll", "✅ All shards cached for offline.");
-        }};
+    }};

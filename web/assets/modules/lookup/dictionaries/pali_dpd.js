@@ -165,5 +165,13 @@ export const PaliDPD = {
         } catch (e) {
             logger.warn("Keys Load Error", e);
         }
+    },
+
+    async close() {
+        if (this.connection) {
+            await this.connection.close();
+            this._keyMap.fullToAbbr = null;
+            this._keyMap.abbrToFull = null;
+        }
     }
 };

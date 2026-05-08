@@ -96,8 +96,28 @@ export class SuttaDB {
         return await initSQLitePersistent({ dbName });
     }
 
-    static async _loadManifest() {
-        try {
+    /**
+     * Giải phóng bộ nhớ bằng cách đóng Shard không dùng
+     */
+    static async closeShard(category) {
+        const instance = this.shards.get(category);
+        if (instance) {
+            await instance.close();
+            this.shards.delete(category);
+            logger.info("Storage", `Closed shard ${category} to free RAM`);
+        }
+    }
+
+    static async closeAll() {
+        for (const category of this.shards.keys()) {
+            await this.closeShard(category);
+        }
+        if (this.core) {
+            await this.core.close();
+            this.core = null;
+        }
+    }
+
             const resp = await fetch('assets/db/db_manifest.json');
             this.manifest = await resp.json();
             await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);

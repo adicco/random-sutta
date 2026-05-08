@@ -1,6 +1,6 @@
 // Path: web/assets/modules/services/sqlite_connection.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLite } from './sqlite_helper.js';
+import { initSQLitePersistent } from './sqlite_helper.js';
 import { BlobCache } from './blob_cache.js';
 import JSZip from 'jszip';
 
@@ -21,32 +21,30 @@ export class SqliteConnection {
         this.isInitializing = true;
         try {
             const hasUpdate = await this._checkAndApplyUpdate();
+            const targetHash = localStorage.getItem(`${this.dbName}_hash`) || "dev";
 
-            logger.info("Init", `Initializing ${this.dbName} in RAM...`);
+            logger.info("Init", `Initializing persistent ${this.dbName}...`);
             
-            let dbHandle = await initSQLite({
-                path: this.dbName
-            });
-            
-            // 2. Check if DB has tables AND no update was pending
-            const tables = await dbHandle.run("SELECT name FROM sqlite_master WHERE type='table'");
-            
-            // 3. If empty OR we just detected an update, download and hydrate
-            if (tables.length === 0 || hasUpdate) {
-                logger.info("Init", hasUpdate ? "Update pending. Re-hydrating RAM..." : "RAM DB empty. Downloading source...");
-                await dbHandle.close();
-                
+            // 1. Kiểm tra xem có cần nạp/cập nhật không
+            let needsUpdate = hasUpdate;
+            if (!needsUpdate) {
+                const testHandle = await initSQLitePersistent({ dbName: this.dbName });
+                if (await testHandle.isEmpty()) needsUpdate = true;
+                await testHandle.close();
+            }
+
+            if (needsUpdate) {
+                logger.info("Init", hasUpdate ? "Update pending. Re-hydrating storage..." : "Storage empty. Downloading source...");
                 const dbBinary = await this._downloadSource();
                 const dbFile = new File([dbBinary], this.dbName, { type: 'application/x-sqlite3' });
                 
-                dbHandle = await initSQLite({
-                    path: this.dbName,
-                    file: dbFile
-                });
-                logger.info("Init", "Database hydrated to RAM.");
+                const { importToPersistentStorage } = await import('./sqlite_helper.js');
+                await importToPersistentStorage(this.dbName, dbFile);
+                logger.info("Init", "Database hydrated to persistent storage.");
             }
 
-            this.db = dbHandle;
+            // 2. Mở kết nối chính thức
+            this.db = await initSQLitePersistent({ dbName: this.dbName });
             this.isInitializing = false;
             return true;
 
@@ -162,5 +160,13 @@ export class SqliteConnection {
     async run(sql, params) {
         if (!this.db) await this.init();
         return await this.db.run(sql, params);
+    }
+
+    async close() {
+        if (this.db) {
+            await this.db.close();
+            this.db = null;
+            logger.info("Close", `Closed connection to ${this.dbName}`);
+        }
     }
 }

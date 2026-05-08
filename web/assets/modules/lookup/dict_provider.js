@@ -57,6 +57,15 @@ export const DictProvider = {
         return results;
     },
 
+    async closeAll() {
+        for (const id of activeDicts) {
+            if (REGISTRY[id] && REGISTRY[id].close) {
+                await REGISTRY[id].close();
+            }
+        }
+        activeDicts = [];
+    },
+
     /**
      * Checks if the element can trigger a lookup based on active dictionaries.
      * @param {HTMLElement} element 
