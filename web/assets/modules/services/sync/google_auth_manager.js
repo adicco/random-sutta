@@ -33,7 +33,7 @@ export const GoogleAuthManager = {
         }
         // Android (Capacitor)
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-            this.CLIENT_ID = "103021460212-4b4nos2deb5rkrv94aslgmpqo8qtibau.apps.googleusercontent.com";
+            this.CLIENT_ID = "103021460212-57t5bgbgr9ug2h4qke5603c5bj51pqqr.apps.googleusercontent.com";
             this.REDIRECT_URI = "com.randomsutta.mac:/oauth2redirect";
             return;
         }
