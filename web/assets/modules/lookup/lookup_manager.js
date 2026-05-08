@@ -148,12 +148,17 @@ export const LookupManager = {
         
         if (cleanText.length > 50 || cleanText.length < 1) return; 
 
-        // Provide immediate visual feedback while loading
-        LookupUI.showLoading(cleanText);
+        // Provide visual feedback if loading takes more than 150ms to prevent flickering
+        const loadingTimer = setTimeout(() => {
+            LookupUI.showLoading(cleanText);
+        }, 150);
         
         // Ensure Dictionaries are ready
         const isReady = await DictProvider.init();
-        if (!isReady) return;
+        if (!isReady) {
+            clearTimeout(loadingTimer);
+            return;
+        }
         
         // [COMPONENTS] Support construction lookup strings (e.g. "word1 + word2")
         const searchTerms = cleanText.includes('+') 
@@ -228,6 +233,8 @@ export const LookupManager = {
                 }
             }
         }
+
+        clearTimeout(loadingTimer);
 
         // [HISTORY] If this lookup was triggered from INSIDE the popup, save previous state
         const isInternal = contextNode && (contextNode.closest("#lookup-popup") !== null);
