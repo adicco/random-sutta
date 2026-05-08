@@ -34,8 +34,10 @@ export const GoogleAuthManager = {
         }
         // Android (Capacitor)
         if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-            this.CLIENT_ID = "103021460212-57t5bgbgr9ug2h4qke5603c5bj51pqqr.apps.googleusercontent.com";
-            this.REDIRECT_URI = "com.randomsutta.mac:/oauth2redirect";
+            // [UPDATED] Using the same iOS-type ID as macOS because 'Android' type 
+            // does not support browser-based redirects (Custom URI schemes).
+            this.CLIENT_ID = "103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle.apps.googleusercontent.com";
+            this.REDIRECT_URI = "com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle:/oauth2redirect";
             return;
         }
         // Web

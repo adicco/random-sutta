@@ -43,6 +43,13 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="com.randomsutta.mac" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle" />
+            </intent-filter>
         </activity>
 
         <provider
