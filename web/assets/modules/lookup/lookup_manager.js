@@ -7,7 +7,8 @@ import { getLogger } from 'utils/logger.js';
 import { LookupEventHandler } from './core/lookup_event_handler.js';
 import { LookupNavigator } from './core/lookup_navigator.js';
 import { LookupHighlighter } from './core/lookup_highlighter.js';
-import { LookupState } from './core/lookup_state.js';
+import { LookupState } from './lookup_state.js';
+import { ResizeHandler } from 'ui/common/resize_handler.js';
 
 const logger = getLogger("LookupManager");
 
@@ -24,7 +25,17 @@ export const LookupManager = {
             onForward: () => this._navigateHistory(1),
             onGoHome: () => this._navigateHistory(0)
         });
-        
+
+        // Attach Resizer
+        const lookupPopup = document.getElementById("lookup-popup");
+        const resizeHandle = document.getElementById("lookup-resize-handle");
+        if (lookupPopup && resizeHandle) {
+            ResizeHandler.attach(lookupPopup, resizeHandle, {
+                storageKey: 'lookup_popup_height',
+                cssVar: '--popup-comment-height' // Shared with comments for coordinated UI
+            });
+        }
+
         // Initialize Dictionaries
         DictProvider.init().then(success => {
              if (success) logger.info("Init", "Dictionaries ready.");

@@ -28,6 +28,42 @@
   border-radius: 0;
 }
 
+/* --- RESIZE HANDLE --- */
+.popup-resize-handle {
+    position: absolute;
+    top: -5px;
+    left: 0;
+    right: 0;
+    height: 15px;
+    cursor: ns-resize;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-resize-handle:after {
+    content: '';
+    width: 30px;
+    height: 4px;
+    background-color: var(--text-muted);
+    border-radius: 2px;
+    opacity: 0.3;
+}
+
+.popup-resize-handle:hover:after {
+    opacity: 0.6;
+}
+
+body.is-resizing {
+    cursor: ns-resize;
+    user-select: none;
+}
+
+body.is-resizing .popup-container {
+    transition: none !important;
+}
+
 .popup-container.hidden {
   opacity: 0;
   transform: translate(-50%, 100%); /* Slide down fully */

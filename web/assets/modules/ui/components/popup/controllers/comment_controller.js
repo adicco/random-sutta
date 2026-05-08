@@ -4,6 +4,7 @@ import { PopupScanner } from '../utils/popup_scanner.js';
 import { CommentUI } from '../ui/comment_ui.js';
 import { QuicklookUI } from '../ui/quicklook_ui.js';
 import { Scroller } from 'ui/common/scroller.js';
+import { ResizeHandler } from 'ui/common/resize_handler.js';
 
 export const CommentController = {
     init() {
@@ -14,6 +15,16 @@ export const CommentController = {
                 window.dispatchEvent(new CustomEvent('popup:request-link', { detail: { href } }));
             }
         });
+
+        // Attach Resizer
+        const commentPopup = document.getElementById("comment-popup");
+        const resizeHandle = document.getElementById("comment-resize-handle");
+        if (commentPopup && resizeHandle) {
+            ResizeHandler.attach(commentPopup, resizeHandle, {
+                storageKey: 'comment_popup_height',
+                cssVar: '--popup-comment-height'
+            });
+        }
     },
 
     scanComments() {
