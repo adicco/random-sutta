@@ -1,5 +1,5 @@
 # Path: Makefile
-.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini
+.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini app
 
 # Python command (sử dụng môi trường hiện tại do direnv quản lý)
 PYTHON := python3
@@ -245,8 +245,11 @@ macos:
 	@echo "📍 dist/macos/Random Sutta.app"
 	@echo "📍 dist/macos/"
 
-	# Cài đặt ứng dụng vào /Applications và cập nhật Launch Services
-	app: macos
+# Cài đặt ứng dụng vào /Applications và cập nhật Launch Services
+app: macos
+	@echo "🛑 Đang dừng các bản App đang chạy..."
+	@pkill -fi "Random Sutta" || true
+	@sleep 1
 	@echo "🚚 Đang cài đặt ứng dụng vào /Applications..."
 	@rm -rf "/Applications/Random Sutta.app"
 	@cp -R "src-tauri/target/release/bundle/macos/Random Sutta.app" "/Applications/"
