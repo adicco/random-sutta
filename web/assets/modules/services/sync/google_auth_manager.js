@@ -28,7 +28,7 @@ export const GoogleAuthManager = {
         if (window.__TAURI_INTERNALS__) {
             // [UPDATED] Using iOS-type Client ID and official reversed scheme
             this.CLIENT_ID = "103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle.apps.googleusercontent.com";
-            this.REDIRECT_URI = "com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle:/oauth2redirect";
+            this.REDIRECT_URI = "com.googleusercontent.apps.103021460212-qk5ogq5es4dlpsmkf5a7q4h7nl7v9qle://oauth2redirect";
             return;
         }
         // Android (Capacitor)
