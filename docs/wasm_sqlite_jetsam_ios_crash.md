@@ -42,17 +42,26 @@ Tùy thuộc vào kích thước của file cơ sở dữ liệu, bạn cần ch
 - Tốc độ truy vấn tính bằng micro-giây (vì chạy hoàn toàn trên RAM).
 - Tránh được 100% chi phí của Asyncify. Không bao giờ còn lỗi 100% CPU.
 
-### Trường hợp 2: Database lớn (Hàng chục, hàng trăm MB) -> Dùng OPFS (Origin Private File System)
+### Giải pháp hiện tại của dự án: OPFSAnyContextVFS + Vertical Sharding
 
-Nếu DB quá to không thể nhét vào RAM, bạn không thể dùng `MemoryVFS`. Tuy nhiên, vẫn phải tránh IndexedDB.
+Dự án Random Sutta đã áp dụng thành công giải pháp kết hợp để triệt tiêu hoàn toàn lỗi Jetsam trên iOS:
 
-**Giải pháp:**
-- Chuyển sang sử dụng **OPFS (Origin Private File System)**. OPFS là một API mới của trình duyệt cung cấp quyền truy cập file trực tiếp (Direct File Access) với hiệu năng cực cao.
-- Bạn có thể sử dụng `OPFSAnyContextVFS` hoặc `OPFSCoopSyncVFS` (có hỗ trợ trong wa-sqlite).
-- OPFS hỗ trợ truy xuất đồng bộ (Synchronous access) trong Web Worker, giúp SQLite-Wasm đọc ghi file thẳng trên ổ cứng thiết bị mà không cần qua Asyncify đắt đỏ.
+1. **Sử dụng `OPFSAnyContextVFS`**: 
+   - Thay vì `IndexedDB` (gây ra vòng lặp dừng/ngắt Asyncify), chúng ta sử dụng **Origin Private File System (OPFS)**. 
+   - VFS này tận dụng `FileSystemSyncAccessHandle` trong một Worker riêng biệt để thực hiện các thao tác I/O đồng bộ. Điều này giúp SQLite-Wasm đọc/ghi dữ liệu trực tiếp với tốc độ gần như bản địa (native), loại bỏ hoàn toàn hiện tượng 100% CPU do chuyển đổi ngữ cảnh.
+
+2. **Cấu trúc Vertical Sharding (Phân mảnh dọc)**:
+   - Dữ liệu được chia nhỏ thành các tệp `.db` dưới 50MB. Việc mở nhiều tệp nhỏ giúp kiểm soát bộ nhớ tốt hơn việc mở một tệp khổng lồ hàng trăm MB.
+
+3. **Cấu hình SQLite tối ưu (iOS Optimized PRAGMAs)**:
+   Mỗi kết nối cơ sở dữ liệu đều được áp dụng các cấu hình "tiết kiệm" bộ nhớ nhưng vẫn đảm bảo tốc độ:
+   - `PRAGMA cache_size = -5000`: Ép buộc mỗi DB chỉ được chiếm tối đa ~5MB RAM để làm cache. Với 4-5 shard đang mở, tổng RAM tiêu tốn cho SQLite chỉ khoảng 25MB, nằm dưới ngưỡng báo động của iOS.
+   - `PRAGMA journal_mode = DELETE`: Giảm thiểu file phụ tạm thời, tiết kiệm I/O.
+   - `PRAGMA mmap_size = 256MB`: Cho phép ánh xạ tệp vào bộ nhớ (Memory Mapping). Trên các thiết bị iOS hiện đại, điều này giúp việc đọc dữ liệu cực nhanh mà không làm tăng bộ nhớ "Dirty RAM" (loại RAM bị Jetsam theo dõi chặt chẽ nhất).
+   - **JS Mutex Serialization**: Sử dụng cơ chế khóa (`withLock`) trong JavaScript để đảm bảo các thao tác mở/đóng/ghi DB diễn ra tuần tự, tránh việc nhiều luồng Wasm cùng lúc yêu cầu cấp phát bộ nhớ, dễ gây ra lỗi `out of bounds`.
 
 ## 4. Bài học rút ra cho mọi dự án Wasm
 
-1. **Tránh Asyncify bằng mọi giá:** Bất cứ khi nào làm việc với WebAssembly, hãy cố gắng giữ mọi thứ đồng bộ (Synchronous). Việc gọi cầu nối Async/Await giữa JS và Wasm trong một vòng lặp (loop) là tự sát trên các thiết bị di động.
+1. **Tránh Asyncify bằng mọi giá:** Bất cứ khi nào làm việc với WebAssembly, hãy cố gắng giữ mọi thứ đồng bộ (Synchronous). Việc gọi cầu nối Async/Await giữa JS và Wasm trong một vòng lặp (loop) là "tự sát" trên các thiết bị di động.
 2. **IndexedDB không sinh ra cho SQLite:** IndexedDB bản chất là một Object Store, nó không phù hợp để làm hệ thống file ảo (VFS) cho SQLite vì việc phân mảnh và truy xuất block quá chậm. Luôn ưu tiên Memory hoặc OPFS.
 3. **Luôn Test bằng Timelines/Profiler:** Nếu Web/PWA chạy chậm, đừng vội đoán mò do React/Vue/DOM. Hãy mở Inspector, nhìn vào biểu đồ CPU và xem luồng (Thread) nào đang đốt tài nguyên. Nếu là `Wasm Worklist Helper`, 99% vấn đề nằm ở giao tiếp I/O.
