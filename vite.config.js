@@ -145,20 +145,23 @@ export default defineConfig(({ mode }) => {
                     ]
                 },
                 workbox: {
+                    skipWaiting: true,
+                    clientsClaim: true,
                     cleanupOutdatedCaches: true,
-                    navigateFallback: 'index.html',
+                    navigateFallback: base + 'index.html', // Phải kèm base để fallback đúng trên GitHub Pages
                     globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json,webmanifest}'],
-                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], // Ensure db and index json are not ignored
-                    maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // Tăng lên 50MB cho các shard lớn
+                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], 
+                    maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, 
                     runtimeCaching: [
-                        {                            // Sutta Databases (Core + Shards)
-                            urlPattern: /\/assets\/db\/sutta_.*\.db(\?.*)?$/,
+                        {                            
+                            // [CRITICAL] Sutta Databases (Core + Shards)
+                            urlPattern: ({ url }) => url.pathname.includes('/assets/db/sutta_') && url.pathname.endsWith('.db'),
                             handler: 'CacheFirst',
                             options: {
                                 cacheName: 'sutta-database-cache',
                                 expiration: {
-                                    maxEntries: 10,
-                                    maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
+                                    maxEntries: 20,
+                                    maxAgeSeconds: 60 * 60 * 24 * 365,
                                 },
                                 cacheableResponse: {
                                     statuses: [0, 200],
@@ -167,12 +170,12 @@ export default defineConfig(({ mode }) => {
                         },
                         {
                             // Dictionary Databases
-                            urlPattern: /\/assets\/db\/dictionaries\/.*\.db(\?.*)?$/,
+                            urlPattern: ({ url }) => url.pathname.includes('/assets/db/dictionaries/') && url.pathname.endsWith('.db'),
                             handler: 'CacheFirst',
                             options: {
                                 cacheName: 'dictionary-cache',
                                 expiration: {
-                                    maxEntries: 5,
+                                    maxEntries: 10,
                                     maxAgeSeconds: 60 * 60 * 24 * 365,
                                 },
                                 cacheableResponse: {
