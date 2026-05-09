@@ -114,41 +114,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     SuttaController._saveProgress();
   });
 
-  // [NEW] Landing Random Button
-  if (landingRandomBtn) {
-      landingRandomBtn.addEventListener("click", async () => {
-          // Switch view immediately to feel responsive (or show loader?)
-          // Better: Load first then switch? Or Switch then load?
-          // Let's switch then load to show the reader UI skeleton.
-          switchView('reader');
-          await SuttaController.loadRandomSutta(true);
-      });
-  }
+  // [FIX] Helper for robust Deep Link parsing
+  const processDeepLink = async (urlStr) => {
+    logger.info("DeepLink", "Processing: " + urlStr);
+    
+    // Handle Google Auth Callbacks
+    if (urlStr.includes('auth-callback')) {
+        GoogleAuthManager.handleNativeCallback(urlStr);
+        return;
+    }
+
+    try {
+        let q = null;
+        let hash = "";
+
+        // Attempt 1: Standard URL parsing
+        try {
+            const url = new URL(urlStr);
+            q = url.searchParams.get('q');
+            hash = url.hash;
+        } catch (e) {}
+
+        // Attempt 2: Manual fallback (resilient to custom scheme parsing quirks)
+        if (!q) {
+            const qMatch = urlStr.match(/[?&]q=([^&#]+)/);
+            if (qMatch) q = decodeURIComponent(qMatch[1]);
+            
+            const hashMatch = urlStr.match(/#([^?]+)/);
+            if (hashMatch) hash = '#' + hashMatch[1];
+        }
+
+        if (q) {
+            switchView('reader');
+            let loadId = q;
+            if (hash) loadId += hash;
+            
+            // Allow a small delay for the view switcher and DB to be ready
+            setTimeout(() => {
+                SuttaController.loadSutta(loadId, true);
+            }, 100);
+        }
+    } catch (e) {
+        logger.error("DeepLink", "Failed to parse app URL: " + urlStr, e);
+    }
+  };
 
   // [NEW] Capacitor App Links
   if (window.Capacitor && window.Capacitor.isNativePlatform()) {
       import('@capacitor/app').then(({ App }) => {
           App.addListener('appUrlOpen', async data => {
-              logger.info("App", "App opened with URL: " + data.url);
-              
-              // Handle all Google Auth Callbacks via the stable randomsutta scheme
-              if (data.url.includes('auth-callback')) {
-                  GoogleAuthManager.handleNativeCallback(data.url);
-                  return;
-              }
-
-              try {
-                  const url = new URL(data.url);
-                  const q = url.searchParams.get('q');
-                  if (q) {
-                      switchView('reader');
-                      let loadId = q;
-                      if (url.hash) loadId += url.hash;
-                      await SuttaController.loadSutta(loadId, true);
-                  }
-              } catch (e) {
-                  logger.error("App", "Failed to parse app URL", e);
-              }
+              processDeepLink(data.url);
           });
       }).catch(e => logger.warn("App", "Failed to load Capacitor App plugin", e));
   }
@@ -158,27 +173,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       import('@tauri-apps/plugin-deep-link').then(({ onOpenUrl }) => {
           onOpenUrl(async (urls) => {
               logger.info("Tauri App", "Tauri deep link opened: " + JSON.stringify(urls));
-              
               for (const urlStr of urls) {
-                  // Handle Google Auth Callbacks
-                  if (urlStr.includes('auth-callback')) {
-                      GoogleAuthManager.handleNativeCallback(urlStr);
-                      continue;
-                  }
-
-                  try {
-                      const url = new URL(urlStr);
-                      const q = url.searchParams.get('q');
-                      if (q) {
-                          switchView('reader');
-                          let loadId = q;
-                          if (url.hash) loadId += url.hash;
-                          await SuttaController.loadSutta(loadId, true);
-                          break;
-                      }
-                  } catch (e) {
-                      logger.error("Tauri App", "Failed to parse Tauri app URL", e);
-                  }
+                  processDeepLink(urlStr);
               }
           });
       }).catch(e => logger.warn("Tauri App", "Failed to load Tauri Deep Link plugin", e));

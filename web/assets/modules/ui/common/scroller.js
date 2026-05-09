@@ -100,7 +100,7 @@ export const Scroller = {
     },
 
     highlightElement: function(targetId, autoRemove = false) {
-        document.querySelectorAll('.highlight', '.highlight-container').forEach(el => {
+        document.querySelectorAll('.highlight, .highlight-container').forEach(el => {
             el.classList.remove('highlight', 'highlight-container');
         });
         if (!targetId) return;
