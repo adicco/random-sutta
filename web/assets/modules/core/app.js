@@ -34,6 +34,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const isDebug = params.get("debug") === "1" || params.get("debug") === "true";
   setupLogging({ level: isDebug ? LogLevel.DEBUG : LogLevel.INFO });
 
+  window.SuttaDB = SuttaDB; 
+  window.SuttaController = SuttaController; 
+  window.loadSutta = (id, u, s, o) => SuttaController.loadSutta(id, u, s, o);
+  window.triggerRandomSutta = () => SuttaController.loadRandomSutta(true);
+
   DrawerManager.init();
   ThemeManager.init();
   FontSizeManager.init();
@@ -53,11 +58,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   setupQuickNav((query) => SuttaController.loadSutta(query));
-
-  window.SuttaDB = SuttaDB; // [NEW] Expose DB for debugging
-  window.SuttaController = SuttaController; // [NEW] Expose controller
-  window.loadSutta = (id, u, s, o) => SuttaController.loadSutta(id, u, s, o);
-  window.triggerRandomSutta = () => SuttaController.loadRandomSutta(true);
 
   const randomBtn = document.getElementById("btn-random");
   const landingRandomBtn = document.getElementById("btn-landing-random"); // [NEW]

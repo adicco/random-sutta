@@ -4,107 +4,48 @@ const logger = getLogger("GestureManager");
 
 export const GestureManager = {
     init() {
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchStartTime = 0;
+        let startX = 0;
+        let startY = 0;
+        let startTime = 0;
         const swipeThreshold = 80; // min distance px
         const timeThreshold = 300; // max time ms
-        const edgeTapThreshold = 50; // px from edge for taps
-        const tapTimeThreshold = 250; // max time for a tap
+        const edgeTapThreshold = 45; // px from edge for taps
+        const tapTimeThreshold = 300; // max time for a tap
 
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) return; // Ignore multi-touch
-            
-            const target = e.target;
+        const handleStart = (x, y, target) => {
             const isInsidePopup = target.closest('.popup-container');
             const isInsideDrawer = target.closest('#filter-drawer, #magic-toc-drawer');
             
-            // [FIX] Don't invalidate if tapping on margins/body or the collapsed magic nav
-            // but still invalidate if inside an active popup/drawer
             if (isInsidePopup || isInsideDrawer) {
-                touchStartX = -1; 
+                startX = -1; 
                 return;
             }
 
-            const touch = e.touches[0];
-            touchStartX = touch.clientX;
-            touchStartY = touch.clientY;
-            touchStartTime = Date.now();
-        }, { passive: true });
+            startX = x;
+            startY = y;
+            startTime = Date.now();
+        };
 
-        document.addEventListener('touchend', (e) => {
-            if (touchStartX === -1) return; // Ignore invalidated starts
-            if (e.changedTouches.length === 0) return;
-            const touch = e.changedTouches[0];
-            const touchEndX = touch.clientX;
-            const touchEndY = touch.clientY;
-            const touchEndTime = Date.now();
-
-            const deltaX = touchEndX - touchStartX;
-            const deltaY = touchEndY - touchStartY;
-            const deltaTime = touchEndTime - touchStartTime;
+        const handleEnd = (endX, endY, target) => {
+            if (startX === -1) return;
+            
+            const deltaX = endX - startX;
+            const deltaY = endY - startY;
+            const deltaTime = Date.now() - startTime;
             const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
             const windowWidth = window.innerWidth;
 
-            // [NEW] 1. Quick Tap on Edges -> Navigate Next/Prev Sutta
-            if (deltaTime < tapTimeThreshold && dist < 10) {
-                // [FIX] Prevent conflict with word lookup or other interactive elements
-                const target = e.target;
-                
-                // [NEW] Ignore if inside Magic Nav (Sidebar)
-                const isInsideMagicNav = target.closest('#magic-nav-wrapper, #magic-nav-corner');
-                if (isInsideMagicNav) return;
+            // 1. Edge Tap Navigation (Prev/Next)
+            if (deltaTime < tapTimeThreshold && dist < 15) {
+                // Prevent conflict with interactive elements
+                if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item, #magic-nav-wrapper, #magic-nav-corner')) return;
 
-                // If user clicks a button, link or specific interactive item, let it pass
-                if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item')) return;
-
-                // [NEW] Detect if tapping exactly on empty margin/padding
-                let isEdgeMargin = false;
-                const hitElement = document.elementFromPoint(touchEndX, touchEndY);
-                if (hitElement) {
-                    const tag = hitElement.tagName.toLowerCase();
-                    if (tag === 'body' || tag === 'html' || hitElement.id === 'sutta-container') {
-                        isEdgeMargin = true;
-                    }
-                }
-
-                // Check if tapping on a word (Pali lookup)
-                let isWord = false;
-                if (!isEdgeMargin) {
-                    try {
-                        let range;
-                        if (document.caretRangeFromPoint) {
-                            range = document.caretRangeFromPoint(touchEndX, touchEndY);
-                        } else if (document.caretPositionFromPoint) {
-                            const pos = document.caretPositionFromPoint(touchEndX, touchEndY);
-                            if (pos) {
-                                range = document.createRange();
-                                range.setStart(pos.offsetNode, pos.offset);
-                            }
-                        }
-                        
-                        if (range && range.startContainer.nodeType === 3) {
-                            const text = range.startContainer.textContent;
-                            const offset = range.startOffset;
-                            if (text[offset] && /\S/.test(text[offset])) {
-                                isWord = true;
-                            }
-                        }
-                    } catch (err) {}
-                }
-
-                if (isWord) return;
-
-                // Left Edge Tap -> Prev
-                if (touchStartX <= edgeTapThreshold) {
+                // Left Edge -> Prev
+                if (startX <= edgeTapThreshold) {
                     const btnPrev = document.getElementById("nav-prev");
                     if (btnPrev && !btnPrev.disabled) {
-                        logger.debug("EdgeTap", "Triggering Prev Sutta (Direct)");
-                        // [NEW] Call direct navigation instead of button click
+                        logger.debug("EdgeTap", "Prev Sutta");
                         const success = window.SuttaController?.navigatePrev();
-                        
-                        // [NEW] Visual feedback on button
                         if (success) {
                             btnPrev.classList.add("active");
                             setTimeout(() => btnPrev.classList.remove("active"), 150);
@@ -112,15 +53,13 @@ export const GestureManager = {
                         return;
                     }
                 }
-                // Right Edge Tap -> Next
-                if (touchStartX >= windowWidth - edgeTapThreshold) {
+                
+                // Right Edge -> Next
+                if (startX >= windowWidth - edgeTapThreshold) {
                     const btnNext = document.getElementById("nav-next");
                     if (btnNext && !btnNext.disabled) {
-                        logger.debug("EdgeTap", "Triggering Next Sutta (Direct)");
-                        // [NEW] Call direct navigation instead of button click
+                        logger.debug("EdgeTap", "Next Sutta");
                         const success = window.SuttaController?.navigateNext();
-
-                        // [NEW] Visual feedback on button
                         if (success) {
                             btnNext.classList.add("active");
                             setTimeout(() => btnNext.classList.remove("active"), 150);
@@ -130,33 +69,45 @@ export const GestureManager = {
                 }
             }
 
-            // 2. Quick Swipe -> History Navigation
-            // [RESTRICTION] Swipe should only work on the main reading area
-            const startTarget = document.elementFromPoint(touchStartX, touchStartY);
-            if (!startTarget || !startTarget.closest('#sutta-container')) return;
-
-            // Must be a quick swipe
+            // 2. Swipe Navigation (Main container only)
             if (deltaTime > timeThreshold) return;
-
-            // Must be primarily horizontal
             if (Math.abs(deltaX) < Math.abs(deltaY) * 2) return;
-
-            // Must cover minimum distance
             if (Math.abs(deltaX) < swipeThreshold) return;
 
-            // 1. Swipe Right -> Go Back
-            if (deltaX > swipeThreshold) {
-                logger.debug("Gesture", "Navigating Back");
-                window.history.back();
-            }
+            const startTarget = document.elementFromPoint(startX, startY);
+            if (!startTarget || !startTarget.closest('#sutta-container')) return;
 
-            // 2. Swipe Left -> Go Forward
-            if (deltaX < -swipeThreshold) {
-                logger.debug("Gesture", "Navigating Forward");
+            if (deltaX > swipeThreshold) {
+                logger.debug("Gesture", "History Back");
+                window.history.back();
+            } else if (deltaX < -swipeThreshold) {
+                logger.debug("Gesture", "History Forward");
                 window.history.forward();
             }
+        };
+
+        // Touch Listeners
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) return;
+            handleStart(e.touches[0].clientX, e.touches[0].clientY, e.target);
         }, { passive: true });
+
+        document.addEventListener('touchend', (e) => {
+            if (e.changedTouches.length === 0) return;
+            handleEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY, e.target);
+        }, { passive: true });
+
+        // Mouse Listeners (Desktop support)
+        document.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Only left click
+            handleStart(e.clientX, e.clientY, e.target);
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (e.button !== 0) return;
+            handleEnd(e.clientX, e.clientY, e.target);
+        });
         
-        logger.info("Init", "GestureManager initialized.");
+        logger.info("Init", "GestureManager initialized (Touch + Mouse).");
     }
 };
