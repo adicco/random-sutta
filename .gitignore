@@ -29,6 +29,7 @@ Thumbs.db
 
 /build/
 /dist/
+/web/dev-dist/
 
 /tmp
 
