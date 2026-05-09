@@ -41,7 +41,13 @@ const buildVersion = new Date().getTime();
 
 export default defineConfig(({ mode }) => {
     const isProd = mode === 'production';
-    const base = isProd ? '/random-sutta/' : '/';
+    
+    // [FIX] Detect if we are building for Native (APK/Tauri) or Web
+    // APK_BUILD is set in Makefile, TAURI_ENV_PLATFORM is set by Tauri
+    const isNative = process.env.APK_BUILD === 'true' || !!process.env.TAURI_ENV_PLATFORM;
+    
+    // GitHub Pages needs '/random-sutta/', but APK/Tauri needs './' or '/'
+    const base = (isProd && !isNative) ? '/random-sutta/' : './';
 
     return {
         root: 'web', 
@@ -93,7 +99,9 @@ export default defineConfig(({ mode }) => {
                     return html.replace(/__APP_VERSION__/g, buildVersion);
                 }
             },
+            // [FIX] Only enable PWA for Web builds, disable for Native
             VitePWA({
+                disable: isNative,
                 registerType: 'autoUpdate',
                 injectRegister: 'inline', 
                 includeManifestIcons: true, 
