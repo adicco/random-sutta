@@ -95,8 +95,9 @@ export default defineConfig(({ mode }) => {
             },
             VitePWA({
                 registerType: 'autoUpdate',
-                injectRegister: 'auto', 
+                injectRegister: 'inline', 
                 includeManifestIcons: true, 
+                manifestFilename: 'manifest.json',
                 devOptions: {
                     enabled: true
                 },
@@ -146,7 +147,7 @@ export default defineConfig(({ mode }) => {
                 workbox: {
                     cleanupOutdatedCaches: true,
                     navigateFallback: 'index.html',
-                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json}'],
+                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json,webmanifest}'],
                     globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], // Ensure db and index json are not ignored
                     maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, // Tăng lên 50MB cho các shard lớn
                     runtimeCaching: [
