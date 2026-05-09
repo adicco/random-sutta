@@ -100,7 +100,7 @@ export default defineConfig(({ mode }) => {
                     enabled: true // Allows testing PWA in dev mode
                 },
                 manifest: {
-                    id: '/?source=pwa', // Unique ID for the app
+                    id: 'com.randomsutta.app', // Stable unique ID
                     name: 'Random Sutta',
                     short_name: 'Random Sutta',
                     description: 'Discover the Wisdom of the Buddha',
@@ -108,7 +108,7 @@ export default defineConfig(({ mode }) => {
                     background_color: '#fdfbf7', // Parchment background
                     display: 'standalone', 
                     orientation: 'portrait',
-                    start_url: './', // Use current directory
+                    start_url: './?utm_source=pwa', // Always start at root, bypass current URL params
                     scope: './',     // Relative scope
                     icons: [
                         { src: 'assets/icons/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
