@@ -93,21 +93,27 @@ export default defineConfig(({ mode }) => {
                 }
             },
             VitePWA({
-                registerType: 'prompt',
+                registerType: 'autoUpdate',
+                injectRegister: 'script', // More reliable injection
                 includeManifestIcons: false, 
+                devOptions: {
+                    enabled: true // Allows testing PWA in dev mode
+                },
                 manifest: {
+                    id: '/?source=pwa', // Unique ID for the app
                     name: 'Random Sutta',
                     short_name: 'Random Sutta',
                     description: 'Discover the Wisdom of the Buddha',
-                    theme_color: '#fdfbf7',
-                    background_color: '#fdfbf7',
+                    theme_color: '#8b4513', // Brown theme color
+                    background_color: '#fdfbf7', // Parchment background
                     display: 'standalone', 
                     orientation: 'portrait',
-                    // Let VitePWA handle scope and start_url based on 'base'
+                    start_url: './', // Use current directory
+                    scope: './',     // Relative scope
                     icons: [
-                        { src: 'assets/icons/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
-                        { src: 'assets/icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
-                        { src: 'assets/icons/android-chrome-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+                        { src: 'assets/icons/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
+                        { src: 'assets/icons/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
+                        { src: 'assets/icons/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
                         { src: 'assets/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
                     ]
                 },
