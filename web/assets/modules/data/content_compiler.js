@@ -13,7 +13,7 @@ export const ContentCompiler = {
         
         sortedKeys.forEach(segmentId => {
             const seg = contentMap[segmentId];
-            const { pli, eng, html: htmlDecor, comm } = seg;
+            const { pli, eng, html: htmlDecor, comm, reference } = seg;
 
             let openTag = "";
             let closeTag = "";
@@ -27,6 +27,15 @@ export const ContentCompiler = {
             }
 
             let segmentHtml = `<span id="${segmentId}" class="segment">`;
+            
+            // [NEW] Add reference anchors for deep linking (PTS, MS, etc.)
+            if (reference) {
+                const refs = reference.split(',').map(r => r.trim()).filter(r => r);
+                refs.forEach(ref => {
+                    segmentHtml += `<a id="${ref}" class="anchor-ref"></a>`;
+                });
+            }
+
             if (pli) segmentHtml += `<span class="pli" lang="pi">${pli}</span>`;
             if (eng) segmentHtml += `<span class="eng" lang="en">${eng}</span>`;
             
