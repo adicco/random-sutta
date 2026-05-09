@@ -1,6 +1,6 @@
 // Path: web/assets/modules/data/sutta_db.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLitePersistent } from 'services/sqlite_helper.js';
+import { initSQLitePersistent, importToPersistentStorage } from 'services/sqlite_helper.js';
 import { BlobCache } from 'services/blob_cache.js';
 
 const logger = getLogger("SuttaDB");
@@ -84,7 +84,6 @@ export class SuttaDB {
         if (needsUpdate) {
             logger.info("Storage", `Updating ${dbName}: ${currentHash} -> ${targetHash}`);
             const file = await this._fetchFile(dbName, onProgress);
-            const { importToPersistentStorage } = await import('services/sqlite_helper.js');
             await importToPersistentStorage(dbName, file);
             await this._setStoredHash(dbName, targetHash);
             return true;

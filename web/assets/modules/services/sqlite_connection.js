@@ -1,6 +1,6 @@
 // Path: web/assets/modules/services/sqlite_connection.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLitePersistent } from './sqlite_helper.js';
+import { initSQLitePersistent, importToPersistentStorage } from './sqlite_helper.js';
 import { BlobCache } from './blob_cache.js';
 import JSZip from 'jszip';
 
@@ -38,7 +38,6 @@ export class SqliteConnection {
                 const dbBinary = await this._downloadSource();
                 const dbFile = new File([dbBinary], this.dbName, { type: 'application/x-sqlite3' });
                 
-                const { importToPersistentStorage } = await import('./sqlite_helper.js');
                 await importToPersistentStorage(this.dbName, dbFile);
                 logger.info("Init", "Database hydrated to persistent storage.");
             }

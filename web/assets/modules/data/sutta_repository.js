@@ -1,6 +1,7 @@
 // Path: web/assets/modules/data/sutta_repository.js
 import { SuttaDB } from './sutta_db.js';
 import { getLogger } from 'utils/logger.js';
+import { DictProvider } from 'lookup/dict_provider.js';
 
 const logger = getLogger("SuttaRepository");
 
@@ -190,7 +191,6 @@ export const SuttaRepository = {
         
         // 2. Nạp từ điển (DPD) để Safari cache lại
         try {
-            const { DictProvider } = await import('lookup/dict_provider.js');
             await DictProvider.init();
             logger.info("DownloadAll", "✅ Dictionary cached.");
             // Tối ưu RAM: Đóng ngay sau khi cache xong
