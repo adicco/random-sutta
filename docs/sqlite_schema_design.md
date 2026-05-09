@@ -30,5 +30,10 @@ To support full-text search without ballooning the core or content databases:
 These will be lazy-loaded into **OPFS** only when the user opens the search interface.
 
 ## Implementation Details
-*   **Frontend Logic:** `SuttaDB` manages multiple SQLite instances. `SuttaRepository` acts as an orchestrator, resolving the correct shard for each query.
-*   **Build Pipeline:** `SqliteGenerator` automatically distributes data based on `book_id`.
+*   **Persistent Storage (OPFS):** The application uses the **Origin Private File System (OPFS)** via the `wa-sqlite` AccessHandle VFS. This provides near-native disk performance and persistence across browser sessions.
+*   **Lazy Shard Loading:** Content shards (`sutta_content_{category}.db`) are not downloaded by default. They are lazy-loaded and imported into OPFS only when a user requests a sutta from that specific category, or when the user triggers the "Make Offline" feature.
+*   **Hybrid VFS Strategy:**
+    *   **Core DB:** Open in read-only mode, frequently accessed.
+    *   **Content Shards:** Open in persistent mode via OPFS.
+*   **Data Integrity:** A `db_manifest.json` tracks the hash of every shard. The `SuttaDB` logic verifies these hashes before opening to trigger automatic updates if a new version is deployed to the server.
+*   **Build Pipeline:** The `src.sutta_processor` package handles the conversion from Bilara JSON to sharded SQLite files, generating the required indexes for rapid lookup.
