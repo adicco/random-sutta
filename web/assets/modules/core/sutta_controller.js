@@ -66,7 +66,8 @@ export const SuttaController = {
             const parts = input.split('#');
             suttaId = parts[0].trim().toLowerCase();
             if (parts.length > 1) {
-                scrollTarget = parts[1];
+                // [FIX] Decode URI component to handle encoded dots/colons in refs
+                scrollTarget = decodeURIComponent(parts[1]);
             }
         }
 
@@ -74,7 +75,8 @@ export const SuttaController = {
         if (shouldUpdateUrl) {
             try {
                 const bookParam = FilterComponent.generateBookParam();
-                Router.updateURL(null, bookParam, false, null, currentScroll);
+                // [FIX] Preserve the hash during initial update to prevent UI flickers/loss
+                Router.updateURL(null, bookParam, false, scrollTarget, currentScroll);
             } catch (e) {}
         }
 

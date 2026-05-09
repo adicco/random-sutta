@@ -100,13 +100,19 @@ export const Scroller = {
     },
 
     highlightElement: function(targetId, autoRemove = false) {
-        document.querySelectorAll('.highlight, .highlight-container').forEach(el => {
+        document.querySelectorAll('.highlight', '.highlight-container').forEach(el => {
             el.classList.remove('highlight', 'highlight-container');
         });
         if (!targetId) return;
 
-        const el = document.getElementById(targetId);
+        let el = document.getElementById(targetId);
         if (el) {
+            // [NEW] If targeting a reference anchor, highlight the parent segment instead
+            if (el.classList.contains('anchor-ref')) {
+                const parentSeg = el.closest('.segment');
+                if (parentSeg) el = parentSeg;
+            }
+
             const highlightClass = el.classList.contains('segment') ? 'highlight' : 'highlight-container';
             el.classList.add(highlightClass);
 
