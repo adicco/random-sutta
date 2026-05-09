@@ -1,39 +1,43 @@
-# Random Sutta - Multi-DB Sharded Architecture
+# Random Sutta - Vertical Sharded Architecture (SQLite + OPFS)
 
-This document describes the sharded SQLite database architecture serving the Random Sutta offline PWA/APK.
+This document describes the sharded SQLite database architecture and the advanced OPFS implementation used in the Random Sutta application.
 
-## Philosophy
-To overcome file size limits (GitHub Pages 100MB) and mobile memory constraints (iOS Jetsam), the data is sharded into a **Core Database** and multiple **Content Shards**.
+## Database Philosophy
+To overcome file size limits (GitHub Pages) and mobile memory constraints (iOS Jetsam), the system uses a vertical sharding strategy. Data is split between a **Core** database for navigation and **Content** shards for high-volume text.
 
-## Sharding Layout
+## Schema Specification
 
-### 1. `sutta_core.db` (~5-10MB)
-*   **VFS:** Loaded into **MemoryVFS** (RAM).
-*   **Purpose:** Instant UI rendering, navigation, and global metadata lookup.
+### 1. `sutta_core.db` (The Orchestrator)
+*   **Purpose:** Global metadata, structural hierarchy, and application configuration.
 *   **Tables:**
-    *   `config`: Global app settings (author priority, etc.).
-    *   `metadata`: All UIDs, titles, blurbs, and navigation links.
-    *   `structure`: Materialized JSON trees for every book.
-    *   `random_pools`: Relational mapping for random sutta selection.
+    *   `config (key PK, value TEXT)`: App-wide constants (e.g., `author_priority`).
+    *   `metadata (uid PK, ...)`: Contains 16 fields including `acronym`, `translated_title`, `original_title`, `blurb`, `parent_uid`, `children` (JSON), and `nav_prev`/`nav_next`.
+    *   `structure (book_id PK, tree_json TEXT)`: Pre-computed navigation trees for every book.
+    *   `random_pools (book_id, sutta_uid, PK(book_id, sutta_uid))`: Mapping for the random sutta generator.
 
-### 2. `sutta_content_{category}.db` (~20-50MB each)
-*   **VFS:** Loaded into **OPFS** (Persistent Disk Storage).
+### 2. `sutta_content_{category}.db` (Vertical Content Shards)
 *   **Categories:** `major` (DN, MN, SN, AN), `minor` (KN), `vinaya`, `abhidhamma`.
-*   **Purpose:** Large scale text content storage.
-*   **Tables:**
-    *   `content_segments`: The normalized Pali/English/HTML text segments.
+*   **Purpose:** Normalized storage of all segmented text.
+*   **Table:** `content_segments`
+    *   `sutta_uid`, `segment_id`, `segment_order`, `type` (pli/eng/html), `lang`, `author_uid`, `content`.
+    *   **Primary Key:** `(sutta_uid, segment_id, type, lang, author_uid)`.
+    *   **Indexes:** Optimized for sequential reading (`sutta_uid`, `segment_order`) and filtering (`type`, `lang`, `author_uid`).
 
-## Future Expansion: Search (FTS5)
-To support full-text search without ballooning the core or content databases:
-1.  **`sutta_search_pali.db`**: Virtual FTS5 tables for Pali text.
-2.  **`sutta_search_eng.db`**: Virtual FTS5 tables for English translations.
-These will be lazy-loaded into **OPFS** only when the user opens the search interface.
+## Storage Implementation: OPFSAnyContextVFS
 
-## Implementation Details
-*   **Persistent Storage (OPFS):** The application uses the **Origin Private File System (OPFS)** via the `wa-sqlite` AccessHandle VFS. This provides near-native disk performance and persistence across browser sessions.
-*   **Lazy Shard Loading:** Content shards (`sutta_content_{category}.db`) are not downloaded by default. They are lazy-loaded and imported into OPFS only when a user requests a sutta from that specific category, or when the user triggers the "Make Offline" feature.
-*   **Hybrid VFS Strategy:**
-    *   **Core DB:** Open in read-only mode, frequently accessed.
-    *   **Content Shards:** Open in persistent mode via OPFS.
-*   **Data Integrity:** A `db_manifest.json` tracks the hash of every shard. The `SuttaDB` logic verifies these hashes before opening to trigger automatic updates if a new version is deployed to the server.
-*   **Build Pipeline:** The `src.sutta_processor` package handles the conversion from Bilara JSON to sharded SQLite files, generating the required indexes for rapid lookup.
+The application utilizes `wa-sqlite` with a specialized VFS implementation to handle the persistent storage of SQLite databases on the web.
+
+### Key Features:
+*   **OPFSAnyContextVFS:** Unlike the standard `AccessHandleVFS` which restricts access to a single Web Worker, `OPFSAnyContextVFS` allows the database to be accessed from any context (Main Thread, Web Worker, or Service Worker) using the **Origin Private File System (OPFS)**.
+*   **AccessHandle Mechanism:** It uses the synchronous `FileSystemSyncAccessHandle` inside a dedicated worker to provide near-native disk I/O performance.
+*   **Mutex Locking:** A JavaScript-level mutex (`withLock`) ensures that sensitive SQLite operations (opening, closing, writing) are serialized to prevent memory corruption, especially on iOS.
+
+### Performance & Memory Optimization (iOS Jetsam-Ready):
+To prevent crashes on iOS devices with strict memory limits, the following PRAGMAs are applied to every database connection:
+*   `journal_mode = DELETE`: Reduces overhead for read-heavy workloads.
+*   `synchronous = NORMAL`: Balancing safety and write speed.
+*   `cache_size = -5000`: Limits cache to ~5MB per database.
+*   `mmap_size = 256MB`: Enables memory-mapped I/O for significantly faster read access on supported platforms.
+
+## Build Pipeline
+The `src.sutta_processor` Python package generates these databases by transforming Bilara JSON data into a vertically-integrated relational structure, ensuring that metadata is separated from heavy content to maintain UI responsiveness.
