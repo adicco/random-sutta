@@ -21,7 +21,8 @@ export const SuttaController = {
   navigatePrev: function() {
     if (this.isLoading) return false;
     if (this.currentNav.prev) {
-        this.loadSutta(this.currentNav.prev);
+        // [FIX] Explicitly request transition for gesture navigation to match button behavior
+        this.loadSutta(this.currentNav.prev, true, 0, { transition: true });
         return true;
     }
     return false;
@@ -30,7 +31,8 @@ export const SuttaController = {
   navigateNext: function() {
     if (this.isLoading) return false;
     if (this.currentNav.next) {
-        this.loadSutta(this.currentNav.next);
+        // [FIX] Explicitly request transition for gesture navigation to match button behavior
+        this.loadSutta(this.currentNav.next, true, 0, { transition: true });
         return true;
     }
     return false;
@@ -271,16 +273,18 @@ export const SuttaController = {
       this.isLoading = true;
 
       if (this._loaderTimer) clearTimeout(this._loaderTimer);
+      // [OPTIMIZATION] Tăng delay lên 400ms để triệt tiêu hoàn toàn nháy (flicker) cho các bài kinh đã cache
       this._loaderTimer = setTimeout(() => {
-        // Chỉ disable nút sau 200ms để tránh flashing cho load nhanh
+        if (!this.isLoading) return; // Nếu đã load xong trong lúc đợi thì thôi
+
         btns.forEach(btn => { if (btn) btn.disabled = true; });
 
         if (loader) {
           loader.classList.remove("hidden");
-          loader.offsetHeight;
+          loader.offsetHeight; // Force reflow
           loader.classList.add("visible");
         }
-      }, 200);
+      }, 400); 
     } else {
       this.isLoading = false;
 
@@ -289,13 +293,16 @@ export const SuttaController = {
         this._loaderTimer = null;
       }
 
-      // Re-enable ngay lập tức
+      // Re-enable buttons immediately for responsiveness
       btns.forEach(btn => { if (btn) btn.disabled = false; });
 
       if (loader) {
         loader.classList.remove("visible");
+        // [NEW] Use a stable delay for hiding to match CSS transitions
         setTimeout(() => {
-          if (!this.isLoading) loader.classList.add("hidden");
+          if (!this.isLoading) {
+            loader.classList.add("hidden");
+          }
         }, 300);
       }
     }
