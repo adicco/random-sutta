@@ -145,15 +145,32 @@ export class SuttaDB {
     }
 
     static async _loadManifest() {
+        // 1. Load from cache first for immediate availability
         try {
-            const resp = await fetch('assets/db/db_manifest.json');
-            this.manifest = await resp.json();
-            await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
-        } catch (e) {
             const cached = await BlobCache.getBlob('db_manifest');
             if (cached) {
                 this.manifest = JSON.parse(new TextDecoder().decode(cached));
+                logger.info("Manifest", "Loaded from cache");
             }
+        } catch (e) {
+            logger.warn("Manifest", "Failed to load from cache", e);
+        }
+
+        // 2. Try to update from network with a short timeout
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+            
+            const resp = await fetch('assets/db/db_manifest.json', { signal: controller.signal });
+            clearTimeout(timeoutId);
+            
+            if (resp.ok) {
+                this.manifest = await resp.json();
+                await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
+                logger.info("Manifest", "Updated from network");
+            }
+        } catch (e) {
+            logger.warn("Manifest", "Network fetch failed or timed out, using cache", e);
         }
     }
 

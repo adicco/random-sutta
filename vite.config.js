@@ -148,8 +148,9 @@ export default defineConfig(({ mode }) => {
                     skipWaiting: true,
                     clientsClaim: true,
                     cleanupOutdatedCaches: true,
-                    navigateFallback: base + 'index.html', // Phải kèm base để fallback đúng trên GitHub Pages
-                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json,webmanifest}'],
+                    directoryIndex: 'index.html',
+                    navigateFallback: base + 'index.html', 
+                    globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json,webmanifest,manifest.json}'],
                     globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], 
                     maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, 
                     runtimeCaching: [

@@ -65,22 +65,9 @@
       />
     </div>
 
-    <script>
-      // [CACHE BUSTER] Force clear cache if version changed
-      const APP_VERSION = "__APP_VERSION__";
-      if (localStorage.getItem("app_version") !== APP_VERSION) {
-        if ("caches" in window) {
-          caches.keys().then((names) => {
-            for (let name of names) caches.delete(name);
-          });
-        }
-        localStorage.setItem("app_version", APP_VERSION);
-        console.log("Cache cleared for version " + APP_VERSION);
-      }
-    </script>
     <script
       type="module"
-      src="assets/modules/core/app.js?v=dev-placeholder"
+      src="assets/modules/core/app.js"
     ></script>
   </head>
   <body>
@@ -605,17 +592,5 @@
       </div>
     </div>
 
-    <script>
-      // [AUTO-UPDATE] Force Reload when Service Worker updates
-      if ('serviceWorker' in navigator) {
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          if (refreshing) return;
-          refreshing = true;
-          console.log("[App] Service Worker updated. Reloading...");
-          window.location.reload();
-        });
-      }
-    </script>
   </body>
 </html>
