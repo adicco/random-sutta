@@ -41,10 +41,11 @@ const buildVersion = new Date().getTime();
 
 export default defineConfig(({ mode }) => {
     const isProd = mode === 'production';
+    const base = isProd ? '/random-sutta/' : '/';
 
     return {
         root: 'web', 
-        base: './', // Sử dụng relative path để hỗ trợ mở file trực tiếp (nếu được) hoặc deploy github pages
+        base: base,
         
         esbuild: {
             drop: isProd ? ['debugger', 'console'] : [],
@@ -94,34 +95,46 @@ export default defineConfig(({ mode }) => {
             },
             VitePWA({
                 registerType: 'autoUpdate',
-                injectRegister: 'script', // More reliable injection
-                includeManifestIcons: false, 
+                injectRegister: 'auto', 
+                includeManifestIcons: true, 
                 devOptions: {
-                    enabled: true // Allows testing PWA in dev mode
+                    enabled: true
                 },
                 manifest: {
-                    id: 'com.randomsutta.app', // Stable unique ID
+                    id: 'com.randomsutta.app',
                     name: 'Random Sutta',
                     short_name: 'Random Sutta',
                     description: 'Discover the Wisdom of the Buddha',
-                    theme_color: '#8b4513', // Brown theme color
-                    background_color: '#fdfbf7', // Parchment background
+                    theme_color: '#8b4513',
+                    background_color: '#fdfbf7',
                     display: 'standalone', 
                     orientation: 'portrait',
-                    start_url: './?utm_source=pwa', // Always start at root, bypass current URL params
-                    scope: './',     // Relative scope
+                    start_url: base + '?utm_source=pwa', 
+                    scope: base,
                     icons: [
                         { 
                             src: 'assets/icons/web-app-manifest-192x192.png', 
                             sizes: '192x192', 
                             type: 'image/png',
-                            purpose: 'any maskable' 
+                            purpose: 'any' 
+                        },
+                        { 
+                            src: 'assets/icons/web-app-manifest-192x192.png', 
+                            sizes: '192x192', 
+                            type: 'image/png',
+                            purpose: 'maskable' 
                         },
                         { 
                             src: 'assets/icons/web-app-manifest-512x512.png', 
                             sizes: '512x512', 
                             type: 'image/png',
-                            purpose: 'any maskable'
+                            purpose: 'any'
+                        },
+                        { 
+                            src: 'assets/icons/web-app-manifest-512x512.png', 
+                            sizes: '512x512', 
+                            type: 'image/png',
+                            purpose: 'maskable'
                         },
                         { 
                             src: 'assets/icons/apple-touch-icon.png', 
