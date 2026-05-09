@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
+    "prebuild": "rm -rf web/dev-dist",
     "build": "vite build && touch dist/web/.nojekyll",
     "preview": "vite preview",
     "deploy": "gh-pages -d dist/web"

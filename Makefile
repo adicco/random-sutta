@@ -187,7 +187,7 @@ publish: official deploy
 # ==============================================================================
 clean:
 	@echo "🧹 Cleaning up..."
-	rm -rf build/ dist/ release/ tmp/
+	rm -rf build/ dist/ release/ tmp/ web/dev-dist/
 	rm -f web/public/assets/db/sutta_*.db
 	rm -f web/public/assets/db/db_manifest.json
 	rm -rf web/assets/modules/data/constants.js
