@@ -38,13 +38,13 @@ class EpubPackager:
         if active_cover_image:
             cover_meta = '    <meta name="cover" content="cover-image"/>'
             cover_manifest = '    <item id="cover-image" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>\n'
-            cover_manifest += '    <item id="cover" href="Text/cover.xhtml" media-type="application/xhtml+xml"/>'
+            cover_manifest += '    <item id="cover" href="Text/cover.html" media-type="application/xhtml+xml"/>'
             cover_spine = '    <itemref idref="cover" linear="yes"/>'
             
             cover_toc_entry = {
                 "uid": "cover",
                 "title": "Cover",
-                "filename": "cover.xhtml",
+                "filename": "cover.html",
                 "play_order": 0,
                 "children": []
             }
@@ -67,7 +67,7 @@ class EpubPackager:
             # Write Cover
             if active_cover_image:
                 epub.writestr("OEBPS/Images/cover.jpg", active_cover_image, compress_type=zipfile.ZIP_STORED)
-                epub.writestr("OEBPS/Text/cover.xhtml", COVER_HTML_TEMPLATE, compress_type=zipfile.ZIP_DEFLATED)
+                epub.writestr("OEBPS/Text/cover.html", COVER_HTML_TEMPLATE, compress_type=zipfile.ZIP_DEFLATED)
             
             # TOCs
             ncx_title = "SuttaCentral Tipitaka [Eng]" if self.eng_only else "SuttaCentral Tipitaka"

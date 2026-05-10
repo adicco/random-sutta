@@ -52,11 +52,18 @@ class HtmlBuilder:
         eng = segment.get("eng") or ""
         html_tag = segment.get("html", "")
 
+        if self.eng_only:
+            pli = ""
+
         if not pli and not eng:
+            if html_tag:
+                if "{}" in html_tag:
+                    return html_tag.format("")
+                return html_tag
             return ""
 
         content = ""
-        if pli and not self.eng_only:
+        if pli:
             pli_text = pli
             if not eng and footnote_idx > 0:
                 pli_text += f' <sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
@@ -87,7 +94,7 @@ class HtmlBuilder:
             
         title = self.get_title(uid, meta)
         safe_uid = uid.replace("/", "_").replace(":", "_")
-        filename = f"{safe_uid}.xhtml"
+        filename = f"{safe_uid}.html"
         self.uid_to_filename[uid] = filename
         
         collected_headers = []
@@ -183,7 +190,7 @@ class HtmlBuilder:
         elif m_type == "alias":
             target = meta.get("target_uid")
             if target:
-                self.uid_to_filename[uid] = self.uid_to_filename.get(target, f"{target.replace('/', '_')}.xhtml")
+                self.uid_to_filename[uid] = self.uid_to_filename.get(target, f"{target.replace('/', '_')}.html")
             return None
 
         return filename, collected_headers

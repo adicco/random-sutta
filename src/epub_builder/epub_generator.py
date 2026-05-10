@@ -76,7 +76,7 @@ class EpubGenerator:
         for m_uid, m_data in self.all_meta.items():
             if m_data.get("type") in ["leaf", "branch"]:
                 safe_uid = m_uid.replace("/", "_").replace(":", "_")
-                self.uid_to_filename[m_uid] = f"{safe_uid}.xhtml"
+                self.uid_to_filename[m_uid] = f"{safe_uid}.html"
 
     def _traverse_tree(self, node: Any, parent_toc_list: List[Dict[str, Any]], depth: int = 1):
         """Recursively traverse the book structure tree."""
