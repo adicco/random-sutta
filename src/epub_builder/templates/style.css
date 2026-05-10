@@ -165,11 +165,15 @@ h3 { font-size: 1.2em; }
     text-indent: -2.5em; /* Kéo ngược dòng đầu ra để đặt số thứ tự */
 }
 
-.footnote-content a {
+.footnote-content a[epub|type="backlink"] {
     display: inline-block;
     width: 2.1em; /* Độ rộng cố định cho số thứ tự để căn lề văn bản */
     text-align: right;
     margin-right: 0.4em;
     text-decoration: none;
     font-weight: bold;
+}
+
+.footnote-content a {
+    color: var(--link-color);
 }
