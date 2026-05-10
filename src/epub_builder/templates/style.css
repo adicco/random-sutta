@@ -156,12 +156,21 @@ span.segment {
 
 @namespace epub "http://www.idpf.org/2007/ops";
 
+aside[epub:type="footnote"] {
+    display: block;
+    margin-bottom: 1.5em;
+}
+
 .footnote-container {
-    margin-bottom: 1.2em;
+    margin: 0;
 }
 
 .footnote-content {
-    margin: 0 0 0.4em 0;
+    margin: 0 0 0.5em 0;
+}
+
+.footnote-content.last-paragraph {
+    margin-bottom: 0;
 }
 
 .footnote-backlink {

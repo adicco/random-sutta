@@ -206,20 +206,28 @@ class HtmlBuilder:
 
                 html_parts.append(self.build_segment_html(seg, footnote_idx))
 
-            if current_footnotes:
-                fn_html = '<section class="footnotes-section">\n'
-                for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
-                    parts = [p.strip() for p in comm_text.split("|")]
-                    fn_html += f'<aside xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" epub:type="footnote" id="fn_{seg_id}">\n'
-                    fn_html += '  <div class="footnote-container">\n'
-                    for i, part in enumerate(parts):
-                        if i == 0:
-                            fn_html += f'    <p class="footnote-content first-paragraph"><a class="footnote-backlink" epub:type="backlink" href="#ref_{seg_id}">{idx}.</a>&nbsp;&nbsp;{part}</p>\n'
-                        else:
-                            fn_html += f'    <p class="footnote-content">{part}</p>\n'
-                    fn_html += "  </div>\n</aside>\n"
-                fn_html += "</section>"
-                html_parts.append(fn_html)
+                if current_footnotes:
+                    fn_html = '<section class="footnotes-section">\n'
+                    for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
+                        parts = [p.strip() for p in comm_text.split("|")]
+                        fn_html += f'<aside xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" epub:type="footnote" id="fn_{seg_id}">\n'
+                        fn_html += '  <div class="footnote-container">\n'
+                        for i, part in enumerate(parts):
+                            classes = ["footnote-content"]
+                            if i == 0:
+                                classes.append("first-paragraph")
+                            if i == len(parts) - 1:
+                                classes.append("last-paragraph")
+                            
+                            class_attr = f' class="{" ".join(classes)}"'
+                            
+                            if i == 0:
+                                fn_html += f'    <p{class_attr}><a class="footnote-backlink" epub:type="backlink" href="#ref_{seg_id}">{idx}.</a>&nbsp;&nbsp;{part}</p>\n'
+                            else:
+                                fn_html += f'    <p{class_attr}>{part}</p>\n'
+                        fn_html += "  </div>\n</aside>\n"
+                    fn_html += "</section>"
+                    html_parts.append(fn_html)
 
             content_html = "\n".join(html_parts)
 
