@@ -157,10 +157,13 @@ epub:
 	$(PYTHON) -m src.epub_builder --eng-only --output dist/epub/random_sutta_eng.epub
 
 calibre: epub
-	@echo "🚚 Copying EPUB to Calibre Library..."
+	@echo "🚚 Copying Standard EPUB to Calibre Library..."
 	@mkdir -p "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)"
 	cp dist/epub/random_sutta.epub "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)/SuttaCentral Tipitaka - Random Sutta.epub"
-	@echo "✅ EPUB copied to Calibre Library."
+	@echo "🚚 Copying English-only EPUB to Calibre Library..."
+	@mkdir -p "/Users/hieucao/My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka [Eng] (4195)"
+	cp dist/epub/random_sutta_eng.epub "/Users/hieucao/My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka [Eng] (4195)/SuttaCentral Tipitaka [Eng] - Random Sutta.epub"
+	@echo "✅ All EPUBs copied to Calibre Library."
 
 # ==============================================================================
 # 🚀 RELEASE ACTIONS
