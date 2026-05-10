@@ -86,7 +86,7 @@ class HtmlBuilder:
             
         title = self.get_title(uid, meta)
         safe_uid = uid.replace("/", "_").replace(":", "_")
-        filename = f"{m_type}_{safe_uid}.html"
+        filename = f"{safe_uid}.html"
         self.uid_to_filename[uid] = filename
         
         collected_headers = []
@@ -181,7 +181,7 @@ class HtmlBuilder:
         elif m_type == "alias":
             target = meta.get("target_uid")
             if target:
-                self.uid_to_filename[uid] = self.uid_to_filename.get(target, f"leaf_{target.replace('/', '_')}.html")
+                self.uid_to_filename[uid] = self.uid_to_filename.get(target, f"{target.replace('/', '_')}.html")
             return None
 
         return filename, collected_headers
