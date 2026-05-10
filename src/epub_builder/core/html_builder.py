@@ -154,8 +154,8 @@ class HtmlBuilder:
             if current_footnotes:
                 fn_html = '<section class="footnotes-section">\n'
                 for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
-                    fn_html += f'<aside xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" epub:type="footnote" id="fn_{seg_id}"><p><a epub:type="backlink" href="#ref_{seg_id}">{idx}</a>. {comm_text}</p></aside>\n'
-                fn_html += '</section>'
+                    fn_html += f'<aside xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" epub:type="footnote" id="fn_{seg_id}"><p class="footnote-content"><a epub:type="backlink" href="#ref_{seg_id}">{idx}</a> {comm_text}</p></aside>\n'
+                fn_html += "</section>"
                 html_parts.append(fn_html)
 
             content_html = "\n".join(html_parts)

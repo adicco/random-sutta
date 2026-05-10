@@ -150,18 +150,16 @@ h3 { font-size: 1.2em; }
     font-size: 0.9em;
 }
 
-.footnote-wrapper {
-    margin-bottom: 1em;
-    padding: 0.5em 0;
+@namespace epub "http://www.idpf.org/2007/ops";
+
+.footnote-content {
+    margin: 0 0 0.8em 0;
+    padding-left: 2em;
+    text-indent: -2em;
 }
 
-.footnote-item {
-    color: var(--text-main);
-}
-
-.footnote-item a.footnote-back {
+.footnote-content a {
     text-decoration: none;
-    color: var(--link-color);
-    margin-right: 8px;
     font-weight: bold;
+    margin-right: 0.3em;
 }
