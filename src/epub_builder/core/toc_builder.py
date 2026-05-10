@@ -1,4 +1,5 @@
 # Path: src/epub_builder/core/toc_builder.py
+import html
 from typing import Dict, Any, List
 from ..templates import TOC_NCX_TEMPLATE, NAV_XHTML_TEMPLATE
 
@@ -8,9 +9,11 @@ class TocBuilder:
         def build_nav_points(entries: List[Dict], level: int) -> str:
             res = ""
             for entry in entries:
+                safe_title = html.escape(entry["title"])
+                safe_filename = html.escape(entry["filename"])
                 res += f'{"  " * level}<navPoint id="navPoint-{entry["play_order"]}" playOrder="{entry["play_order"]}">\n'
-                res += f'{"  " * level}  <navLabel><text>{entry["title"]}</text></navLabel>\n'
-                res += f'{"  " * level}  <content src="Text/{entry["filename"]}"/>\n'
+                res += f'{"  " * level}  <navLabel><text>{safe_title}</text></navLabel>\n'
+                res += f'{"  " * level}  <content src="Text/{safe_filename}"/>\n'
                 if entry["children"]:
                     res += build_nav_points(entry["children"], level + 2)
                 res += f'{"  " * level}</navPoint>\n'
@@ -27,7 +30,9 @@ class TocBuilder:
             if not entries: return ""
             res = f'{"  " * level}<ol>\n'
             for entry in entries:
-                res += f'{"  " * (level + 1)}<li><a href="Text/{entry["filename"]}">{entry["title"]}</a>\n'
+                safe_title = html.escape(entry["title"])
+                safe_filename = html.escape(entry["filename"])
+                res += f'{"  " * (level + 1)}<li><a href="Text/{safe_filename}">{safe_title}</a>\n'
                 if entry["children"]:
                     res += build_nav_list(entry["children"], level + 2)
                 res += f'{"  " * (level + 1)}</li>\n'

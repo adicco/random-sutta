@@ -170,8 +170,9 @@ class EpubGenerator:
         parent_toc_list.append(toc_entry)
         
         # Update manifest and spine
-        self.spine_items.append(f'<itemref idref="item_{uid}"/>')
-        self.manifest_items.append(f'<item id="item_{uid}" href="Text/{filename}" media-type="application/xhtml+xml"/>')
+        safe_uid = uid.replace("/", "_").replace(":", "_")
+        self.spine_items.append(f'<itemref idref="item_{safe_uid}"/>')
+        self.manifest_items.append(f'<item id="item_{safe_uid}" href="Text/{filename}" media-type="application/xhtml+xml"/>')
 
         # Add sub-headers found within the page to the TOC
         self._add_page_headers_to_toc(toc_entry, filename, uid, collected_headers)

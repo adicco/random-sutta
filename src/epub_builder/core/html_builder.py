@@ -91,6 +91,7 @@ class HtmlBuilder:
         
         collected_headers = []
         
+        import html
         if m_type == "leaf":
             # Detect if this leaf has subleaf children to avoid duplicate TOC entries
             has_subleaf_children = False
@@ -110,9 +111,9 @@ class HtmlBuilder:
             segments = self.db.get_segments(uid, meta.get("book_id", ""))
             html_parts = []
             current_footnotes = []
-            
+
             acronym = meta.get("acronym") or ""
-                
+
             for seg in segments:
                 html_tag = seg.get("html", "")
                 comm = seg.get("comm")
@@ -121,7 +122,7 @@ class HtmlBuilder:
                     comm = resolve_internal_links(comm, self.uid_to_filename, self.all_meta)
                     current_footnotes.append((seg.get("segment_id", ""), comm))
                     footnote_idx = len(current_footnotes)
-                
+
                 # Only extract headers if the leaf doesn't have virtual subleaf children
                 if not has_subleaf_children and html_tag and any(tag in html_tag for tag in ["<h1", "<h2", "<h3", "<h4", "<h5", "<h6"]):
                     if any(cls in html_tag for cls in ["class='sutta-title'", 'class="sutta-title"', "class='range-title'", 'class="range-title"']):
@@ -139,18 +140,18 @@ class HtmlBuilder:
                             "anchor": seg.get("segment_id", ""),
                             "level": level
                         })
-                        
+
                 html_parts.append(self.build_segment_html(seg, footnote_idx))
-                
+
             if current_footnotes:
                 fn_html = '<div class="footnotes-section">\n'
                 for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
                     fn_html += f'<aside xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" epub:type="footnote" id="fn_{seg_id}" class="footnote-item"><p class="footnote-wrapper"><a class="footnote-back" href="#ref_{seg_id}">{idx}</a> {comm_text}</p></aside>\n'
                 fn_html += '</div>'
                 html_parts.append(fn_html)
-                
+
             content_html = "\n".join(html_parts)
-            
+
             # Post-process: Remove UL block from header and insert Acronym
             if acronym:
                 acronym_div = f'<div class="low-profile-acronym">{acronym}</div>'
@@ -165,14 +166,14 @@ class HtmlBuilder:
 
             if not content_html.strip():
                 content_html = "<p><i>[No content available]</i></p>"
-                
-            page_html = PAGE_HTML_TEMPLATE.format(title=title, content=content_html)
+
+            page_html = PAGE_HTML_TEMPLATE.format(title=html.escape(title), content=content_html)
             pages_list.append({"filename": filename, "content": page_html})
-            
+
         elif m_type in ["branch", "root", "group"]:
             blurb = meta.get("blurb") or ""
             page_html = BRANCH_HTML_TEMPLATE.format(
-                title=title, 
+                title=html.escape(title),
                 blurb=blurb,
                 children_links="{children_links}"
             )
