@@ -159,7 +159,7 @@ class HtmlBuilder:
                     fn_html += '  <div class="footnote-container">\n'
                     for i, part in enumerate(parts):
                         if i == 0:
-                            fn_html += f'    <p class="footnote-content first-paragraph"><a epub:type="backlink" href="#ref_{seg_id}">{idx}</a>{part}</p>\n'
+                            fn_html += f'    <p class="footnote-content first-paragraph"><a class="footnote-backlink" epub:type="backlink" href="#ref_{seg_id}">{idx}</a>{part}</p>\n'
                         else:
                             fn_html += f'    <p class="footnote-content">{part}</p>\n'
                     fn_html += "  </div>\n</aside>\n"

@@ -165,7 +165,7 @@ h3 { font-size: 1.2em; }
     text-indent: -2em; /* Kéo ngược dòng đầu ra để đặt số thứ tự */
 }
 
-.footnote-content a[epub|type="backlink"] {
+.footnote-backlink {
     display: inline-block;
     width: 1.6em; /* Độ rộng cố định cho số thứ tự */
     text-align: right;
