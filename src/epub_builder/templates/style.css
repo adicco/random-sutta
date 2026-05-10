@@ -152,14 +152,24 @@ h3 { font-size: 1.2em; }
 
 @namespace epub "http://www.idpf.org/2007/ops";
 
+.footnote-container {
+    margin-bottom: 1.2em;
+}
+
 .footnote-content {
-    margin: 0 0 0.8em 0;
-    padding-left: 2em;
-    text-indent: -2em;
+    margin: 0 0 0.4em 0;
+    padding-left: 2.5em; /* Lề trái cố định cho tất cả các paragraph */
+}
+
+.footnote-content.first-paragraph {
+    text-indent: -2.5em; /* Kéo ngược dòng đầu ra để đặt số thứ tự */
 }
 
 .footnote-content a {
+    display: inline-block;
+    width: 2.1em; /* Độ rộng cố định cho số thứ tự để căn lề văn bản */
+    text-align: right;
+    margin-right: 0.4em;
     text-decoration: none;
     font-weight: bold;
-    margin-right: 0.3em;
 }
