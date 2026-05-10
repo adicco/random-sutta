@@ -139,6 +139,8 @@ span.segment {
     font-size: 0.75em;
     line-height: 0;
     vertical-align: super;
+    margin-left: 0.1em;
+    margin-right: 0.15em;
 }
 
 .footnote-link {
