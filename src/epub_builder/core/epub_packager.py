@@ -50,19 +50,37 @@ class EpubPackager:
             }
             processed_toc.insert(0, cover_toc_entry)
 
+        # OPF
+        opf_title = "SuttaCentral Tipitaka [Eng]" if self.eng_only else "SuttaCentral Tipitaka"
+        opf_content = CONTENT_OPF_TEMPLATE.format(
+            title=opf_title,
+            author="Random Sutta",
+            language="en",
+            uuid=self.epub_uuid,
+            date=self.date_str,
+            cover_meta=cover_meta,
+            cover_manifest=cover_manifest,
+            cover_spine=cover_spine,
+            manifest_items="\n".join(manifest_items),
+            spine_items="\n".join(spine_items)
+        )
+
         with zipfile.ZipFile(str(self.output_path), 'w') as epub:
             # mimetype must be uncompressed and first
-            epub.writestr("mimetype", EPUB_MIMETYPE, compress_type=zipfile.ZIP_STORED)
+            # We use a ZipInfo to ensure no extra fields or timestamps that might confuse strict checkers
+            mimetype_info = zipfile.ZipInfo("mimetype")
+            mimetype_info.compress_type = zipfile.ZIP_STORED
+            mimetype_info.external_attr = 0o644 << 16
+            epub.writestr(mimetype_info, EPUB_MIMETYPE)
             
             # Container
             epub.writestr("META-INF/container.xml", CONTAINER_XML, compress_type=zipfile.ZIP_DEFLATED)
             
+            # OPF - Writing it early for better compatibility
+            epub.writestr("OEBPS/content.opf", opf_content, compress_type=zipfile.ZIP_DEFLATED)
+
             # Styles
             epub.writestr("OEBPS/Styles/style.css", STYLE_CSS, compress_type=zipfile.ZIP_DEFLATED)
-            
-            # Write all generated pages
-            for page in pages:
-                epub.writestr(f"OEBPS/Text/{page['filename']}", page["content"], compress_type=zipfile.ZIP_DEFLATED)
             
             # Write Cover
             if active_cover_image:
@@ -76,21 +94,9 @@ class EpubPackager:
             
             nav_content = TocBuilder.build_nav_xhtml(processed_toc)
             epub.writestr("OEBPS/nav.xhtml", nav_content, compress_type=zipfile.ZIP_DEFLATED)
-            
-            # OPF
-            opf_title = "SuttaCentral Tipitaka [Eng]" if self.eng_only else "SuttaCentral Tipitaka"
-            opf_content = CONTENT_OPF_TEMPLATE.format(
-                title=opf_title,
-                author="Random Sutta",
-                language="en",
-                uuid=self.epub_uuid,
-                date=self.date_str,
-                cover_meta=cover_meta,
-                cover_manifest=cover_manifest,
-                cover_spine=cover_spine,
-                manifest_items="\n".join(manifest_items),
-                spine_items="\n".join(spine_items)
-            )
-            epub.writestr("OEBPS/content.opf", opf_content, compress_type=zipfile.ZIP_DEFLATED)
+
+            # Write all generated pages
+            for page in pages:
+                epub.writestr(f"OEBPS/Text/{page['filename']}", page["content"], compress_type=zipfile.ZIP_DEFLATED)
 
         logger.info(f"✅ Successfully created {self.output_path}")

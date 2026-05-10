@@ -152,10 +152,10 @@ class HtmlBuilder:
                 html_parts.append(self.build_segment_html(seg, footnote_idx))
 
             if current_footnotes:
-                fn_html = '<div class="footnotes-section">\n'
+                fn_html = '<section class="footnotes-section">\n'
                 for idx, (seg_id, comm_text) in enumerate(current_footnotes, 1):
                     fn_html += f'<aside xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" epub:type="footnote" id="fn_{seg_id}" class="footnote-item"><div class="footnote-wrapper"><a class="footnote-back" href="#ref_{seg_id}">{idx}</a> {comm_text}</div></aside>\n'
-                fn_html += '</div>'
+                fn_html += '</section>'
                 html_parts.append(fn_html)
 
             content_html = "\n".join(html_parts)
