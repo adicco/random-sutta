@@ -20,6 +20,7 @@ import {
 import { GoogleAuthManager } from "services/sync/google_auth_manager.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
+import { ToolbarManager } from "toolbar/toolbar_manager.js";
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev-mode";
 const logger = getLogger("App");
@@ -49,6 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   FilterComponent.init();
   initPopupSystem();
+  ToolbarManager.init();
 
   TTSBootstrap.init({
     onAutoNext: async () => {
