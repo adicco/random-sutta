@@ -144,9 +144,23 @@ export class SearchEngine {
 
     _scrollToActive() {
         const activeMark = this.matches[this.currentIndex];
-        if (activeMark) {
-            // Use block: 'center' so the match isn't hidden under headers/toolbars
-            activeMark.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (!activeMark) return;
+
+        // Get the bounding box of the element
+        const rect = activeMark.getBoundingClientRect();
+        
+        // Define safety margins (e.g. 100px from top and bottom)
+        const margin = 100;
+        const isVisible = (
+            rect.top >= margin &&
+            rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) - margin
+        );
+
+        // Only scroll if NOT comfortably visible
+        if (!isVisible) {
+            // Use behavior: 'auto' (instant) to avoid dizziness from "sliding" motion
+            // Use block: 'center' to place it in a good reading position
+            activeMark.scrollIntoView({ behavior: "auto", block: "center" });
         }
     }
 
