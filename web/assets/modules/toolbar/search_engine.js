@@ -79,7 +79,19 @@ export class SearchEngine {
             return;
         }
 
-        if (node.nodeType === Node.TEXT_NODE) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check if element is hidden
+            const style = window.getComputedStyle(node);
+            if (style.display === "none" || style.visibility === "hidden") {
+                return;
+            }
+
+            // Must convert to array to avoid issues when DOM is mutated during iteration
+            const children = Array.from(node.childNodes);
+            for (let child of children) {
+                this._traverseAndHighlight(child, regex);
+            }
+        } else if (node.nodeType === Node.TEXT_NODE) {
             const originalText = node.nodeValue;
             const match = regex.exec(originalText);
             
@@ -108,12 +120,6 @@ export class SearchEngine {
                 
                 // Recursively highlight the remaining text
                 this._traverseAndHighlight(afterText, regex);
-            }
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-            // Must convert to array to avoid issues when DOM is mutated during iteration
-            const children = Array.from(node.childNodes);
-            for (let child of children) {
-                this._traverseAndHighlight(child, regex);
             }
         }
     }
