@@ -153,6 +153,15 @@ body.popup-open #quicklook-popup {
   padding-bottom: calc(30vh + env(safe-area-inset-bottom, 20px));
 }
 
+.comment-paragraph {
+    margin-bottom: 1em;
+    line-height: 1.5;
+}
+
+.comment-paragraph:last-child {
+    margin-bottom: 0;
+}
+
 /* [NEW] Quicklook Specific: Add extra breathing room at bottom for comfortable scrolling *g/
 #quicklook-popup .popup-body {
   padding-bottom: 80px !important;

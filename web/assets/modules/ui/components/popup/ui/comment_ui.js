@@ -87,7 +87,18 @@ export const CommentUI = {
 
     render(text, index, total, contextText = "") {
         if (!this.elements.content) return;
-        this.elements.content.innerHTML = text;
+        
+        // [UPDATED] Split by | and wrap in paragraphs
+        if (text && text.includes('|')) {
+            const paragraphs = text.split('|')
+                .map(p => p.trim())
+                .filter(p => p.length > 0)
+                .map(p => `<p class="comment-paragraph">${p}</p>`)
+                .join('');
+            this.elements.content.innerHTML = paragraphs;
+        } else {
+            this.elements.content.innerHTML = `<p class="comment-paragraph">${text}</p>`;
+        }
         
         if (this.elements.headerContext) {
             // [UPDATED] Remove double quotes
