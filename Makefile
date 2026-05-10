@@ -253,7 +253,7 @@ macos:
 # [NEW] Biên dịch ứng dụng MacOS chế độ DEBUG (Nhanh hơn để test)
 macos-debug:
 	@echo "🍏 Đang biên dịch ứng dụng MacOS (DEBUG)..."
-	export PATH="$$HOME/.cargo/bin:$$PATH" && npx tauri build --debug
+	export PATH="$$HOME/.cargo/bin:$$PATH" && npx tauri build --debug --no-bundle
 	@echo "📦 Đang chép file cài đặt vào thư mục dist/macos-debug..."
 	@mkdir -p dist/macos-debug
 	@cp -R "src-tauri/target/debug/bundle/macos/Random Sutta.app" dist/macos-debug/
@@ -271,7 +271,7 @@ app: macos
 	@/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "/Applications/Random Sutta.app"
 	@echo "✅ Đã cài đặt và đăng ký giao thức randomsutta:// thành công!"
 
-# [NEW] Cài đặt bản DEBUG vào /Applications
+# [NEW] Cài đặt bản DEBUG vào /Applications và tự động mở
 app-debug: macos-debug
 	@echo "🛑 Đang dừng các bản App đang chạy..."
 	@pkill -fi "Random Sutta" || true
@@ -281,4 +281,6 @@ app-debug: macos-debug
 	@cp -R "src-tauri/target/debug/bundle/macos/Random Sutta.app" "/Applications/"
 	@echo "🔄 Đang cập nhật Launch Services..."
 	@/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "/Applications/Random Sutta.app"
-	@echo "✅ Đã cài đặt bản DEBUG thành công!"
+	@echo "🚀 Đang khởi chạy ứng dụng..."
+	@open -a "Random Sutta"
+	@echo "✅ Đã cài đặt và khởi chạy bản DEBUG thành công!"
