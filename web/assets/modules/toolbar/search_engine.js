@@ -38,10 +38,11 @@ export class SearchEngine {
         this.clear();
         if (!term || term.trim() === "") return 0;
         
-        this.searchTerm = term.toLowerCase();
+        this.searchTerm = term.trim();
         this.matches = [];
         
-        this._traverseAndHighlight(this.root, this.searchTerm);
+        const searchRegex = this._buildRegex(this.searchTerm);
+        this._traverseAndHighlight(this.root, searchRegex);
         
         if (this.matches.length > 0) {
             this.currentIndex = 0;
@@ -52,20 +53,39 @@ export class SearchEngine {
         return this.matches.length;
     }
 
-    _traverseAndHighlight(node, term) {
+    _buildRegex(term) {
+        // Map basic characters to include their Pali accented equivalents
+        const charMap = {
+            'a': '[aā]', 'i': '[iī]', 'u': '[uū]',
+            'm': '[mṃṁ]', 'n': '[nñṇṅ]', 't': '[tṭ]',
+            'd': '[dḍ]', 'l': '[lḷ]'
+        };
+        
+        // Escape special regex characters
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        let pattern = '';
+        
+        for (let char of escaped.toLowerCase()) {
+            // Include combining diacritical marks [\u0300-\u036f] to handle decomposed (NFD) text
+            pattern += (charMap[char] || char) + '[\\u0300-\\u036f]*';
+        }
+        
+        return new RegExp(pattern, 'i');
+    }
+
+    _traverseAndHighlight(node, regex) {
         // Skip script tags, style tags, and already highlighted nodes
         if (node.nodeName === "SCRIPT" || node.nodeName === "STYLE" || node.nodeName === "MARK") {
             return;
         }
 
         if (node.nodeType === Node.TEXT_NODE) {
-            const text = node.nodeValue.toLowerCase();
-            const index = text.indexOf(term);
+            const originalText = node.nodeValue;
+            const match = regex.exec(originalText);
             
-            if (index !== -1) {
-                // We found a match in this text node
-                const matchLength = term.length;
-                const originalText = node.nodeValue;
+            if (match) {
+                const index = match.index;
+                const matchLength = match[0].length;
                 
                 // Split the text node
                 const beforeText = document.createTextNode(originalText.substring(0, index));
@@ -87,13 +107,13 @@ export class SearchEngine {
                 this.matches.push(mark);
                 
                 // Recursively highlight the remaining text
-                this._traverseAndHighlight(afterText, term);
+                this._traverseAndHighlight(afterText, regex);
             }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
             // Must convert to array to avoid issues when DOM is mutated during iteration
             const children = Array.from(node.childNodes);
             for (let child of children) {
-                this._traverseAndHighlight(child, term);
+                this._traverseAndHighlight(child, regex);
             }
         }
     }

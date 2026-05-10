@@ -115,7 +115,7 @@ mark.search-highlight {
   background-color: #ffeb3b; /* Yellow for normal match */
   color: #000;
   border-radius: 2px;
-  padding: 0 2px;
+  /* Removed padding to prevent layout shifting */
 }
 
 mark.search-highlight.active {
