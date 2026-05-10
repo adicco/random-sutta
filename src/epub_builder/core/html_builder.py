@@ -9,11 +9,12 @@ from .link_resolver import resolve_internal_links
 logger = logging.getLogger("EpubBuilder.HtmlBuilder")
 
 class HtmlBuilder:
-    def __init__(self, db, all_meta, uid_to_filename, use_apk_links: bool = False):
+    def __init__(self, db, all_meta, uid_to_filename, use_apk_links: bool = False, eng_only: bool = False):
         self.db = db
         self.all_meta = all_meta
         self.uid_to_filename = uid_to_filename
         self.use_apk_links = use_apk_links
+        self.eng_only = eng_only
 
     def get_title(self, uid: str, meta: Dict[str, Any]) -> str:
         translated = meta.get("translated_title")
@@ -55,7 +56,7 @@ class HtmlBuilder:
             return ""
 
         content = ""
-        if pli:
+        if pli and not self.eng_only:
             pli_text = pli
             if not eng and footnote_idx > 0:
                 pli_text += f' <sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'

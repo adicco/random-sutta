@@ -17,9 +17,10 @@ class EpubGenerator:
     Main orchestrator for EPUB generation.
     Coordinates database reading, tree traversal, HTML building, and packaging.
     """
-    def __init__(self, output_path: Path, db_dir: Path):
+    def __init__(self, output_path: Path, db_dir: Path, eng_only: bool = False):
         self.output_path = output_path
         self.db_dir = db_dir
+        self.eng_only = eng_only
         self.epub_uuid = str(uuid.uuid4())
         self.date_str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         
@@ -57,12 +58,12 @@ class EpubGenerator:
             tpk_tree = StructureProcessor.flatten_single_chains(tpk_tree, self.all_meta)
 
             # 2. Generate Content
-            self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename)
+            self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename, eng_only=self.eng_only)
             logger.info("🌳 Processing TPK tree...")
             self._traverse_tree(tpk_tree, self.toc_entries)
 
             # 3. Package EPUB
-            packager = EpubPackager(self.output_path, self.epub_uuid, self.date_str)
+            packager = EpubPackager(self.output_path, self.epub_uuid, self.date_str, eng_only=self.eng_only)
             packager.package(
                 pages=self.pages,
                 toc_entries=self.toc_entries,

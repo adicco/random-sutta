@@ -5,17 +5,18 @@ from pathlib import Path
 from typing import Dict, Any, List
 from ..templates import (
     EPUB_MIMETYPE, CONTAINER_XML, CONTENT_OPF_TEMPLATE, STYLE_CSS,
-    COVER_HTML_TEMPLATE, COVER_IMAGE
+    COVER_HTML_TEMPLATE, COVER_IMAGE, COVER_ENG_IMAGE
 )
 from .toc_builder import TocBuilder
 
 logger = logging.getLogger("EpubBuilder.Packager")
 
 class EpubPackager:
-    def __init__(self, output_path: Path, epub_uuid: str, date_str: str):
+    def __init__(self, output_path: Path, epub_uuid: str, date_str: str, eng_only: bool = False):
         self.output_path = output_path
         self.epub_uuid = epub_uuid
         self.date_str = date_str
+        self.eng_only = eng_only
 
     def package(self, 
                 pages: List[Dict[str, str]], 
@@ -32,7 +33,9 @@ class EpubPackager:
         
         processed_toc = list(toc_entries) # Copy to avoid side effects
         
-        if COVER_IMAGE:
+        active_cover_image = COVER_ENG_IMAGE if self.eng_only and COVER_ENG_IMAGE else COVER_IMAGE
+
+        if active_cover_image:
             cover_meta = '    <meta name="cover" content="cover-image"/>'
             cover_manifest = '    <item id="cover-image" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>\n'
             cover_manifest += '    <item id="cover" href="Text/cover.xhtml" media-type="application/xhtml+xml"/>'
@@ -62,20 +65,22 @@ class EpubPackager:
                 epub.writestr(f"OEBPS/Text/{page['filename']}", page["content"], compress_type=zipfile.ZIP_DEFLATED)
             
             # Write Cover
-            if COVER_IMAGE:
-                epub.writestr("OEBPS/Images/cover.jpg", COVER_IMAGE, compress_type=zipfile.ZIP_STORED)
+            if active_cover_image:
+                epub.writestr("OEBPS/Images/cover.jpg", active_cover_image, compress_type=zipfile.ZIP_STORED)
                 epub.writestr("OEBPS/Text/cover.xhtml", COVER_HTML_TEMPLATE, compress_type=zipfile.ZIP_DEFLATED)
             
             # TOCs
-            ncx_content = TocBuilder.build_toc_ncx(processed_toc, self.epub_uuid)
+            ncx_title = "SuttaCentral Tipitaka [Eng]" if self.eng_only else "SuttaCentral Tipitaka"
+            ncx_content = TocBuilder.build_toc_ncx(processed_toc, self.epub_uuid, title=ncx_title)
             epub.writestr("OEBPS/toc.ncx", ncx_content, compress_type=zipfile.ZIP_DEFLATED)
             
             nav_content = TocBuilder.build_nav_xhtml(processed_toc)
             epub.writestr("OEBPS/nav.xhtml", nav_content, compress_type=zipfile.ZIP_DEFLATED)
             
             # OPF
+            opf_title = "SuttaCentral Tipitaka [Eng]" if self.eng_only else "SuttaCentral Tipitaka"
             opf_content = CONTENT_OPF_TEMPLATE.format(
-                title="SuttaCentral Tipitaka",
+                title=opf_title,
                 author="Random Sutta",
                 language="en",
                 uuid=self.epub_uuid,

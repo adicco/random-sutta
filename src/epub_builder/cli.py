@@ -17,4 +17,9 @@ def parse_args() -> argparse.Namespace:
         default=Path("dist/epub/random_sutta.epub"),
         help="Output path for the generated EPUB file"
     )
+    parser.add_argument(
+        "--eng-only",
+        action="store_true",
+        help="Generate an English-only version of the EPUB (no Pali)"
+    )
     return parser.parse_args()

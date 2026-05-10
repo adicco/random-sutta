@@ -5,7 +5,7 @@ from ..templates import TOC_NCX_TEMPLATE, NAV_XHTML_TEMPLATE
 
 class TocBuilder:
     @staticmethod
-    def build_toc_ncx(toc_entries: List[Dict[str, Any]], uuid_str: str) -> str:
+    def build_toc_ncx(toc_entries: List[Dict[str, Any]], uuid_str: str, title: str = "SuttaCentral Tipitaka") -> str:
         def build_nav_points(entries: List[Dict], level: int) -> str:
             res = ""
             for entry in entries:
@@ -21,7 +21,7 @@ class TocBuilder:
             
         nav_points = build_nav_points(toc_entries, 2)
         return TOC_NCX_TEMPLATE.format(
-            uuid=uuid_str, depth=5, title="SuttaCentral Tipitaka", nav_points=nav_points
+            uuid=uuid_str, depth=5, title=title, nav_points=nav_points
         )
 
     @staticmethod
