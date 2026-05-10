@@ -35,13 +35,13 @@ class EpubPackager:
         if COVER_IMAGE:
             cover_meta = '    <meta name="cover" content="cover-image"/>'
             cover_manifest = '    <item id="cover-image" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>\n'
-            cover_manifest += '    <item id="cover" href="Text/cover.html" media-type="application/xhtml+xml"/>'
+            cover_manifest += '    <item id="cover" href="Text/cover.xhtml" media-type="application/xhtml+xml"/>'
             cover_spine = '    <itemref idref="cover" linear="yes"/>'
             
             cover_toc_entry = {
                 "uid": "cover",
                 "title": "Cover",
-                "filename": "cover.html",
+                "filename": "cover.xhtml",
                 "play_order": 0,
                 "children": []
             }
@@ -64,7 +64,7 @@ class EpubPackager:
             # Write Cover
             if COVER_IMAGE:
                 epub.writestr("OEBPS/Images/cover.jpg", COVER_IMAGE, compress_type=zipfile.ZIP_STORED)
-                epub.writestr("OEBPS/Text/cover.html", COVER_HTML_TEMPLATE, compress_type=zipfile.ZIP_DEFLATED)
+                epub.writestr("OEBPS/Text/cover.xhtml", COVER_HTML_TEMPLATE, compress_type=zipfile.ZIP_DEFLATED)
             
             # TOCs
             ncx_content = TocBuilder.build_toc_ncx(processed_toc, self.epub_uuid)
