@@ -154,25 +154,21 @@ h3 { font-size: 1.2em; }
 
 .footnote-container {
     margin-bottom: 1.2em;
+    padding-left: 1.5em; /* Tạo lề trái nhẹ nhàng */
 }
 
 .footnote-content {
     margin: 0 0 0.4em 0;
-    padding-left: 1.7em; /* Lề trái cố định cho tất cả các dòng */
 }
 
 .footnote-content.first-paragraph {
-    text-indent: -1.7em; /* Kéo dòng đầu ra trái để treo số thứ tự */
+    text-indent: -1.5em; /* Chỉ treo dòng đầu tiên có chứa số thứ tự */
 }
 
 .footnote-backlink {
-    display: inline-block;
-    width: 0.7em; /* Độ rộng thu hẹp lại cho số thứ tự */
-    text-align: right;
-    margin-right: 1em; /* 0.7em (width) + 1em (margin) = 1.7em (khớp với padding) */
-    text-decoration: none;
     font-weight: bold;
-    vertical-align: top;
+    margin-right: 0.5em;
+    text-decoration: none;
 }
 
 .footnote-content a {
