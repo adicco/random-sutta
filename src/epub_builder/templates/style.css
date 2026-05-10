@@ -158,20 +158,21 @@ h3 { font-size: 1.2em; }
 
 .footnote-content {
     margin: 0 0 0.4em 0;
-    padding-left: 2.5em; /* Lề trái cố định cho tất cả các paragraph */
+    padding-left: 2em; /* Lề trái cố định cho tất cả các paragraph */
 }
 
 .footnote-content.first-paragraph {
-    text-indent: -2.5em; /* Kéo ngược dòng đầu ra để đặt số thứ tự */
+    text-indent: -2em; /* Kéo ngược dòng đầu ra để đặt số thứ tự */
 }
 
 .footnote-content a[epub|type="backlink"] {
     display: inline-block;
-    width: 2.1em; /* Độ rộng cố định cho số thứ tự để căn lề văn bản */
+    width: 1.6em; /* Độ rộng cố định cho số thứ tự */
     text-align: right;
-    margin-right: 0.4em;
+    margin-right: 0.4em; /* 1.6em + 0.4em = 2em (khớp với padding/indent) */
     text-decoration: none;
     font-weight: bold;
+    vertical-align: top;
 }
 
 .footnote-content a {
