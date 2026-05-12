@@ -40,11 +40,17 @@ button,
   position: fixed;
   top: 20%;      /* Leave top 20% for headers/menus */
   height: 60%;   /* Cover middle 60% of the screen height */
-  width: 45px;   /* Tap target width */
+  width: 40px;   /* Tap target width matching desktop padding */
   z-index: 100;  /* Below popups, but above text */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   /* background-color: rgba(255, 0, 0, 0.1); Uncomment to debug visually */
+}
+
+@media (max-width: 600px) {
+  .edge-nav-zone {
+    width: 35px; /* Match mobile padding */
+  }
 }
 
 #edge-nav-left {
