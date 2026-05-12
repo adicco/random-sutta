@@ -70,8 +70,9 @@ export default defineConfig(({ mode }) => {
     // APK_BUILD is set in Makefile, TAURI_ENV_PLATFORM is set by Tauri
     const isNative = process.env.APK_BUILD === 'true' || !!process.env.TAURI_ENV_PLATFORM;
     
-    // Use relative paths for everything to support APK, Tauri, and Subfolder deployments (GitHub Pages)
-    const base = './';
+    // GitHub Pages needs '/random-sutta/', but APK/Tauri needs './'
+    // Dev mode usually works best with '/'
+    const base = isNative ? './' : (isProd ? '/random-sutta/' : '/');
 
     return {
         root: 'web', 
