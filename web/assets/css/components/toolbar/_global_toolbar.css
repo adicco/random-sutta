@@ -6,6 +6,7 @@
   bottom: 0;
   left: 0;
   width: 100%;
+  box-sizing: border-box;
   background: var(--bg-card); /* Sử dụng --bg-card để đồng nhất với các component nổi khác (như drawer, card) */
   border-top: 1px solid var(--border-color);
   z-index: 2000;
@@ -63,6 +64,7 @@ body.lookup-open #magic-toolbar-trigger {
   font-size: 16px;
   outline: none;
   padding: 4px 0;
+  min-width: 0;
 }
 
 .toolbar-search-info {
