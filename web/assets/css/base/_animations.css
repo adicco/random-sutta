@@ -11,7 +11,7 @@
 }
 
 /* Đảm bảo đè lên các animation slideDown mặc định của Drawer/Menu khi cần */
-#filter-drawer,
+#setting-drawer,
 #toh-menu {
   animation: none !important;
 }

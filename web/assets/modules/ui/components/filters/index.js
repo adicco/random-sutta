@@ -52,6 +52,22 @@ export const FilterComponent = {
                 }
             }
         );
+
+        // [NEW] Close logic for filter popup
+        const filterPopup = document.getElementById("filter-popup");
+        const closeBtn = document.getElementById("close-filter-popup");
+        if (filterPopup && closeBtn) {
+            closeBtn.addEventListener("click", () => {
+                filterPopup.classList.add("hidden");
+            });
+
+            // Click outside to close (optional, if we want typical popup behavior)
+            filterPopup.addEventListener("click", (e) => {
+                if (e.target === filterPopup) {
+                    filterPopup.classList.add("hidden");
+                }
+            });
+        }
     },
 
     getActiveFilters: () => FilterState.getActiveList(),

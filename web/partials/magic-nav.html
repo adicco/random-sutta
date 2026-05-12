@@ -1,0 +1,62 @@
+    <div
+      id="magic-nav-wrapper"
+      class="hidden collapsed"
+      title="Open Navigation"
+    >
+      <div id="magic-nav-corner" class="magic-btn" title="Collapse Menu">
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </div>
+
+      <div id="magic-group">
+        <div id="btn-magic-toc" class="magic-btn" title="Table of Contents">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+        </div>
+
+        <div id="magic-breadcrumb-bar"></div>
+      </div>
+    </div> <!-- Close magic-nav-wrapper -->
+
+    <div id="magic-toc-drawer">
+      <div id="magic-toc-tabs" class="lookup-header-tabs">
+        <button id="tab-magic-toc" class="lookup-tab active">Contents</button>
+        <button id="tab-magic-bookmarks" class="lookup-tab">Bookmarks</button>
+        <button id="tab-magic-read" class="lookup-tab">Read</button>
+      </div>
+      <div id="magic-toc-content" class="magic-tab-content">
+        <!-- JS generates TOC here -->
+      </div>
+      <div id="magic-bookmarks-content" class="magic-tab-content hidden">
+        <div id="bookmarks-list"></div>
+      </div>
+      <div id="magic-read-content" class="magic-tab-content hidden">
+        <div id="read-list"></div>
+      </div>
+    </div>
+    <div id="magic-backdrop" class="hidden"></div>

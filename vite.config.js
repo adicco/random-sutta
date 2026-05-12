@@ -95,8 +95,26 @@ export default defineConfig(({ mode }) => {
             basicSsl(),
             {
                 name: 'html-transform',
-                transformIndexHtml(html) {
-                    return html.replace(/__APP_VERSION__/g, buildVersion);
+                transformIndexHtml(html, ctx) {
+                    let result = html.replace(/__APP_VERSION__/g, buildVersion);
+                    
+                    const includeRegex = /<include\s+src=["'](.*?)["']\s*\/?>(?:<\/include>)?/g;
+                    
+                    const processIncludes = (content, baseDir) => {
+                        return content.replace(includeRegex, (match, src) => {
+                            const filePath = path.resolve(baseDir, src);
+                            if (fs.existsSync(filePath)) {
+                                const fileContent = fs.readFileSync(filePath, 'utf-8');
+                                // Recursively process includes inside the loaded file
+                                return processIncludes(fileContent, path.dirname(filePath));
+                            }
+                            console.warn(`[html-transform] Included file not found: ${filePath}`);
+                            return `<!-- INCLUDE ERROR: ${src} not found -->`;
+                        });
+                    };
+
+                    const baseDir = ctx.filename ? path.dirname(ctx.filename) : path.resolve('web');
+                    return processIncludes(result, baseDir);
                 }
             },
             // [FIX] Only enable PWA for Web builds, disable for Native

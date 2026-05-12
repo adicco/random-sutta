@@ -1,0 +1,147 @@
+    <div id="filter-popup" class="popup-container hidden">
+      <div class="popup-resize-handle" id="filter-resize-handle"></div>
+      <div class="comment-header">
+        <div class="comment-header-text">Select Books</div>
+        <button id="close-filter-popup" class="header-close-btn">×</button>
+      </div>
+      <div class="popup-body">
+        <p class="filter-label" style="margin-top: 10px;">Select books to randomize from:</p>
+        <div id="primary-filters"></div>
+        <button id="btn-more-filters" class="text-btn">Others</button>
+        <div id="secondary-filters" class="filter-row hidden"></div>
+      </div>
+    </div>
+
+    <div id="comment-popup" class="popup-container hidden">
+      <div class="popup-resize-handle" id="comment-resize-handle"></div>
+      <div class="comment-header">
+        <div id="comment-context-header" class="comment-header-text">...</div>
+        <button id="close-comment" class="header-close-btn">×</button>
+      </div>
+
+      <div class="popup-body">
+        <div id="comment-content"></div>
+      </div>
+
+      <div class="popup-nav-bar">
+        <button
+          id="btn-comment-prev"
+          class="popup-nav-btn"
+          title="Previous Comment"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span id="comment-index-info" class="popup-nav-info">0 / 0</span>
+        <button
+          id="btn-comment-next"
+          class="popup-nav-btn"
+          title="Next Comment"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="quicklook-popup" class="popup-container hidden">
+      <div class="popup-body">
+        <div id="quicklook-content" class="sutta-text-view">Loading...</div>
+      </div>
+      <!-- Footer (Was Header) -->
+      <div class="quicklook-footer clickable-footer" id="quicklook-footer-container">
+        <span id="quicklook-title" class="ql-title">Preview</span>
+        <button id="close-quicklook" class="header-close-btn">×</button>
+      </div>
+    </div>
+
+    <div id="lookup-popup" class="popup-container hidden">
+      <div class="popup-resize-handle" id="lookup-resize-handle"></div>
+      <div class="lookup-header-tabs">
+        <div class="lookup-history-controls">
+          <button id="btn-lookup-back" class="lookup-history-btn" title="Back" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button id="btn-lookup-forward" class="lookup-history-btn" title="Forward" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+        <div id="tab-dpd" class="lookup-tab active" title="Digital Pali Dictionary">
+            <span>DPD</span>
+        </div>
+        <button id="close-lookup" class="header-close-btn">×</button>
+      </div>
+      
+      <div class="popup-body">
+        <!-- Best Matches (Phrases in Context) -->
+        <div id="lookup-best-matches" class="lookup-best-matches hidden"></div>
+
+        <!-- Heading Row -->
+        <div class="lookup-heading-row">
+            <h3 id="lookup-word-heading"></h3>
+        </div>
+
+        <!-- Main Content -->
+        <div id="lookup-content-dpd" class="lookup-main-content"></div>
+      </div>
+
+      <div class="popup-nav-bar">
+        <button
+          id="btn-lookup-prev"
+          class="popup-nav-btn"
+          title="Previous Word"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span id="lookup-nav-info" class="popup-nav-info">Navigate</span>
+        <button
+          id="btn-lookup-next"
+          class="popup-nav-btn"
+          title="Next Word"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>

@@ -1,0 +1,65 @@
+    <!-- VIEW 2: READER APP -->
+    <div id="reader-view" class="hidden">
+        <header>
+          <div class="controls">
+            <button id="btn-random" disabled>Random Sutta</button>
+          </div>
+    
+          <div id="nav-header" class="hidden">
+            <button id="nav-prev" class="nav-arrow" title="Previous">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="transform: rotate(-90deg); transform-origin: center"
+              >
+                <path d="M6 15l6-6 6 6" />
+              </svg>
+            </button>
+    
+            <div id="nav-title-display" title="Click to search specific Sutta">
+              <div id="nav-title-text">
+                <span id="nav-main-title"></span>
+                <span id="nav-sub-title"></span>
+              </div>
+    
+              <div id="nav-search-container" class="hidden">
+                <input
+                  type="text"
+                  id="nav-sutta-input"
+                  placeholder="e.g. mn1"
+                  autocomplete="off"
+                />
+                <button id="nav-search-btn" title="Go">➜</button>
+              </div>
+            </div>
+    
+            <button id="nav-next" class="nav-arrow" title="Next">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="transform: rotate(90deg); transform-origin: center"
+              >
+                <path d="M6 15l6-6 6 6" />
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <div id="familiarity-bar-header"></div>
+    
+        <main id="sutta-container" class="sutta-text-view">
+          <p class="placeholder">Click the button to load a sutta.</p>
+        </main>
+    </div>

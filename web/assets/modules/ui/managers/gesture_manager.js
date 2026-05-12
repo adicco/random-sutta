@@ -14,7 +14,7 @@ export const GestureManager = {
 
         const handleStart = (x, y, target) => {
             const isInsidePopup = target.closest('.popup-container');
-            const isInsideDrawer = target.closest('#filter-drawer, #magic-toc-drawer');
+            const isInsideDrawer = target.closest('#setting-drawer, #magic-toc-drawer');
             
             if (isInsidePopup || isInsideDrawer) {
                 startX = -1; 
