@@ -54,6 +54,7 @@ body.lookup-open #magic-toolbar-trigger {
   border-radius: 8px;
   padding: 4px 12px;
   border: 1px solid var(--border-color);
+  min-width: 0;
 }
 
 .toolbar-search-input {
@@ -84,6 +85,7 @@ body.lookup-open #magic-toolbar-trigger {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .toolbar-nav-btn:hover {
@@ -106,6 +108,7 @@ body.lookup-open #magic-toolbar-trigger {
   align-items: center;
   justify-content: center;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .toolbar-close-btn:hover {
