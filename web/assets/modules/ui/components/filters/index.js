@@ -5,6 +5,8 @@ import { FilterView } from './filter_view.js';
 import { FilterGestures } from './filter_gestures.js';
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
 import { ScrollHandler } from 'ui/common/scroll_handler.js';
+import { SwipeHandler } from 'ui/common/swipe_handler.js';
+import { ResizeHandler } from 'ui/common/resize_handler.js';
 
 export const FilterComponent = {
     init() {
@@ -59,10 +61,31 @@ export const FilterComponent = {
         const filterPopup = document.getElementById("filter-popup");
         const closeBtn = document.getElementById("close-filter-popup");
         const filterBody = document.querySelector("#filter-popup .popup-body");
+        const resizeHandle = document.getElementById("filter-resize-handle");
 
         if (filterPopup) {
             ZIndexManager.register(filterPopup);
             if (filterBody) ScrollHandler.preventBackgroundScroll(filterPopup, filterBody);
+            
+            // Attach Resize Handler
+            if (resizeHandle) {
+                ResizeHandler.attach(filterPopup, resizeHandle, {
+                    storageKey: 'filter_popup_height',
+                    cssVar: '--popup-filter-height',
+                    maxHeightVh: 80,
+                    maxHeightPx: () => window.innerHeight * 0.8
+                });
+            }
+
+            // Attach Swipe down to close
+            SwipeHandler.attach(filterPopup, {
+                onSwipeDown: () => {
+                    filterPopup.classList.add("hidden");
+                },
+                threshold: 50,
+                // Only allow swipe down if we are at the top of the scroll container
+                isScrollAtTop: () => filterBody ? filterBody.scrollTop <= 5 : true
+            });
         }
 
         if (filterPopup && closeBtn) {

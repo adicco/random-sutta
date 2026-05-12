@@ -29,6 +29,15 @@
   border-top: 1px solid var(--border-light); /* Subtle edge */
 }
 
+/* --- UNIQUE POPUP HEIGHTS --- */
+#comment-popup {
+  height: var(--popup-comment-height);
+}
+
+#filter-popup {
+  height: var(--popup-filter-height);
+}
+
 /* --- RESIZE HANDLE --- */
 .popup-resize-handle {
     position: absolute;
