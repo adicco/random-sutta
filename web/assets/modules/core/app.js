@@ -71,6 +71,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const landing = document.getElementById("landing-view");
     const reader = document.getElementById("reader-view");
     const settings = document.getElementById("setting-container");
+    const edgeLeft = document.getElementById("edge-nav-left");
+    const edgeRight = document.getElementById("edge-nav-right");
     
     if (viewName === 'reader') {
         landing.classList.add("hidden");
@@ -79,12 +81,16 @@ document.addEventListener("DOMContentLoaded", async () => {
              landing.style.display = 'none'; // Ensure clicks pass through
              reader.classList.remove("hidden");
              if (settings) settings.classList.remove("hidden");
+             if (edgeLeft) edgeLeft.classList.remove("hidden");
+             if (edgeRight) edgeRight.classList.remove("hidden");
         }, 300); // Match CSS transition
     } else {
         landing.style.display = 'flex';
         landing.classList.remove("hidden");
         reader.classList.add("hidden");
         if (settings) settings.classList.add("hidden");
+        if (edgeLeft) edgeLeft.classList.add("hidden");
+        if (edgeRight) edgeRight.classList.add("hidden");
     }
   };
 
