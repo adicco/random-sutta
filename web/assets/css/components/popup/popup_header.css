@@ -60,6 +60,31 @@
   display: none;
 }
 
+/* [NEW] Generic Centered Title Header */
+.popup-title-header {
+  padding: 10px 15px;
+  background-color: var(--bg-body);
+  display: flex;
+  justify-content: center; /* Center the text */
+  align-items: center;
+  min-height: 50px;
+  border-top: 1px solid var(--border-light);
+  position: relative;
+}
+
+.popup-title-text {
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  text-align: center;
+}
+
+.popup-title-header .header-close-btn {
+  position: absolute;
+  right: 15px;
+}
+
 /* [NEW] Quicklook Title Layout */
 #quicklook-title {
   display: flex;

@@ -3,6 +3,7 @@
 /* --- SHARED STYLES --- */
 :root {
   --popup-comment-height: 40vh;
+  --popup-filter-height: auto;
   --popup-quicklook-top: calc(70px + env(safe-area-inset-top, 0px));
 }
 
