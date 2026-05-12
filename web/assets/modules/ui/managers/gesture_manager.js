@@ -35,84 +35,7 @@ export const GestureManager = {
             const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
             const windowWidth = window.innerWidth;
 
-            // 1. Edge Tap Navigation (Prev/Next)
-            if (deltaTime < tapTimeThreshold && dist < 15) {
-                // Prevent conflict with interactive elements
-                if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item, #magic-nav-wrapper, #magic-nav-corner')) return;
-
-                const windowHeight = window.innerHeight;
-                const topLimit = windowHeight * 0.2;
-                const bottomLimit = windowHeight * 0.8;
-                const isWithinVerticalBounds = endY >= topLimit && endY <= bottomLimit;
-
-                if (isWithinVerticalBounds) {
-                    // Check if tap hit a word (to prevent conflicting with dictionary lookup)
-                    let isTextTap = false;
-                    try {
-                        let range;
-                        if (document.caretRangeFromPoint) {
-                            range = document.caretRangeFromPoint(endX, endY);
-                        } else if (document.caretPositionFromPoint) {
-                            const pos = document.caretPositionFromPoint(endX, endY);
-                            if (pos) {
-                                range = document.createRange();
-                                range.setStart(pos.offsetNode, pos.offset);
-                                range.setEnd(pos.offsetNode, pos.offset);
-                            }
-                        }
-                        
-                        if (range && range.startContainer.nodeType === 3) {
-                            const textContent = range.startContainer.textContent || "";
-                            const offset = range.startOffset;
-                            // Check if the character exactly at or right before the offset is a word character
-                            const charAt = textContent[offset] || "";
-                            const charBefore = textContent[offset - 1] || "";
-                            const delimiters = /[.,;:"'‘’“”\—?!()…\s]/;
-                            
-                            if ((charAt && !delimiters.test(charAt)) || (charBefore && !delimiters.test(charBefore))) {
-                                isTextTap = true;
-                            }
-                        }
-                    } catch (e) {
-                        // Ignore errors
-                    }
-
-                    if (isTextTap) {
-                        logger.debug("EdgeTap", "Tap hit a word. Prioritizing lookup.");
-                        return; // Abort edge navigation to allow click event to trigger lookup
-                    }
-
-                    // Left Edge -> Prev
-                    if (startX <= edgeTapThreshold) {
-                        const btnPrev = document.getElementById("nav-prev");
-                        if (btnPrev && !btnPrev.disabled) {
-                            logger.debug("EdgeTap", "Prev Sutta");
-                            const success = window.SuttaController?.navigatePrev();
-                            if (success) {
-                                btnPrev.classList.add("active");
-                                setTimeout(() => btnPrev.classList.remove("active"), 150);
-                            }
-                            return;
-                        }
-                    }
-                    
-                    // Right Edge -> Next
-                    if (startX >= windowWidth - edgeTapThreshold) {
-                        const btnNext = document.getElementById("nav-next");
-                        if (btnNext && !btnNext.disabled) {
-                            logger.debug("EdgeTap", "Next Sutta");
-                            const success = window.SuttaController?.navigateNext();
-                            if (success) {
-                                btnNext.classList.add("active");
-                                setTimeout(() => btnNext.classList.remove("active"), 150);
-                            }
-                            return;
-                        }
-                    }
-                }
-            }
-
-            // 2. Swipe Navigation (Main container only)
+            // 1. Swipe Navigation (Main container only)
             if (deltaTime > timeThreshold) return;
             if (Math.abs(deltaX) < Math.abs(deltaY) * 2) return;
             if (Math.abs(deltaX) < swipeThreshold) return;
@@ -151,6 +74,38 @@ export const GestureManager = {
             handleEnd(e.clientX, e.clientY, e.target);
         });
         
+        // --- Explicit Invisible Edge Buttons ---
+        const edgeLeft = document.getElementById("edge-nav-left");
+        const edgeRight = document.getElementById("edge-nav-right");
+
+        if (edgeLeft) {
+            edgeLeft.addEventListener("click", () => {
+                const btnPrev = document.getElementById("nav-prev");
+                if (btnPrev && !btnPrev.disabled) {
+                    logger.debug("EdgeBtn", "Prev Sutta");
+                    const success = window.SuttaController?.navigatePrev();
+                    if (success) {
+                        btnPrev.classList.add("active");
+                        setTimeout(() => btnPrev.classList.remove("active"), 150);
+                    }
+                }
+            });
+        }
+
+        if (edgeRight) {
+            edgeRight.addEventListener("click", () => {
+                const btnNext = document.getElementById("nav-next");
+                if (btnNext && !btnNext.disabled) {
+                    logger.debug("EdgeBtn", "Next Sutta");
+                    const success = window.SuttaController?.navigateNext();
+                    if (success) {
+                        btnNext.classList.add("active");
+                        setTimeout(() => btnNext.classList.remove("active"), 150);
+                    }
+                }
+            });
+        }
+
         logger.info("Init", "GestureManager initialized (Touch + Mouse).");
     }
 };
