@@ -33,11 +33,34 @@ export const FilterView = {
 
         // 2. Secondary Books
         let hasSecondaryActive = false;
+        
+        const khuddakaSecondary = ["vv", "pv", "tha-ap", "thi-ap", "bv", "cp", "ja", "mnd", "cnd", "ps", "pe", "ne", "mil"];
+        const vinaya = ["pli-tv-bu-pm", "pli-tv-bi-pm", "pli-tv-bu-vb", "pli-tv-bi-vb", "pli-tv-kd", "pli-tv-pvr"];
+        const abhidhamma = ["ds", "vb", "dt", "pp", "kv", "ya", "patthana"];
+
+        const rowKhuddaka = document.createElement("div");
+        rowKhuddaka.className = "filter-row";
+        
+        const rowVinaya = document.createElement("div");
+        rowVinaya.className = "filter-row";
+        
+        const rowAbhidhamma = document.createElement("div");
+        rowAbhidhamma.className = "filter-row";
+
         SECONDARY_BOOKS.forEach((book) => {
             const isActive = state.has(book);
             if (isActive) hasSecondaryActive = true;
-            this._createButton(book, secondaryDiv, isActive, callbacks);
+            
+            let targetRow = rowKhuddaka;
+            if (vinaya.includes(book)) targetRow = rowVinaya;
+            else if (abhidhamma.includes(book)) targetRow = rowAbhidhamma;
+            
+            this._createButton(book, targetRow, isActive, callbacks);
         });
+
+        secondaryDiv.appendChild(rowKhuddaka);
+        secondaryDiv.appendChild(rowVinaya);
+        secondaryDiv.appendChild(rowAbhidhamma);
 
         // 3. More Button Logic
         if (hasSecondaryActive) {

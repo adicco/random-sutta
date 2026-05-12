@@ -47,7 +47,20 @@ class PoolManager:
             if book_id in self.random_pools and len(self.random_pools[book_id]) > 0:
                 valid_secondary.append(book_id)
 
-        sorted_secondary = sorted(valid_secondary)
+        # Canonical ordering
+        canonical_order = {
+            # Khuddaka (secondary)
+            "vv": 1, "pv": 2, "tha-ap": 3, "thi-ap": 4, "bv": 5, "cp": 6, "ja": 7, 
+            "mnd": 8, "cnd": 9, "ps": 10, "pe": 11, "ne": 12, "mil": 13,
+            # Vinaya
+            "pli-tv-bu-pm": 20, "pli-tv-bi-pm": 21, "pli-tv-bu-vb": 22, 
+            "pli-tv-bi-vb": 23, "pli-tv-kd": 24, "pli-tv-pvr": 25,
+            # Abhidhamma
+            "ds": 30, "vb": 31, "dt": 32, "pp": 33, "kv": 34, "ya": 35, "patthana": 36
+        }
+
+        # Sắp xếp theo canonical_order, nếu không có trong dict thì đẩy xuống cuối (alphabetical)
+        sorted_secondary = sorted(valid_secondary, key=lambda x: (canonical_order.get(x, 999), x))
         
         # 2. Sort Sub-books
         for k in self.group_structure:
