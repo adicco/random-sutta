@@ -125,7 +125,7 @@ export default defineConfig(({ mode }) => {
                 includeManifestIcons: true, 
                 manifestFilename: 'manifest.json',
                 devOptions: {
-                    enabled: true
+                    enabled: false
                 },
                 manifest: {
                     id: 'com.randomsutta.app',
