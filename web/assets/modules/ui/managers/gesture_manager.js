@@ -78,32 +78,82 @@ export const GestureManager = {
         const edgeLeft = document.getElementById("edge-nav-left");
         const edgeRight = document.getElementById("edge-nav-right");
 
-        if (edgeLeft) {
-            edgeLeft.addEventListener("click", () => {
-                const btnPrev = document.getElementById("nav-prev");
-                if (btnPrev && !btnPrev.disabled) {
-                    logger.debug("EdgeBtn", "Prev Sutta");
-                    const success = window.SuttaController?.navigatePrev();
-                    if (success) {
-                        btnPrev.classList.add("active");
-                        setTimeout(() => btnPrev.classList.remove("active"), 150);
+        const handleEdgeClick = (e, navId) => {
+            const btn = e.currentTarget;
+            
+            // Tạm thời ẩn nút đi để tìm xem bên dưới là gì
+            btn.style.display = 'none';
+            const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+            
+            // Kiểm tra xem bên dưới có phải là chữ (text) không
+            let isText = false;
+            try {
+                let range;
+                if (document.caretRangeFromPoint) {
+                    range = document.caretRangeFromPoint(e.clientX, e.clientY);
+                } else if (document.caretPositionFromPoint) {
+                    const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+                    if (pos) {
+                        range = document.createRange();
+                        range.setStart(pos.offsetNode, pos.offset);
+                        range.setEnd(pos.offsetNode, pos.offset);
                     }
                 }
-            });
+                
+                if (range && range.startContainer.nodeType === 3) {
+                    const textContent = range.startContainer.textContent || "";
+                    const offset = range.startOffset;
+                    const charAt = textContent[offset] || "";
+                    const charBefore = textContent[offset - 1] || "";
+                    const delimiters = /[.,;:"'‘’“”\—?!()…\s]/;
+                    
+                    if ((charAt && !delimiters.test(charAt)) || (charBefore && !delimiters.test(charBefore))) {
+                        isText = true;
+                    }
+                }
+            } catch (err) {}
+
+            // Nếu trúng chữ trong khung bài kinh, ta nhường quyền cho LookupManager
+            if (isText && elUnder && elUnder.closest('#sutta-container')) {
+                logger.debug("EdgeBtn", "Tap hit a word. Prioritizing lookup.");
+                
+                // Tạo một click ảo đâm xuyên qua
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: e.clientX,
+                    clientY: e.clientY
+                });
+                elUnder.dispatchEvent(clickEvent);
+                
+                // Khôi phục nút sau khi sự kiện đã được xử lý xong
+                setTimeout(() => {
+                    btn.style.display = '';
+                }, 0);
+                return;
+            }
+            
+            // Khôi phục nút nếu không phải là chữ
+            btn.style.display = '';
+
+            // Tiến hành chuyển bài
+            const navBtn = document.getElementById(navId);
+            if (navBtn && !navBtn.disabled) {
+                logger.debug("EdgeBtn", navId === "nav-prev" ? "Prev Sutta" : "Next Sutta");
+                const success = navId === "nav-prev" ? window.SuttaController?.navigatePrev() : window.SuttaController?.navigateNext();
+                if (success) {
+                    navBtn.classList.add("active");
+                    setTimeout(() => navBtn.classList.remove("active"), 150);
+                }
+            }
+        };
+
+        if (edgeLeft) {
+            edgeLeft.addEventListener("click", (e) => handleEdgeClick(e, "nav-prev"));
         }
 
         if (edgeRight) {
-            edgeRight.addEventListener("click", () => {
-                const btnNext = document.getElementById("nav-next");
-                if (btnNext && !btnNext.disabled) {
-                    logger.debug("EdgeBtn", "Next Sutta");
-                    const success = window.SuttaController?.navigateNext();
-                    if (success) {
-                        btnNext.classList.add("active");
-                        setTimeout(() => btnNext.classList.remove("active"), 150);
-                    }
-                }
-            });
+            edgeRight.addEventListener("click", (e) => handleEdgeClick(e, "nav-next"));
         }
 
         logger.info("Init", "GestureManager initialized (Touch + Mouse).");
