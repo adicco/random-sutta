@@ -147,6 +147,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     SuttaController.loadRandomSutta(true);
   });
 
+  // [NEW] Landing Page Button Listener
+  if (landingRandomBtn) {
+    landingRandomBtn.addEventListener("click", () => {
+      switchView('reader');
+      SuttaController.loadRandomSutta(true);
+    });
+  }
+
   // [NEW] Save progress on scroll (debounced)
   let scrollSaveTimer = null;
   window.addEventListener("scroll", () => {
