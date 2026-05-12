@@ -4,6 +4,31 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 import path from 'path';
 import fs from 'fs';
 
+// --- HỆ THỐNG COMPILER HTML (Hỗ trợ Partials) ---
+const expandHtml = (sourcePath) => {
+    if (!fs.existsSync(sourcePath)) return `<!-- ERROR: ${sourcePath} not found -->`;
+    const content = fs.readFileSync(sourcePath, 'utf-8');
+    const baseDir = path.dirname(sourcePath);
+    const includeRegex = /<include\s+src=["'](.*?)["']\s*\/?>(?:<\/include>)?/g;
+    
+    return content.replace(includeRegex, (match, src) => {
+        const filePath = path.resolve(baseDir, src);
+        return expandHtml(filePath); // Đệ quy chèn các partials
+    });
+};
+
+const compileIndexHtml = (buildVersion) => {
+    const templatePath = path.resolve('web/index.template.html');
+    const outputPath = path.resolve('web/index.html');
+    
+    if (fs.existsSync(templatePath)) {
+        let html = expandHtml(templatePath);
+        html = html.replace(/__APP_VERSION__/g, buildVersion);
+        fs.writeFileSync(outputPath, html, 'utf-8');
+        console.log(`   ✅ Compiled web/index.html from partials (v${buildVersion})`);
+    }
+};
+
 // --- HỆ THỐNG AUTO-ALIAS TỰ ĐỘNG ---
 function getDirectories(source) {
     if (!fs.existsSync(source)) return [];
@@ -94,29 +119,19 @@ export default defineConfig(({ mode }) => {
         plugins: [
             basicSsl(),
             {
-                name: 'html-transform',
-                enforce: 'pre',
-                transformIndexHtml(html, ctx) {
-                    const includeRegex = /<include\s+src=["'](.*?)["']\s*\/?>(?:<\/include>)?/g;
-                    
-                    const processIncludes = (content, baseDir) => {
-                        return content.replace(includeRegex, (match, src) => {
-                            const filePath = path.resolve(baseDir, src);
-                            if (fs.existsSync(filePath)) {
-                                const fileContent = fs.readFileSync(filePath, 'utf-8');
-                                // Recursively process includes inside the loaded file
-                                return processIncludes(fileContent, path.dirname(filePath));
-                            }
-                            console.warn(`[html-transform] Included file not found: ${filePath}`);
-                            return `<!-- INCLUDE ERROR: ${src} not found -->`;
-                        });
-                    };
-
-                    const baseDir = ctx.filename ? path.dirname(ctx.filename) : path.resolve('web');
-                    const expandedHtml = processIncludes(html, baseDir);
-                    
-                    // Do version replacement AFTER expansion
-                    return expandedHtml.replace(/__APP_VERSION__/g, buildVersion);
+                name: 'html-compiler',
+                configResolved() {
+                    compileIndexHtml(buildVersion);
+                },
+                configureServer(server) {
+                    // Watch for changes in partials or template
+                    server.watcher.add(path.resolve('web/partials/*.html'));
+                    server.watcher.add(path.resolve('web/index.template.html'));
+                    server.watcher.on('change', (file) => {
+                        if (file.includes('web/partials') || file.includes('index.template.html')) {
+                            compileIndexHtml(buildVersion);
+                        }
+                    });
                 }
             },
             // [FIX] Only enable PWA for Web builds, disable for Native

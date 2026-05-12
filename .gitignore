@@ -62,4 +62,4 @@ android/app/debug/
 capacitor.config.json.tmp
 android/app/*.apk
 *.apk
-*.epub
+*.epub/web/index.html
