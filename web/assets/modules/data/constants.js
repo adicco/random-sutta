@@ -26,15 +26,15 @@ export const SECONDARY_BOOKS = [
   "mnd",
   "cnd",
   "ps",
-  "pe",
   "ne",
+  "pe",
   "mil",
-  "pli-tv-bu-pm",
-  "pli-tv-bi-pm",
   "pli-tv-bu-vb",
   "pli-tv-bi-vb",
   "pli-tv-kd",
   "pli-tv-pvr",
+  "pli-tv-bu-pm",
+  "pli-tv-bi-pm",
   "ds",
   "vb",
   "dt",
@@ -43,6 +43,41 @@ export const SECONDARY_BOOKS = [
   "ya",
   "patthana"
 ];
+
+export const SECONDARY_GROUPS = {
+  "khuddaka": [
+    "vv",
+    "pv",
+    "tha-ap",
+    "thi-ap",
+    "bv",
+    "cp",
+    "ja",
+    "mnd",
+    "cnd",
+    "ps",
+    "ne",
+    "pe",
+    "mil"
+  ],
+  "vinaya": [
+    "pli-tv-bu-vb",
+    "pli-tv-bi-vb",
+    "pli-tv-kd",
+    "pli-tv-pvr",
+    "pli-tv-bu-pm",
+    "pli-tv-bi-pm"
+  ],
+  "abhidhamma": [
+    "ds",
+    "vb",
+    "dt",
+    "pp",
+    "kv",
+    "ya",
+    "patthana"
+  ]
+};
 
 // Group mapping for Split Books (e.g. an -> [an1, an2...])
 export const SUB_BOOKS = {};

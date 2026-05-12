@@ -1,6 +1,6 @@
 // Path: web/assets/modules/ui/components/filters/filter_view.js
 // [FIXED] Đường dẫn import lùi 3 cấp
-import { PRIMARY_BOOKS, SECONDARY_BOOKS } from 'data/constants.js';
+import { PRIMARY_BOOKS, SECONDARY_BOOKS, SECONDARY_GROUPS } from 'data/constants.js';
 
 export const FilterView = {
     render(containerIds, state, callbacks) {
@@ -31,36 +31,27 @@ export const FilterView = {
         primaryDiv.appendChild(rowNikayas);
         primaryDiv.appendChild(rowOthers);
 
-        // 2. Secondary Books
+        // 2. Secondary Books (Dynamically grouped)
         let hasSecondaryActive = false;
         
-        const khuddakaSecondary = ["vv", "pv", "tha-ap", "thi-ap", "bv", "cp", "ja", "mnd", "cnd", "ps", "pe", "ne", "mil"];
-        const vinaya = ["pli-tv-bu-pm", "pli-tv-bi-pm", "pli-tv-bu-vb", "pli-tv-bi-vb", "pli-tv-kd", "pli-tv-pvr"];
-        const abhidhamma = ["ds", "vb", "dt", "pp", "kv", "ya", "patthana"];
-
-        const rowKhuddaka = document.createElement("div");
-        rowKhuddaka.className = "filter-row";
+        // Ensure SECONDARY_GROUPS exists for backward compatibility, fallback to flat list
+        const groups = SECONDARY_GROUPS || { "others": SECONDARY_BOOKS };
         
-        const rowVinaya = document.createElement("div");
-        rowVinaya.className = "filter-row";
-        
-        const rowAbhidhamma = document.createElement("div");
-        rowAbhidhamma.className = "filter-row";
-
-        SECONDARY_BOOKS.forEach((book) => {
-            const isActive = state.has(book);
-            if (isActive) hasSecondaryActive = true;
+        for (const [groupName, books] of Object.entries(groups)) {
+            if (!books || books.length === 0) continue;
             
-            let targetRow = rowKhuddaka;
-            if (vinaya.includes(book)) targetRow = rowVinaya;
-            else if (abhidhamma.includes(book)) targetRow = rowAbhidhamma;
-            
-            this._createButton(book, targetRow, isActive, callbacks);
-        });
+            const groupRow = document.createElement("div");
+            groupRow.className = "filter-row";
+            groupRow.dataset.groupName = groupName; // Optional: For debugging/styling
 
-        secondaryDiv.appendChild(rowKhuddaka);
-        secondaryDiv.appendChild(rowVinaya);
-        secondaryDiv.appendChild(rowAbhidhamma);
+            books.forEach((book) => {
+                const isActive = state.has(book);
+                if (isActive) hasSecondaryActive = true;
+                this._createButton(book, groupRow, isActive, callbacks);
+            });
+            
+            secondaryDiv.appendChild(groupRow);
+        }
 
         // 3. More Button Logic
         if (hasSecondaryActive) {
