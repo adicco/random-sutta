@@ -95,9 +95,8 @@ export default defineConfig(({ mode }) => {
             basicSsl(),
             {
                 name: 'html-transform',
+                enforce: 'pre',
                 transformIndexHtml(html, ctx) {
-                    let result = html.replace(/__APP_VERSION__/g, buildVersion);
-                    
                     const includeRegex = /<include\s+src=["'](.*?)["']\s*\/?>(?:<\/include>)?/g;
                     
                     const processIncludes = (content, baseDir) => {
@@ -114,7 +113,10 @@ export default defineConfig(({ mode }) => {
                     };
 
                     const baseDir = ctx.filename ? path.dirname(ctx.filename) : path.resolve('web');
-                    return processIncludes(result, baseDir);
+                    const expandedHtml = processIncludes(html, baseDir);
+                    
+                    // Do version replacement AFTER expansion
+                    return expandedHtml.replace(/__APP_VERSION__/g, buildVersion);
                 }
             },
             // [FIX] Only enable PWA for Web builds, disable for Native
