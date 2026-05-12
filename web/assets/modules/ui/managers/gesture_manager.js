@@ -40,31 +40,74 @@ export const GestureManager = {
                 // Prevent conflict with interactive elements
                 if (target.closest('a, button, .comment-marker, .lookup-highlight, .toc-item, .bookmark-item, #magic-nav-wrapper, #magic-nav-corner')) return;
 
-                // Left Edge -> Prev
-                if (startX <= edgeTapThreshold) {
-                    const btnPrev = document.getElementById("nav-prev");
-                    if (btnPrev && !btnPrev.disabled) {
-                        logger.debug("EdgeTap", "Prev Sutta");
-                        const success = window.SuttaController?.navigatePrev();
-                        if (success) {
-                            btnPrev.classList.add("active");
-                            setTimeout(() => btnPrev.classList.remove("active"), 150);
+                const windowHeight = window.innerHeight;
+                const topLimit = windowHeight * 0.2;
+                const bottomLimit = windowHeight * 0.8;
+                const isWithinVerticalBounds = endY >= topLimit && endY <= bottomLimit;
+
+                if (isWithinVerticalBounds) {
+                    // Check if tap hit a word (to prevent conflicting with dictionary lookup)
+                    let isTextTap = false;
+                    try {
+                        let range;
+                        if (document.caretRangeFromPoint) {
+                            range = document.caretRangeFromPoint(endX, endY);
+                        } else if (document.caretPositionFromPoint) {
+                            const pos = document.caretPositionFromPoint(endX, endY);
+                            if (pos) {
+                                range = document.createRange();
+                                range.setStart(pos.offsetNode, pos.offset);
+                                range.setEnd(pos.offsetNode, pos.offset);
+                            }
                         }
-                        return;
+                        
+                        if (range && range.startContainer.nodeType === 3) {
+                            const textContent = range.startContainer.textContent || "";
+                            const offset = range.startOffset;
+                            // Check if the character exactly at or right before the offset is a word character
+                            const charAt = textContent[offset] || "";
+                            const charBefore = textContent[offset - 1] || "";
+                            const delimiters = /[.,;:"'‘’“”\—?!()…\s]/;
+                            
+                            if ((charAt && !delimiters.test(charAt)) || (charBefore && !delimiters.test(charBefore))) {
+                                isTextTap = true;
+                            }
+                        }
+                    } catch (e) {
+                        // Ignore errors
                     }
-                }
-                
-                // Right Edge -> Next
-                if (startX >= windowWidth - edgeTapThreshold) {
-                    const btnNext = document.getElementById("nav-next");
-                    if (btnNext && !btnNext.disabled) {
-                        logger.debug("EdgeTap", "Next Sutta");
-                        const success = window.SuttaController?.navigateNext();
-                        if (success) {
-                            btnNext.classList.add("active");
-                            setTimeout(() => btnNext.classList.remove("active"), 150);
+
+                    if (isTextTap) {
+                        logger.debug("EdgeTap", "Tap hit a word. Prioritizing lookup.");
+                        return; // Abort edge navigation to allow click event to trigger lookup
+                    }
+
+                    // Left Edge -> Prev
+                    if (startX <= edgeTapThreshold) {
+                        const btnPrev = document.getElementById("nav-prev");
+                        if (btnPrev && !btnPrev.disabled) {
+                            logger.debug("EdgeTap", "Prev Sutta");
+                            const success = window.SuttaController?.navigatePrev();
+                            if (success) {
+                                btnPrev.classList.add("active");
+                                setTimeout(() => btnPrev.classList.remove("active"), 150);
+                            }
+                            return;
                         }
-                        return;
+                    }
+                    
+                    // Right Edge -> Next
+                    if (startX >= windowWidth - edgeTapThreshold) {
+                        const btnNext = document.getElementById("nav-next");
+                        if (btnNext && !btnNext.disabled) {
+                            logger.debug("EdgeTap", "Next Sutta");
+                            const success = window.SuttaController?.navigateNext();
+                            if (success) {
+                                btnNext.classList.add("active");
+                                setTimeout(() => btnNext.classList.remove("active"), 150);
+                            }
+                            return;
+                        }
                     }
                 }
             }
