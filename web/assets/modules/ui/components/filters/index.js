@@ -3,6 +3,8 @@ import { Router } from 'core/router.js';
 import { FilterState } from './filter_state.js';
 import { FilterView } from './filter_view.js';
 import { FilterGestures } from './filter_gestures.js';
+import { ZIndexManager } from 'ui/common/z_index_manager.js';
+import { ScrollHandler } from 'ui/common/scroll_handler.js';
 
 export const FilterComponent = {
     init() {
@@ -56,6 +58,13 @@ export const FilterComponent = {
         // [NEW] Close logic for filter popup
         const filterPopup = document.getElementById("filter-popup");
         const closeBtn = document.getElementById("close-filter-popup");
+        const filterBody = document.querySelector("#filter-popup .popup-body");
+
+        if (filterPopup) {
+            ZIndexManager.register(filterPopup);
+            if (filterBody) ScrollHandler.preventBackgroundScroll(filterPopup, filterBody);
+        }
+
         if (filterPopup && closeBtn) {
             closeBtn.addEventListener("click", () => {
                 filterPopup.classList.add("hidden");

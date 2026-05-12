@@ -98,10 +98,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   };
 
-  // Header Random Button (Reader Mode)
-  randomBtn.addEventListener("click", () =>
-    SuttaController.loadRandomSutta(true)
-  );
+  // Header Random Button (Reader Mode) - Long Press for Filter
+  let isLongPress = false;
+  let pressTimer;
+
+  const startPress = (e) => {
+    // Only handle left click or touch
+    if (e.type === 'mousedown' && e.button !== 0) return;
+    
+    isLongPress = false;
+    pressTimer = setTimeout(() => {
+      isLongPress = true;
+      const popup = document.getElementById("filter-popup");
+      if (popup) {
+        popup.style.zIndex = 1150; // Ensure it's above other things
+        popup.classList.remove("hidden");
+        if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback on open
+      }
+    }, 500);
+  };
+
+  const cancelPress = () => {
+    if (pressTimer) clearTimeout(pressTimer);
+  };
+
+  // Prevent default context menu on mobile long press
+  randomBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+  
+  randomBtn.addEventListener("mousedown", startPress);
+  randomBtn.addEventListener("touchstart", startPress, { passive: true });
+  randomBtn.addEventListener("mouseup", cancelPress);
+  randomBtn.addEventListener("mouseleave", cancelPress);
+  randomBtn.addEventListener("touchend", cancelPress);
+  randomBtn.addEventListener("touchcancel", cancelPress);
+
+  randomBtn.addEventListener("click", (e) => {
+    if (isLongPress) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    SuttaController.loadRandomSutta(true);
+  });
 
   // [NEW] Save progress on scroll (debounced)
   let scrollSaveTimer = null;
