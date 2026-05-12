@@ -284,26 +284,4 @@ document.addEventListener("DOMContentLoaded", async () => {
       switchView('landing');
     }
   });
-});te.scrollY : 0;
-
-    if (currentParams.q) {
-      // [FIX] Ensure we are in reader view when popping state to a sutta
-      const reader = document.getElementById("reader-view");
-      if (reader && reader.classList.contains("hidden")) {
-          switchView('reader');
-      }
-
-      let loadId = currentParams.q;
-      if (window.location.hash) loadId += window.location.hash;
-      SuttaController.loadSutta(loadId, false, savedScroll, {
-        transition: false,
-      });
-    } else {
-      // If popped back to root -> Show landing?
-      // Or load random? 
-      // Current UX: Back button at root usually exits app or stays.
-      // If we want to support "Back to Landing", we call switchView('landing').
-      switchView('landing');
-    }
-  });
 });
