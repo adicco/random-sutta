@@ -9,11 +9,12 @@ export const SearchRenderer = {
 
         // 2. Generate HTML
         const resultItems = results.map(item => {
-            const uidPart = SearchHighlight.highlight(item.uid, patterns, true);
+            const uidHighlight = `<b>${SearchHighlight.highlight(item.uid, patterns, true)}</b>`;
             const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px; opacity:0.8; color:var(--primary-color); display:inline-block; vertical-align:middle; margin:0 4px;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
             
-            let mainTitle = "";
-            let subMeta = "";
+            let translatedTitle = "";
+            let originalTitle = "";
+            let uidPart = "";
             let rawContent = "";
 
             if (item.type === 'alias' || item.type === 'subleaf') {
@@ -21,24 +22,25 @@ export const SearchRenderer = {
                 const orig = isAlias ? item.target_original_title : item.parent_original_title;
                 const trans = isAlias ? item.target_translated_title : item.parent_translated_title;
                 
-                mainTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig || '', patterns, true);
-                const metaTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
+                translatedTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig || '', patterns, true);
+                originalTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
                 
-                subMeta = `<span class="meta-uid"><b>${uidPart}</b> ${aliasIcon}</span>${metaTitle ? `<span class="meta-title">${metaTitle}</span>` : '<span class="meta-title">Redirect</span>'}`;
+                uidPart = `<span class="search-uid">${uidHighlight} ${aliasIcon} ${isAlias ? 'Redirect' : ''}</span>`;
                 rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
             } else {
                 const orig = item.original_title || '';
                 const trans = item.translated_title || '';
                 
-                mainTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig, patterns, true);
-                const metaTitle = trans ? SearchHighlight.highlight(orig, patterns, true) : '';
+                translatedTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig, patterns, true);
+                originalTitle = trans ? SearchHighlight.highlight(orig, patterns, true) : '';
                 
-                subMeta = `<span class="meta-uid"><b>${uidPart}</b></span>${metaTitle ? `<span class="meta-title">${metaTitle}</span>` : ''}`;
+                uidPart = `<span class="search-uid">${uidHighlight}</span>`;
                 rawContent = item.blurb || "";
             }
 
-            // Fallback if no title at all
-            if (!mainTitle) mainTitle = uidPart;
+            if (!translatedTitle) {
+                translatedTitle = "Untitled"; // Edge case fallback
+            }
 
             let displaySnippet = "";
             if (rawContent) {
@@ -50,9 +52,9 @@ export const SearchRenderer = {
             // Redundancy check
             if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
                 const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-                const titlePure = mainTitle.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-                const metaPure = subMeta.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-                if (titlePure.includes(snippetPure) || metaPure.includes(snippetPure) || snippetPure.length < 5) {
+                const titlePure = translatedTitle.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+                const origPure = originalTitle.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+                if (titlePure.includes(snippetPure) || origPure.includes(snippetPure) || snippetPure.length < 5) {
                     displaySnippet = "";
                 }
             }
@@ -61,8 +63,11 @@ export const SearchRenderer = {
 
             return `
                 <a href="?q=${item.uid}" onclick="event.preventDefault(); ${action}" class="search-full-item">
-                    <div class="search-full-meta">${subMeta}</div>
-                    <div class="search-full-title">${mainTitle}</div>
+                    <div class="search-full-title">
+                        <span class="search-translated-title">${translatedTitle}</span>
+                        ${uidPart}
+                    </div>
+                    ${originalTitle ? `<div class="search-original-title">${originalTitle}</div>` : ''}
                     ${displaySnippet ? `<div class="search-full-snippet">${displaySnippet}</div>` : ''}
                 </a>
             `;
@@ -72,7 +77,7 @@ export const SearchRenderer = {
             <div class="search-results-container">
                 <div class="search-header">
                     <h1 class="search-title">Search Results</h1>
-                    <div class="search-stats">Found ${results.length} matches for "${query}"</div>
+                    <div class="search-stats">Found ${results.length} meta matches for "${query}"</div>
                 </div>
                 <div class="search-result-group">
                     ${resultItems}
