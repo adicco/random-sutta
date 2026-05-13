@@ -36,17 +36,19 @@ export const SuttaRepository = {
     async searchMetadata(query, limit = 30) {
         if (!query || query.length < 2) return [];
         
-        // [FTS5] Prepare query for prefix search
+        // [FTS5] Prepare query
         const cleanQuery = query.replace(/[.*"':]/g, " ").trim();
         if (!cleanQuery) return [];
         
         const terms = cleanQuery.split(/\s+/).filter(t => t.length > 0);
-        const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
+        const normalizedQuery = cleanQuery.replace(/\s/g, "");
+        
+        // Match either the full phrase, the separated terms, or the normalized (no-space) version
+        const ftsQuery = `("${cleanQuery}" OR (${terms.map(t => `${t}*`).join(' AND ')}) OR "${normalizedQuery}*")`;
 
         // [RANKING & CONTEXT] Join with metadata table to get type and target/parent info
-        const exactMatchQuery = query.trim();
-        const normalizedUid = exactMatchQuery.toLowerCase().replace(/\s/g, "");
-        const phrase = exactMatchQuery.toLowerCase();
+        const phrase = cleanQuery.toLowerCase();
+        const acronymSearch = `%${phrase}%`;
 
         const sql = `
             SELECT 
@@ -57,7 +59,7 @@ export const SuttaRepository = {
                 snippet(metadata_fts, -1, '<b>', '</b>', '...', 25) as snippet,
                 (CASE 
                     WHEN m.uid = ? THEN 0
-                    WHEN m.acronym = ? THEN 1
+                    WHEN m.acronym LIKE ? THEN 1
                     WHEN (m.original_title LIKE '%' || ? || '%' OR m.translated_title LIKE '%' || ? || '%' OR m.blurb LIKE '%' || ? || '%') THEN 2
                     WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 3
                     WHEN m.book_id LIKE 'pli-tv-%' THEN 4
@@ -75,8 +77,8 @@ export const SuttaRepository = {
         
         try {
             return await SuttaDB.query(sql, [
-                normalizedUid, 
-                exactMatchQuery.toUpperCase(), 
+                normalizedQuery.toLowerCase(), 
+                acronymSearch,
                 phrase, phrase, phrase,
                 ftsQuery, 
                 limit
