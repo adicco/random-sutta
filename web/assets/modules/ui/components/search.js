@@ -51,7 +51,7 @@ export function setupQuickNav(onSearchCallback) {
         queryTerms.forEach(term => {
           // Robust highlight for Pali/Vietnamese diacritics using simple regex
           const regex = new RegExp(`(${term})`, "gi");
-          highlighted = highlighted.replace(regex, "<b>$1</b>");
+          highlighted = highlighted.replace(regex, '<b class="match-highlight">$1</b>');
         });
         return highlighted;
       };
