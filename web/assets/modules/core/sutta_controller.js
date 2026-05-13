@@ -124,9 +124,13 @@ export const SuttaController = {
 
             if (result.isAlias) {
                 let redirectId = result.targetUid;
-                if (result.hashId) redirectId += `#${result.hashId}`;
+                // [FIX] Preserve original scrollTarget if alias doesn't provide a specific hashId
+                const finalHash = result.hashId || scrollTarget;
+                if (finalHash) redirectId += `#${finalHash}`;
+                
                 // We return here, let the recursive call handle its own loader visibility
-                await this.loadSutta(redirectId, true, 0, { transition: false });
+                // [FIX] Use force: true to bypass the isLoading guard during recursive alias resolution
+                await this.loadSutta(redirectId, true, 0, { transition: false, force: true });
                 logger.timerEnd(`Render: ${suttaId}`);
                 return true;
             }
