@@ -210,7 +210,7 @@ header {
 .search-preview-meta {
   font-size: 0.68rem;
   color: var(--text-main);
-  opacity: 0.75;
+  opacity: 1;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
