@@ -75,12 +75,47 @@ export function setupQuickNav(onSearchCallback) {
         return highlighted;
       };
 
+      const smartSnippet = (text) => {
+        if (!text) return "";
+        
+        // Find the first match position
+        let matchPos = -1;
+        let matchLen = 0;
+        
+        for (const regex of patterns) {
+            const m = regex.exec(text);
+            if (m) {
+                matchPos = m.index;
+                matchLen = m[0].length;
+                break;
+            }
+        }
+
+        if (matchPos === -1) return text.length > 120 ? text.substring(0, 120) + "..." : text;
+
+        // Extract a window around the match (approx 120 chars total)
+        const windowSize = 120;
+        let start = Math.max(0, matchPos - Math.floor(windowSize / 2));
+        let end = start + windowSize;
+
+        if (end > text.length) {
+            end = text.length;
+            start = Math.max(0, end - windowSize);
+        }
+
+        let snippet = text.substring(start, end);
+        if (start > 0) snippet = "..." + snippet.substring(snippet.indexOf(" ") + 1);
+        if (end < text.length) snippet = snippet.substring(0, snippet.lastIndexOf(" ")) + "...";
+
+        return snippet;
+      };
+
       previewContainer.innerHTML = results.map((item, index) => {
         const uidPart = `<b>${highlight(item.uid, true)}</b>`;
         const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
         
         let metaLine = "";
-        let displaySnippet = "";
+        let rawContent = "";
 
         if (item.type === 'alias' || item.type === 'subleaf') {
           const targetTitle = highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title, true) || '';
@@ -90,7 +125,7 @@ export function setupQuickNav(onSearchCallback) {
           metaLine = `${uidPart} ${aliasIcon} <span>${targetTitle}${separator}${targetTrans}</span>`;
           
           // Dòng 2: Ưu tiên Blurb của Đích (Alias) hoặc Cha (Subleaf)
-          displaySnippet = (item.type === 'alias' ? item.target_blurb : item.parent_blurb) || item.blurb || item.snippet || "";
+          rawContent = (item.type === 'alias' ? item.target_blurb : item.parent_blurb) || item.blurb || "";
         } else {
           const title = highlight(item.original_title || '', true);
           const transTitle = highlight(item.translated_title || '', true);
@@ -99,15 +134,21 @@ export function setupQuickNav(onSearchCallback) {
           metaLine = `${uidPart}: <span>${title}${separator}${transTitle}</span>`;
           
           // Dòng 2: Ưu tiên Blurb
-          displaySnippet = item.blurb || item.snippet || "";
+          rawContent = item.blurb || "";
         }
 
-        // Apply highlight to Line 2 if it's not already highlighted by FTS
-        if (displaySnippet && !displaySnippet.includes('<b>')) {
-            displaySnippet = highlight(displaySnippet, false);
+        // Snippet Logic:
+        // 1. If we have rawContent (blurb), create a centered snippet from it
+        // 2. Fallback to FTS snippet if no blurb
+        let displaySnippet = "";
+        if (rawContent) {
+            displaySnippet = highlight(smartSnippet(rawContent), false);
+        } else if (item.snippet) {
+            // FTS snippet is already centered by SQLite, just ensure it's not redundant
+            displaySnippet = item.snippet;
         }
 
-        // Kiểm tra loại bỏ snippet dư thừa (Chỉ khi không phải là blurb thật)
+        // Kiểm tra loại bỏ snippet dư thừa
         if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
             const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
             const metaLinePure = metaLine.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
