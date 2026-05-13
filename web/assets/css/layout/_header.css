@@ -207,15 +207,30 @@ header {
   background-color: rgba(var(--primary-rgb, 107, 78, 113), 0.05);
 }
 
+.search-preview-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
 .search-preview-meta b {
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .search-preview-meta .match-highlight {
   color: var(--primary-color);
   background: none;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .search-preview-alias-icon {
