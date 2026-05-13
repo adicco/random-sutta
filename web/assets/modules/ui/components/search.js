@@ -43,30 +43,32 @@ export function setupQuickNav(onSearchCallback) {
     if (!results || results.length === 0) {
       previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
     } else {
-      // 1. Prepare highlight terms
+      // 1. Prepare highlight patterns
       const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-      let highlightTerms = [];
+      let patterns = [];
       
       queryTerms.forEach(term => {
-          highlightTerms.push(term);
-          // If query is "mn1", also highlight "mn" and "1" separately
-          const parts = term.match(/^([a-z]+)(\d+)$/i);
-          if (parts) {
-              if (parts[1].length > 1) highlightTerms.push(parts[1]);
-              highlightTerms.push(parts[2]);
+          const isNumeric = /^[\d.]+$/.test(term);
+          const acronymMatch = term.match(/^([a-z]+)([\d.]+)$/i);
+          
+          if (acronymMatch) {
+              const alpha = acronymMatch[1].split('').join('[\\s.]*');
+              const digits = acronymMatch[2].split('').map(d => d === '.' ? '\\.' : d).join('[\\s.]*');
+              patterns.push(new RegExp(`(?![^<]*>)(${alpha}[\\s.]*${digits})`, "gi"));
+          } else if (isNumeric && term.length >= 1) {
+              const digits = term.split('').map(d => d === '.' ? '\\.' : d).join('[\\s.]*');
+              patterns.push(new RegExp(`(?![^<]*>)(${digits})`, "gi"));
+          } else if (term.length > 1) {
+              patterns.push(new RegExp(`(?![^<]*>)(${term.replace(/\./g, "\\.")})`, "gi"));
           }
       });
-      // Sort by length descending to prevent partial matches from stealing highlights
-      highlightTerms = [...new Set(highlightTerms)].sort((a, b) => b.length - a.length);
-      
+      // Sort by length to avoid sub-pattern collisions
+      patterns.sort((a, b) => b.source.length - a.source.length);
+
       const highlight = (text) => {
         if (!text) return "";
         let highlighted = text;
-        highlightTerms.forEach(term => {
-          if (term.length < 1) return;
-          // Avoid re-highlighting existing tags
-          // We use a trick: match the term only if it's NOT inside a tag
-          const regex = new RegExp(`(?![^<]*>)(${term})`, "gi");
+        patterns.forEach(regex => {
           highlighted = highlighted.replace(regex, '<b class="match-highlight">$1</b>');
         });
         return highlighted;
@@ -116,14 +118,8 @@ export function setupQuickNav(onSearchCallback) {
             displaySnippet = item.blurb || item.parent_blurb || "";
         }
         
-        // If still no snippet/blurb, and it's a subleaf, at least show parent title info in snippet if not in meta
-        if (!displaySnippet && item.type === 'subleaf' && item.parent_original_title) {
-            displaySnippet = `${item.parent_original_title} – ${item.parent_translated_title || ''}`;
-        }
-
         // Final cleanup: if displaySnippet is now exactly the same as part of metaLine, and we have nothing else, hide it
         if (displaySnippet && metaLine.includes(displaySnippet)) {
-            // Only keep if it's a real blurb, otherwise clear to avoid redundancy
             if (!item.blurb && !item.parent_blurb) displaySnippet = "";
         }
 
