@@ -24,7 +24,7 @@ export const SearchRenderer = {
                 mainTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig || '', patterns, true);
                 const metaTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
                 
-                subMeta = metaTitle ? `<b>${uidPart}</b> ${aliasIcon} ${metaTitle}` : `<b>${uidPart}</b> ${aliasIcon} Redirect`;
+                subMeta = `<span class="meta-uid"><b>${uidPart}</b> ${aliasIcon}</span>${metaTitle ? `<span class="meta-title">${metaTitle}</span>` : '<span class="meta-title">Redirect</span>'}`;
                 rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
             } else {
                 const orig = item.original_title || '';
@@ -33,7 +33,7 @@ export const SearchRenderer = {
                 mainTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig, patterns, true);
                 const metaTitle = trans ? SearchHighlight.highlight(orig, patterns, true) : '';
                 
-                subMeta = metaTitle ? `<b>${uidPart}</b> • ${metaTitle}` : `<b>${uidPart}</b>`;
+                subMeta = `<span class="meta-uid"><b>${uidPart}</b></span>${metaTitle ? `<span class="meta-title">${metaTitle}</span>` : ''}`;
                 rawContent = item.blurb || "";
             }
 
@@ -47,12 +47,22 @@ export const SearchRenderer = {
                 displaySnippet = SearchHighlight.highlight(SearchHighlight.stripHtml(item.snippet), patterns, false);
             }
 
+            // Redundancy check
+            if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
+                const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+                const titlePure = mainTitle.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+                const metaPure = subMeta.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+                if (titlePure.includes(snippetPure) || metaPure.includes(snippetPure) || snippetPure.length < 5) {
+                    displaySnippet = "";
+                }
+            }
+
             const action = `window.loadSutta('${item.uid}', true, 0, { transition: true })`;
 
             return `
                 <a href="?q=${item.uid}" onclick="event.preventDefault(); ${action}" class="search-full-item">
-                    <div class="search-full-title">${mainTitle}</div>
                     <div class="search-full-meta">${subMeta}</div>
+                    <div class="search-full-title">${mainTitle}</div>
                     ${displaySnippet ? `<div class="search-full-snippet">${displaySnippet}</div>` : ''}
                 </a>
             `;

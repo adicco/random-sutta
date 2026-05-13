@@ -44,13 +44,14 @@
   flex-direction: column;
   gap: 6px;
   text-align: left;
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 .search-full-item:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
   border-color: var(--primary-color);
+  text-decoration: none !important;
 }
 
 .search-full-meta {
@@ -60,8 +61,17 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
+}
+
+.search-full-meta .meta-uid {
+  display: flex;
+  align-items: center;
+}
+
+.search-full-meta .meta-title {
+  text-align: right;
 }
 
 .search-full-meta b {
