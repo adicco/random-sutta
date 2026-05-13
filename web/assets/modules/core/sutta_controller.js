@@ -91,13 +91,6 @@ export const SuttaController = {
             TTSOrchestrator.endSession();
         }
 
-        if (scrollTarget && !scrollTarget.includes(':')) {
-            const isSegmentNumber = /^[\d\.]+$/.test(scrollTarget);
-            if (isSegmentNumber) {
-                scrollTarget = `${suttaId}:${scrollTarget}`;
-            }
-        }
-
         logger.info('loadSutta', `Request: ${suttaId} (URL update: ${shouldUpdateUrl}, Cached: ${!!preFetchedData})`);
         logger.timer(`Render: ${suttaId}`);
 
@@ -132,9 +125,17 @@ export const SuttaController = {
                 // [FIX] Use force: true to bypass the isLoading guard during recursive alias resolution
                 await this.loadSutta(redirectId, true, 0, { transition: false, force: true });
                 logger.timerEnd(`Render: ${suttaId}`);
-                return true;
+                return 'ALIAS_REDIRECTED';
             }
             
+            // [NEW] Normalize scrollTarget if it's a simple segment number (Leaf mode)
+            if (scrollTarget && !scrollTarget.includes(':')) {
+                const isSegmentNumber = /^[\d\.]+$/.test(scrollTarget);
+                if (isSegmentNumber) {
+                    scrollTarget = `${suttaId}:${scrollTarget}`;
+                }
+            }
+
             // B. [TELEPORT STEP 1] Stealth Mode
             const isTeleporting = !isTransition && scrollTarget && container;
             if (isTeleporting) {
@@ -173,9 +174,20 @@ export const SuttaController = {
 
         // Execute Scroll/Transition Strategy
         if (isTransition) {
-            await Scroller.transitionTo(performRender, scrollTarget);
+            // [FIX] Handle alias redirection in transition mode
+            const status = await performRender();
+            if (status === 'ALIAS_REDIRECTED') return;
+
+            await new Promise(r => requestAnimationFrame(r));
+            if (scrollTarget) {
+                Scroller.smoothScrollTo(scrollTarget);
+                Scroller.highlightElement(scrollTarget);
+            } else {
+                Scroller.restoreScrollTop(0);
+            }
         } else {
-            await performRender();
+            const status = await performRender();
+            if (status === 'ALIAS_REDIRECTED') return;
             
             if (scrollTarget) {
                 // [TELEPORT STEP 2] Instant Jump Synchronously
