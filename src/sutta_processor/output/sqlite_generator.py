@@ -172,20 +172,30 @@ class SqliteGenerator:
                 if uid in parent_map:
                     m["parent_uid"] = parent_map[uid]
 
+                # Pre-calculate search priority
+                # 0: Primary, 1: Vinaya, 2: Abhidhamma, 3: Others
+                priority = 3
+                if book_id in ['dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig']:
+                    priority = 0
+                elif book_id.startswith('pli-tv-'):
+                    priority = 1
+                elif book_id in ['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana']:
+                    priority = 2
+
                 nav = m.get("nav", {})
                 children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                 cursor.execute("""
                     INSERT OR REPLACE INTO metadata (
                         uid, book_id, type, acronym, translated_title, original_title,
                         blurb, author_uid, parent_uid, target_uid, children,
-                        hash_id, extract_id, nav_prev, nav_next, child_range
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        hash_id, extract_id, nav_prev, nav_next, child_range, search_priority
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
                     m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
                     m.get("parent_uid"), m.get("target_uid"), children_json,
                     m.get("hash_id"), m.get("extract_id"), nav.get("prev"), nav.get("next"),
-                    m.get("child_range")
+                    m.get("child_range"), priority
                 ))
             conn.commit()
 

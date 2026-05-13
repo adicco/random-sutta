@@ -116,6 +116,10 @@ export const SuttaController = {
                             acronym: "Search"
                         }
                     };
+                    
+                    // [FIX] Ensure we switch to reader view for search results
+                    if (window.switchView) window.switchView('reader');
+                    
                     await renderSutta(suttaId, searchData, options);
                     logger.timerEnd(`Render: ${suttaId}`);
                     return true;
