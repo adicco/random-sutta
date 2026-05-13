@@ -179,6 +179,7 @@ header {
   margin-top: 12px;
   max-height: 400px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   z-index: 10005;
   border: 1px solid var(--border-color);
 }
