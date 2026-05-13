@@ -216,6 +216,18 @@ header {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-preview-alias-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: var(--primary-color);
+  opacity: 0.8;
+  stroke-width: 3.5px;
 }
 
 .search-preview-snippet {

@@ -48,20 +48,20 @@ export function setupQuickNav(onSearchCallback) {
         let idPart = `<b>${item.acronym || item.uid}</b>`;
         
         if (item.type === 'alias') {
-          const targetId = item.target_acronym || item.target_uid;
+          const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
           const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
           const targetTitle = `${item.target_original_title || ''} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${item.target_translated_title || ''}`;
-          metaLine = `-> ${idPart}${hashPart}: ${targetTitle}`;
+          metaLine = `${aliasIcon}<span>${idPart}${hashPart}: ${targetTitle}</span>`;
         } else if (item.type === 'subleaf') {
           const title = item.original_title || item.parent_original_title || '';
           const transTitle = item.translated_title || item.parent_translated_title || '';
           const separator = title && transTitle ? ' – ' : '';
-          metaLine = `${idPart}: ${title}${separator}${transTitle}`;
+          metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
         } else {
           const title = item.original_title || '';
           const transTitle = item.translated_title || '';
           const separator = title && transTitle ? ' – ' : '';
-          metaLine = `${idPart}: ${title}${separator}${transTitle}`;
+          metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
         }
 
         return `
