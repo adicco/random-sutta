@@ -62,7 +62,6 @@ export function setupQuickNav(onSearchCallback) {
               patterns.push(new RegExp(`(?![^<]*>)(${term.replace(/\./g, "\\.")})`, "gi"));
           }
       });
-      // Sort by length to avoid sub-pattern collisions
       patterns.sort((a, b) => b.source.length - a.source.length);
 
       const highlight = (text) => {
@@ -75,52 +74,39 @@ export function setupQuickNav(onSearchCallback) {
       };
 
       previewContainer.innerHTML = results.map((item, index) => {
-        // Prepare highlighted parts
-        const highlightedId = highlight(item.acronym || item.uid);
-        const highlightedOriginalTitle = highlight(item.original_title || '');
-        const highlightedTranslatedTitle = highlight(item.translated_title || '');
-        
-        const idPart = `<b>${highlightedId}</b>`;
+        const uidPart = `<b>${highlight(item.uid)}</b>`;
         const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+        
         let metaLine = "";
+        let displaySnippet = "";
 
-        if (item.type === 'alias') {
-          const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
-          const title = highlightedOriginalTitle || highlight(item.target_original_title || '');
-          const transTitle = highlightedTranslatedTitle || highlight(item.target_translated_title || '');
-          const separator = title && transTitle ? ' – ' : '';
-          metaLine = `${aliasIcon}<span>${idPart}${hashPart}: ${title}${separator}${transTitle}</span>`;
-        } else if (item.type === 'subleaf') {
-          const title = highlightedOriginalTitle || highlight(item.parent_original_title || '');
-          const transTitle = highlightedTranslatedTitle || highlight(item.parent_translated_title || '');
-          const separator = title && transTitle ? ' – ' : '';
-          metaLine = `${aliasIcon}<span>${idPart}: ${title}${separator}${transTitle}</span>`;
+        if (item.type === 'alias' || item.type === 'subleaf') {
+          const targetTitle = highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title) || '';
+          const targetTrans = highlight(item.type === 'alias' ? item.target_translated_title : item.parent_translated_title) || '';
+          const separator = targetTitle && targetTrans ? ' – ' : '';
+          
+          metaLine = `${uidPart} ${aliasIcon} <span>${targetTitle}${separator}${targetTrans}</span>`;
+          
+          // Dòng 2: Ưu tiên Blurb của Đích (Alias) hoặc Cha (Subleaf) tuyệt đối
+          displaySnippet = (item.type === 'alias' ? item.target_blurb : item.parent_blurb) || item.blurb || item.snippet || "";
         } else {
-          const title = highlightedOriginalTitle;
-          const transTitle = highlightedTranslatedTitle;
+          const title = highlight(item.original_title || '');
+          const transTitle = highlight(item.translated_title || '');
           const separator = title && transTitle ? ' – ' : '';
-          metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
+          
+          metaLine = `${uidPart}: <span>${title}${separator}${transTitle}</span>`;
+          
+          // Dòng 2: Ưu tiên Blurb tuyệt đối
+          displaySnippet = item.blurb || item.snippet || "";
         }
 
-        // Snippet Logic:
-        // Prioritize blurb if the FTS snippet is just repeating the ID/Acronym
-        let displaySnippet = item.snippet || '';
-        const snippetPureText = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-        const acronymPure = (item.acronym || '').toLowerCase().replace(/\s/g, '');
-        const uidPure = item.uid.toLowerCase();
-        
-        const isRedundant = !snippetPureText || 
-                            snippetPureText === acronymPure || 
-                            snippetPureText === uidPure || 
-                            (snippetPureText.length < 12 && !displaySnippet.includes('<b>'));
-
-        if (isRedundant || !displaySnippet.includes('<b>')) {
-            displaySnippet = item.blurb || item.parent_blurb || "";
-        }
-        
-        // Final cleanup: if displaySnippet is now exactly the same as part of metaLine, and we have nothing else, hide it
-        if (displaySnippet && metaLine.includes(displaySnippet)) {
-            if (!item.blurb && !item.parent_blurb) displaySnippet = "";
+        // Kiểm tra loại bỏ snippet dư thừa (Nếu chỉ lặp lại nội dung đã có ở dòng 1 và không phải blurb thật)
+        if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
+            const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+            const metaLinePure = metaLine.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+            if (metaLinePure.includes(snippetPure) || snippetPure.length < 5) {
+                displaySnippet = "";
+            }
         }
 
         return `
