@@ -62,8 +62,13 @@ export function setupQuickNav(onSearchCallback) {
               patterns.push(new RegExp(`(?![^<]*>)(${alpha}[\\s.]*${digits})`, "gi"));
           }
       });
-      // Sort by length to avoid sub-pattern collisions
       patterns.sort((a, b) => b.source.length - a.source.length);
+
+      const stripHtml = (html) => {
+        if (!html) return "";
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || "";
+      };
 
       const highlight = (text, isLine1 = true) => {
         if (!text) return "";
@@ -77,35 +82,33 @@ export function setupQuickNav(onSearchCallback) {
 
       const smartSnippet = (text) => {
         if (!text) return "";
+        const cleanText = stripHtml(text);
         
         // Find the first match position
         let matchPos = -1;
-        let matchLen = 0;
-        
         for (const regex of patterns) {
-            const m = regex.exec(text);
+            const m = regex.exec(cleanText);
             if (m) {
                 matchPos = m.index;
-                matchLen = m[0].length;
                 break;
             }
         }
 
-        if (matchPos === -1) return text.length > 120 ? text.substring(0, 120) + "..." : text;
+        if (matchPos === -1) return cleanText.length > 120 ? cleanText.substring(0, 120) + "..." : cleanText;
 
         // Extract a window around the match (approx 120 chars total)
         const windowSize = 120;
         let start = Math.max(0, matchPos - Math.floor(windowSize / 2));
         let end = start + windowSize;
 
-        if (end > text.length) {
-            end = text.length;
+        if (end > cleanText.length) {
+            end = cleanText.length;
             start = Math.max(0, end - windowSize);
         }
 
-        let snippet = text.substring(start, end);
+        let snippet = cleanText.substring(start, end);
         if (start > 0) snippet = "..." + snippet.substring(snippet.indexOf(" ") + 1);
-        if (end < text.length) snippet = snippet.substring(0, snippet.lastIndexOf(" ")) + "...";
+        if (end < cleanText.length) snippet = snippet.substring(0, snippet.lastIndexOf(" ")) + "...";
 
         return snippet;
       };
@@ -138,14 +141,12 @@ export function setupQuickNav(onSearchCallback) {
         }
 
         // Snippet Logic:
-        // 1. If we have rawContent (blurb), create a centered snippet from it
-        // 2. Fallback to FTS snippet if no blurb
         let displaySnippet = "";
         if (rawContent) {
             displaySnippet = highlight(smartSnippet(rawContent), false);
         } else if (item.snippet) {
-            // FTS snippet is already centered by SQLite, just ensure it's not redundant
-            displaySnippet = item.snippet;
+            // Strip FTS snippet to prevent tag leakage from DB, then re-highlight
+            displaySnippet = highlight(stripHtml(item.snippet), false);
         }
 
         // Kiểm tra loại bỏ snippet dư thừa
