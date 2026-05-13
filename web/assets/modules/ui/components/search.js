@@ -79,18 +79,20 @@ export function setupQuickNav(onSearchCallback) {
         const highlightedTranslatedTitle = highlight(item.translated_title || '');
         
         const idPart = `<b>${highlightedId}</b>`;
+        const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
         let metaLine = "";
 
         if (item.type === 'alias') {
-          const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
           const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
-          const targetTitle = `${highlightedOriginalTitle} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${highlightedTranslatedTitle}`;
-          metaLine = `${aliasIcon}<span>${idPart}${hashPart}: ${targetTitle}</span>`;
+          const title = highlightedOriginalTitle || highlight(item.target_original_title || '');
+          const transTitle = highlightedTranslatedTitle || highlight(item.target_translated_title || '');
+          const separator = title && transTitle ? ' – ' : '';
+          metaLine = `${aliasIcon}<span>${idPart}${hashPart}: ${title}${separator}${transTitle}</span>`;
         } else if (item.type === 'subleaf') {
           const title = highlightedOriginalTitle || highlight(item.parent_original_title || '');
           const transTitle = highlightedTranslatedTitle || highlight(item.parent_translated_title || '');
           const separator = title && transTitle ? ' – ' : '';
-          metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
+          metaLine = `${aliasIcon}<span>${idPart}: ${title}${separator}${transTitle}</span>`;
         } else {
           const title = highlightedOriginalTitle;
           const transTitle = highlightedTranslatedTitle;
