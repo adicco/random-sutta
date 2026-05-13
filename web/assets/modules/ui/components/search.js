@@ -118,7 +118,13 @@ export function setupQuickNav(onSearchCallback) {
         
         // If still no snippet/blurb, and it's a subleaf, at least show parent title info in snippet if not in meta
         if (!displaySnippet && item.type === 'subleaf' && item.parent_original_title) {
-            displaySnippet = `Phần kinh thuộc: ${item.parent_original_title} – ${item.parent_translated_title || ''}`;
+            displaySnippet = `${item.parent_original_title} – ${item.parent_translated_title || ''}`;
+        }
+
+        // Final cleanup: if displaySnippet is now exactly the same as part of metaLine, and we have nothing else, hide it
+        if (displaySnippet && metaLine.includes(displaySnippet)) {
+            // Only keep if it's a real blurb, otherwise clear to avoid redundancy
+            if (!item.blurb && !item.parent_blurb) displaySnippet = "";
         }
 
         return `
