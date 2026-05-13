@@ -48,59 +48,66 @@ export function setupQuickNav(onSearchCallback) {
       let patterns = [];
       
       queryTerms.forEach(term => {
-          const isNumeric = /^[\d.]+$/.test(term);
-          const acronymMatch = term.match(/^([a-z]+)([\d.]+)$/i);
+          // Escape for regex
+          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           
+          // Pattern 1: Exact term (e.g. "king", "an1.1")
+          patterns.push(new RegExp(`(?![^<]*>)(${escaped})`, "gi"));
+          
+          // Pattern 2: If alpha-numeric (mn1), allow spaces/dots between alpha and numeric
+          const acronymMatch = term.match(/^([a-z]+)([\d.]+)$/i);
           if (acronymMatch) {
-              const alpha = acronymMatch[1].split('').join('[\\s.]*');
-              const digits = acronymMatch[2].split('').map(d => d === '.' ? '\\.' : d).join('[\\s.]*');
+              const alpha = acronymMatch[1];
+              const digits = acronymMatch[2].replace(/\./g, '\\.');
               patterns.push(new RegExp(`(?![^<]*>)(${alpha}[\\s.]*${digits})`, "gi"));
-          } else if (isNumeric && term.length >= 1) {
-              const digits = term.split('').map(d => d === '.' ? '\\.' : d).join('[\\s.]*');
-              patterns.push(new RegExp(`(?![^<]*>)(${digits})`, "gi"));
-          } else if (term.length > 1) {
-              patterns.push(new RegExp(`(?![^<]*>)(${term.replace(/\./g, "\\.")})`, "gi"));
           }
       });
+      // Sort by length to avoid sub-pattern collisions
       patterns.sort((a, b) => b.source.length - a.source.length);
 
-      const highlight = (text) => {
+      const highlight = (text, isLine1 = true) => {
         if (!text) return "";
         let highlighted = text;
+        const tag = isLine1 ? '<b class="match-highlight">' : '<b>';
         patterns.forEach(regex => {
-          highlighted = highlighted.replace(regex, '<b class="match-highlight">$1</b>');
+          highlighted = highlighted.replace(regex, `${tag}$1</b>`);
         });
         return highlighted;
       };
 
       previewContainer.innerHTML = results.map((item, index) => {
-        const uidPart = `<b>${highlight(item.uid)}</b>`;
+        const uidPart = `<b>${highlight(item.uid, true)}</b>`;
         const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
         
         let metaLine = "";
         let displaySnippet = "";
 
         if (item.type === 'alias' || item.type === 'subleaf') {
-          const targetTitle = highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title) || '';
-          const targetTrans = highlight(item.type === 'alias' ? item.target_translated_title : item.parent_translated_title) || '';
+          const targetTitle = highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title, true) || '';
+          const targetTrans = highlight(item.type === 'alias' ? item.target_translated_title : item.parent_translated_title, true) || '';
           const separator = targetTitle && targetTrans ? ' – ' : '';
           
           metaLine = `${uidPart} ${aliasIcon} <span>${targetTitle}${separator}${targetTrans}</span>`;
           
-          // Dòng 2: Ưu tiên Blurb của Đích (Alias) hoặc Cha (Subleaf) tuyệt đối
+          // Dòng 2: Ưu tiên Blurb của Đích (Alias) hoặc Cha (Subleaf)
           displaySnippet = (item.type === 'alias' ? item.target_blurb : item.parent_blurb) || item.blurb || item.snippet || "";
         } else {
-          const title = highlight(item.original_title || '');
-          const transTitle = highlight(item.translated_title || '');
+          const title = highlight(item.original_title || '', true);
+          const transTitle = highlight(item.translated_title || '', true);
           const separator = title && transTitle ? ' – ' : '';
           
           metaLine = `${uidPart}: <span>${title}${separator}${transTitle}</span>`;
           
-          // Dòng 2: Ưu tiên Blurb tuyệt đối
+          // Dòng 2: Ưu tiên Blurb
           displaySnippet = item.blurb || item.snippet || "";
         }
 
-        // Kiểm tra loại bỏ snippet dư thừa (Nếu chỉ lặp lại nội dung đã có ở dòng 1 và không phải blurb thật)
+        // Apply highlight to Line 2 if it's not already highlighted by FTS
+        if (displaySnippet && !displaySnippet.includes('<b>')) {
+            displaySnippet = highlight(displaySnippet, false);
+        }
+
+        // Kiểm tra loại bỏ snippet dư thừa (Chỉ khi không phải là blurb thật)
         if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
             const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
             const metaLinePure = metaLine.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
