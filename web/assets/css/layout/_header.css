@@ -127,8 +127,8 @@ header {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90%;
-  z-index: 10;
+  width: 95%;
+  z-index: 1500;
 }
 
 #nav-title-display #nav-search-container.hidden {
@@ -145,9 +145,9 @@ header {
   color: var(--primary-color);
   outline: none;
   font-size: 16px;
-  height: 2rem;
+  height: 2.2rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  background: white;
+  background: var(--bg-card);
 }
 
 #nav-search-btn {
@@ -156,7 +156,7 @@ header {
   border: none;
   border-radius: var(--radius-sm);
   padding: 0 12px;
-  height: 2rem;
+  height: 2.2rem;
   font-size: 1rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -171,7 +171,7 @@ header {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100vw - 40px);
+  width: calc(100vw - 20px);
   max-width: 600px;
   background: var(--bg-card);
   border-radius: var(--radius-md);
@@ -179,7 +179,7 @@ header {
   margin-top: 12px;
   max-height: 400px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 2000;
   border: 1px solid var(--border-color);
 }
 
