@@ -100,6 +100,7 @@ export function setupQuickNav(onSearchCallback) {
       }).join('');
     }
     previewContainer.classList.remove("hidden");
+    previewContainer.scrollTop = 0; // Reset scroll position when results change
     activeIndex = -1;
   }
 
