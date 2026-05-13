@@ -70,15 +70,16 @@
 }
 
 .search-uid {
-  font-size: 0.85rem;
-  color: var(--text-main);
-  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
   flex-shrink: 0;
   display: flex;
   align-items: center;
+  opacity: 0.8;
 }
 
 .search-original-title {
@@ -98,13 +99,13 @@
   font-weight: 800;
 }
 
-.search-full-snippet {
+.search-blurb-snippet {
   font-size: 1rem;
   color: var(--text-main);
   line-height: 1.6;
 }
 
-.search-full-snippet b {
+.search-blurb-snippet b {
   background: rgba(var(--primary-rgb), 0.15);
   color: var(--primary-color);
   padding: 0 2px;

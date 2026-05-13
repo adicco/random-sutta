@@ -45,18 +45,6 @@ export const SearchRenderer = {
             let displaySnippet = "";
             if (rawContent) {
                 displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 250), patterns, false);
-            } else if (item.snippet) {
-                displaySnippet = SearchHighlight.highlight(SearchHighlight.stripHtml(item.snippet), patterns, false);
-            }
-
-            // Redundancy check
-            if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
-                const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-                const titlePure = translatedTitle.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-                const origPure = originalTitle.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-                if (titlePure.includes(snippetPure) || origPure.includes(snippetPure) || snippetPure.length < 5) {
-                    displaySnippet = "";
-                }
             }
 
             const action = `window.loadSutta('${item.uid}', true, 0, { transition: true })`;
@@ -68,7 +56,7 @@ export const SearchRenderer = {
                         ${originalTitle ? `<span class="search-original-title">${originalTitle}</span>` : '<span></span>'}
                         ${uidPart}
                     </div>
-                    ${displaySnippet ? `<div class="search-full-snippet">${displaySnippet}</div>` : ''}
+                    ${displaySnippet ? `<div class="search-blurb-snippet">${displaySnippet}</div>` : ''}
                 </a>
             `;
         }).join('');
