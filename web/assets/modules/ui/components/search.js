@@ -110,8 +110,13 @@ export function setupQuickNav(onSearchCallback) {
                             snippetPureText === uidPure || 
                             (snippetPureText.length < 12 && !displaySnippet.includes('<b>'));
 
-        if (item.blurb && (isRedundant || !displaySnippet.includes('<b>'))) {
-            displaySnippet = item.blurb;
+        if (isRedundant || !displaySnippet.includes('<b>')) {
+            displaySnippet = item.blurb || item.parent_blurb || "";
+        }
+        
+        // If still no snippet/blurb, and it's a subleaf, at least show parent title info in snippet if not in meta
+        if (!displaySnippet && item.type === 'subleaf' && item.parent_original_title) {
+            displaySnippet = `Phần kinh thuộc: ${item.parent_original_title} – ${item.parent_translated_title || ''}`;
         }
 
         return `

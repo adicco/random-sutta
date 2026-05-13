@@ -54,7 +54,7 @@ export const SuttaRepository = {
                 m.uid, m.acronym, m.type, m.target_uid, m.parent_uid, m.hash_id,
                 m.original_title, m.translated_title, m.blurb,
                 t.acronym as target_acronym, t.original_title as target_original_title, t.translated_title as target_translated_title,
-                p.acronym as parent_acronym, p.original_title as parent_original_title, p.translated_title as parent_translated_title,
+                p.acronym as parent_acronym, p.original_title as parent_original_title, p.translated_title as parent_translated_title, p.blurb as parent_blurb,
                 snippet(metadata_fts, -1, '<b>', '</b>', '...', 25) as snippet,
                 (CASE 
                     WHEN m.uid = ? THEN 0
