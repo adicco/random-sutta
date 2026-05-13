@@ -5,7 +5,7 @@ import { SuttaDB } from "data/sutta_db.js";
 import { SuttaService, RandomBuffer } from "services/index.js";
 import { setupLogging, LogLevel, getLogger } from "utils/logger.js";
 import { FilterComponent } from "ui/components/filters/index.js";
-import { setupQuickNav } from "ui/components/search.js";
+import { setupQuickNav } from "ui/components/nav_search.js";
 import { initPopupSystem } from "ui/components/popup/index.js";
 import {
   DrawerManager,

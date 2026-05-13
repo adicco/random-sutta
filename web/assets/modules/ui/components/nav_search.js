@@ -1,4 +1,4 @@
-// Path: web/assets/modules/ui/components/search.js
+// Path: web/assets/modules/ui/components/nav_search.js
 import { SuttaRepository } from "data/sutta_repository.js";
 
 export function setupQuickNav(onSearchCallback) {
