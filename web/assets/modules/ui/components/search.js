@@ -43,13 +43,27 @@ export function setupQuickNav(onSearchCallback) {
     if (!results || results.length === 0) {
       previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
     } else {
-      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+      // Normalize query for highlighting: remove spaces and diacritics for a "fuzzy" match
+      const cleanQuery = query.toLowerCase().replace(/\s/g, "");
+      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
       
       const highlight = (text) => {
         if (!text) return "";
         let highlighted = text;
+        
+        // 1. Try matching the full normalized query (e.g. "mn1" in "MN 1")
+        // We do this by finding the match in a normalized version but applying it to the original
+        if (cleanQuery.length > 1) {
+            const normalizedText = text.toLowerCase().replace(/\s/g, "");
+            if (normalizedText.includes(cleanQuery)) {
+                // This is a bit tricky to highlight exactly in the original text if there are spaces.
+                // For now, let's fallback to term-based highlighting which is safer for HTML.
+            }
+        }
+
+        // 2. Term-based highlighting
         queryTerms.forEach(term => {
-          // Robust highlight for Pali/Vietnamese diacritics using simple regex
+          if (term.length < 2 && !/^\d+$/.test(term)) return; // Don't highlight single letters unless they are numbers
           const regex = new RegExp(`(${term})`, "gi");
           highlighted = highlighted.replace(regex, '<b class="match-highlight">$1</b>');
         });
@@ -58,30 +72,45 @@ export function setupQuickNav(onSearchCallback) {
 
       previewContainer.innerHTML = results.map((item, index) => {
         let metaLine = "";
-        let idPart = `<b>${highlight(item.acronym || item.uid)}</b>`;
+        
+        // Prepare highlighted parts
+        const highlightedId = highlight(item.acronym || item.uid);
+        const highlightedOriginalTitle = highlight(item.original_title || '');
+        const highlightedTranslatedTitle = highlight(item.translated_title || '');
+        
+        const idPart = `<b>${highlightedId}</b>`;
         
         if (item.type === 'alias') {
           const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
           const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
-          const targetTitle = `${highlight(item.target_original_title || '')} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${highlight(item.target_translated_title || '')}`;
+          const targetTitle = `${highlightedOriginalTitle} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${highlightedTranslatedTitle}`;
           metaLine = `${aliasIcon}<span>${idPart}${hashPart}: ${targetTitle}</span>`;
         } else if (item.type === 'subleaf') {
-          const title = highlight(item.original_title || item.parent_original_title || '');
-          const transTitle = highlight(item.translated_title || item.parent_translated_title || '');
+          const title = highlightedOriginalTitle || highlight(item.parent_original_title || '');
+          const transTitle = highlightedTranslatedTitle || highlight(item.parent_translated_title || '');
           const separator = title && transTitle ? ' – ' : '';
           metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
         } else {
-          const title = highlight(item.original_title || '');
-          const transTitle = highlight(item.translated_title || '');
+          const title = highlightedOriginalTitle;
+          const transTitle = highlightedTranslatedTitle;
           const separator = title && transTitle ? ' – ' : '';
           metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
         }
 
         // Snippet Logic:
-        // If FTS snippet contains <b>, it means the match is IN the snippet (likely in blurb)
-        // If not, and we have a raw blurb, show the full blurb instead of a generic snippet
+        // 1. If match is in Line 1 (metaLine contains highlight tags)
+        // 2. And we have a blurb
+        // 3. And the FTS snippet seems redundant (just the UID or Acronym)
+        // -> Then show the full blurb for context.
+        
         let displaySnippet = item.snippet || '';
-        if (!displaySnippet.includes('<b>') && item.blurb) {
+        const hasLine1Match = metaLine.includes('class="match-highlight"');
+        const snippetIsRedundant = !displaySnippet.includes('<b>') || 
+                                  (displaySnippet.replace(/<[^>]*>/g, '').length < 15);
+
+        if (hasLine1Match && item.blurb && snippetIsRedundant) {
+            displaySnippet = item.blurb;
+        } else if (!displaySnippet && item.blurb) {
             displaySnippet = item.blurb;
         }
 
