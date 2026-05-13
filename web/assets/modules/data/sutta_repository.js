@@ -33,7 +33,7 @@ export const SuttaRepository = {
         return null;
     },
 
-    async searchMetadata(query, limit = 8) {
+    async searchMetadata(query, limit = 30) {
         if (!query || query.length < 2) return [];
         
         // [FTS5] Prepare query for prefix search

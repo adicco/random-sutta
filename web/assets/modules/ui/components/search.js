@@ -143,14 +143,14 @@ export function setupQuickNav(onSearchCallback) {
         }
       }
       performSearch();
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown" || (e.ctrlKey && e.key === "n")) {
       const items = previewContainer.querySelectorAll(".search-preview-item");
       if (items.length > 0) {
         activeIndex = (activeIndex + 1) % items.length;
         updateActiveItem();
         e.preventDefault();
       }
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === "ArrowUp" || (e.ctrlKey && e.key === "p")) {
       const items = previewContainer.querySelectorAll(".search-preview-item");
       if (items.length > 0) {
         activeIndex = (activeIndex - 1 + items.length) % items.length;
