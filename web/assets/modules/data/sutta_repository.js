@@ -44,6 +44,11 @@ export const SuttaRepository = {
         const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
 
         // [RANKING & CONTEXT] Join with metadata table to get type and target/parent info
+        // Priorities: 
+        // 0: Exact UID Match
+        // 1: Exact Acronym Match
+        // 2: Primary Books (Major Nikayas + Popular Khuddaka)
+        // 3: Others
         const sql = `
             SELECT 
                 m.uid, m.acronym, m.type, m.target_uid, m.parent_uid, m.hash_id,
@@ -54,7 +59,8 @@ export const SuttaRepository = {
                 (CASE 
                     WHEN m.uid = ? THEN 0
                     WHEN m.acronym = ? THEN 1
-                    ELSE 2 
+                    WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 2
+                    ELSE 3 
                 END) as priority
             FROM metadata_fts f
             JOIN metadata m ON f.rowid = m.rowid
