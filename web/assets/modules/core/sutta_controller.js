@@ -1,5 +1,6 @@
 // Path: web/assets/modules/core/sutta_controller.js
 import { SuttaService } from "services/sutta_service.js";
+import { SuttaRepository } from "data/sutta_repository.js";
 import { RandomBuffer } from "services/random_buffer.js";
 import { renderSutta } from "ui/views/renderer.js";
 import { Router } from "core/router.js";
