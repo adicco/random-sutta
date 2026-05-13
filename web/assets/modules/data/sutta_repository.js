@@ -37,7 +37,6 @@ export const SuttaRepository = {
         if (!query || query.length < 2) return [];
         
         // [FTS5] Prepare query for prefix search
-        // replace dots and other separators with spaces to match tokens
         const cleanQuery = query.replace(/[.*"':]/g, " ").trim();
         if (!cleanQuery) return [];
         
@@ -45,27 +44,20 @@ export const SuttaRepository = {
         const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
 
         // [RANKING & CONTEXT] Join with metadata table to get type and target/parent info
-        // We use query.trim() for exact matches to preserve dots in UID/Acronym checks
         const exactMatchQuery = query.trim();
-        // Priorities: 
-        // 0: Exact UID Match
-        // 1: Exact Acronym Match
-        // 2: Primary Books (Major Nikayas + Popular Khuddaka)
-        // 3: Others
         const sql = `
             SELECT 
-                m.uid, m.acronym, m.type, m.target_uid, m.parent_uid, m.hash_id,
+                m.uid, m.type, m.target_uid, m.parent_uid, m.hash_id,
                 m.original_title, m.translated_title, m.blurb,
-                t.acronym as target_acronym, t.original_title as target_original_title, t.translated_title as target_translated_title,
-                p.acronym as parent_acronym, p.original_title as parent_original_title, p.translated_title as parent_translated_title, p.blurb as parent_blurb,
+                t.original_title as target_original_title, t.translated_title as target_translated_title, t.blurb as target_blurb,
+                p.original_title as parent_original_title, p.translated_title as parent_translated_title, p.blurb as parent_blurb,
                 snippet(metadata_fts, -1, '<b>', '</b>', '...', 25) as snippet,
                 (CASE 
                     WHEN m.uid = ? THEN 0
-                    WHEN m.acronym = ? THEN 1
-                    WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 2
-                    WHEN m.book_id LIKE 'pli-tv-%' THEN 3
-                    WHEN m.book_id IN ('ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana') THEN 4
-                    ELSE 5 
+                    WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 1
+                    WHEN m.book_id LIKE 'pli-tv-%' THEN 2
+                    WHEN m.book_id IN ('ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana') THEN 3
+                    ELSE 4 
                 END) as priority
             FROM metadata_fts f
             JOIN metadata m ON f.rowid = m.rowid
@@ -77,7 +69,7 @@ export const SuttaRepository = {
         `;
         
         try {
-            return await SuttaDB.query(sql, [exactMatchQuery.toLowerCase(), exactMatchQuery.toUpperCase(), ftsQuery, limit]);
+            return await SuttaDB.query(sql, [exactMatchQuery.toLowerCase(), ftsQuery, limit]);
         } catch (e) {
             logger.error("Search", "FTS5 query failed", e);
             return [];

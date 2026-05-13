@@ -75,7 +75,6 @@ class SqliteGenerator:
             cursor.execute("""
                 CREATE VIRTUAL TABLE IF NOT EXISTS metadata_fts USING fts5(
                     uid,
-                    acronym,
                     original_title,
                     translated_title,
                     blurb,
