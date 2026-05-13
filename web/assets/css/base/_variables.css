@@ -110,6 +110,7 @@
 
   /* Functional Colors */
   --primary-color: var(--primitive-brown-500);
+  --primary-rgb: 139, 69, 19;
   --primary-hover: var(--primitive-brown-400);
   --text-link: var(--primitive-brown-500);
 

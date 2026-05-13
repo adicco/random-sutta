@@ -70,6 +70,20 @@ class SqliteGenerator:
             
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_book_id ON metadata(book_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_random_pools_book_id ON random_pools(book_id)")
+            
+            # FTS5 for metadata
+            cursor.execute("""
+                CREATE VIRTUAL TABLE IF NOT EXISTS metadata_fts USING fts5(
+                    uid,
+                    acronym,
+                    original_title,
+                    translated_title,
+                    blurb,
+                    content='metadata',
+                    content_rowid='rowid',
+                    tokenize='unicode61 remove_diacritics 2'
+                )
+            """)
             conn.commit()
         logger.info(f"✨ [SQLite] Core Database initialized at {self.core_db_path}")
 
@@ -93,6 +107,15 @@ class SqliteGenerator:
 
     def finalize(self):
         """Optimize all databases."""
+        # Ensure FTS is fully populated and optimized
+        try:
+            with self._get_core_connection() as conn:
+                logger.info("   ⚡ [SQLite] Rebuilding Metadata FTS index...")
+                conn.execute("INSERT INTO metadata_fts(metadata_fts) VALUES('rebuild')")
+                conn.commit()
+        except Exception as e:
+            logger.error(f"❌ [SQLite] FTS rebuild failed: {e}")
+
         db_paths = [self.core_db_path] + [self.output_dir / f"sutta_content_{cat}.db" for cat in self.content_conns.keys()]
         
         for conn in self.content_conns.values():

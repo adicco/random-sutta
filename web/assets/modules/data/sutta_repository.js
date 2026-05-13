@@ -33,6 +33,35 @@ export const SuttaRepository = {
         return null;
     },
 
+    async searchMetadata(query, limit = 10) {
+        if (!query || query.length < 2) return [];
+        
+        // [FTS5] Prepare query for prefix search
+        // remove special FTS characters that might break the query
+        const cleanQuery = query.replace(/[*"':]/g, " ").trim();
+        if (!cleanQuery) return [];
+        
+        const terms = cleanQuery.split(/\s+/);
+        const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
+
+        const sql = `
+            SELECT 
+                uid, acronym, original_title, translated_title,
+                snippet(metadata_fts, -1, '<b>', '</b>', '...', 15) as snippet
+            FROM metadata_fts 
+            WHERE metadata_fts MATCH ? 
+            ORDER BY rank 
+            LIMIT ?
+        `;
+        
+        try {
+            return await SuttaDB.query(sql, [ftsQuery, limit]);
+        } catch (e) {
+            logger.error("Search", "FTS5 query failed", e);
+            return [];
+        }
+    },
+
     async fetchMeta(bookId) {
         // Query Metadata từ Core DB
         const metaResults = await SuttaDB.query("SELECT * FROM metadata WHERE book_id = ?", [bookId]);
