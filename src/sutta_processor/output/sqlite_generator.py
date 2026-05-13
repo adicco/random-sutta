@@ -40,6 +40,7 @@ class SqliteGenerator:
     def _init_core_db(self):
         with self._get_core_connection() as conn:
             cursor = conn.cursor()
+            cursor.execute("PRAGMA page_size = 4096")
             # Config Table
             cursor.execute("CREATE TABLE IF NOT EXISTS config (key TEXT PRIMARY KEY, value TEXT)")
             # Metadata Table
@@ -60,7 +61,8 @@ class SqliteGenerator:
                     extract_id TEXT,
                     nav_prev TEXT,
                     nav_next TEXT,
-                    child_range TEXT
+                    child_range TEXT,
+                    search_priority INTEGER DEFAULT 3
                 )
             """)
             # Structure Table
@@ -69,6 +71,7 @@ class SqliteGenerator:
             cursor.execute("CREATE TABLE IF NOT EXISTS random_pools (book_id TEXT, sutta_uid TEXT, PRIMARY KEY (book_id, sutta_uid))")
             
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_book_id ON metadata(book_id)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_search_priority ON metadata(search_priority)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_random_pools_book_id ON random_pools(book_id)")
             
             # FTS5 for metadata
@@ -231,14 +234,25 @@ class SqliteGenerator:
                 if uid in parent_map:
                     m["parent_uid"] = parent_map[uid]
 
+                # Pre-calculate search priority
+                # 0: Primary, 1: Vinaya, 2: Abhidhamma, 3: Others
+                b_id = m.get("book_id") or book_id
+                priority = 3
+                if b_id in ['dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig']:
+                    priority = 0
+                elif b_id.startswith('pli-tv-'):
+                    priority = 1
+                elif b_id in ['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana']:
+                    priority = 2
+
                 nav = m.get("nav", {})
                 children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                 cursor.execute("""
                     INSERT INTO metadata (
                         uid, book_id, type, acronym, translated_title, original_title,
                         blurb, author_uid, parent_uid, target_uid, children,
-                        hash_id, extract_id, nav_prev, nav_next, child_range
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        hash_id, extract_id, nav_prev, nav_next, child_range, search_priority
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(uid) DO UPDATE SET
                         type=excluded.type, acronym=excluded.acronym,
                         translated_title=excluded.translated_title, original_title=excluded.original_title,
@@ -247,13 +261,14 @@ class SqliteGenerator:
                         children=CASE WHEN excluded.children = '[]' THEN metadata.children ELSE excluded.children END,
                         hash_id=excluded.hash_id,
                         extract_id=excluded.extract_id, nav_prev=excluded.nav_prev, nav_next=excluded.nav_next,
-                        child_range=excluded.child_range
+                        child_range=excluded.child_range,
+                        search_priority=excluded.search_priority
                 """, (
-                    uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
+                    uid, b_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
                     m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
                     m.get("parent_uid"), m.get("target_uid"), children_json,
                     m.get("hash_id"), m.get("extract_id"), nav.get("prev"), nav.get("next"),
-                    m.get("child_range")
+                    m.get("child_range"), priority
                 ))
             conn.commit()
 

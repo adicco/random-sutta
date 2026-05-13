@@ -61,17 +61,14 @@ export const SuttaRepository = {
                     WHEN m.uid = ? THEN 0
                     WHEN m.acronym LIKE ? THEN 1
                     WHEN (m.original_title LIKE '%' || ? || '%' OR m.translated_title LIKE '%' || ? || '%' OR m.blurb LIKE '%' || ? || '%') THEN 2
-                    WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 3
-                    WHEN m.book_id LIKE 'pli-tv-%' THEN 4
-                    WHEN m.book_id IN ('ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana') THEN 5
-                    ELSE 6 
-                END) as priority
+                    ELSE 3
+                END) as match_priority
             FROM metadata_fts f
             JOIN metadata m ON f.rowid = m.rowid
             LEFT JOIN metadata t ON m.target_uid = t.uid
             LEFT JOIN metadata p ON m.parent_uid = p.uid
             WHERE f.metadata_fts MATCH ? 
-            ORDER BY priority, rank 
+            ORDER BY match_priority, m.search_priority, rank 
             LIMIT ?
         `;
         
