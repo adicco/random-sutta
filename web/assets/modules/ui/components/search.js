@@ -39,35 +39,56 @@ export function setupQuickNav(onSearchCallback) {
     activeIndex = -1;
   }
 
-  function renderPreview(results) {
+  function renderPreview(results, query) {
     if (!results || results.length === 0) {
       previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
     } else {
+      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+      
+      const highlight = (text) => {
+        if (!text) return "";
+        let highlighted = text;
+        queryTerms.forEach(term => {
+          // Robust highlight for Pali/Vietnamese diacritics using simple regex
+          const regex = new RegExp(`(${term})`, "gi");
+          highlighted = highlighted.replace(regex, "<b>$1</b>");
+        });
+        return highlighted;
+      };
+
       previewContainer.innerHTML = results.map((item, index) => {
         let metaLine = "";
-        let idPart = `<b>${item.acronym || item.uid}</b>`;
+        let idPart = `<b>${highlight(item.acronym || item.uid)}</b>`;
         
         if (item.type === 'alias') {
           const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
           const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
-          const targetTitle = `${item.target_original_title || ''} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${item.target_translated_title || ''}`;
+          const targetTitle = `${highlight(item.target_original_title || '')} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${highlight(item.target_translated_title || '')}`;
           metaLine = `${aliasIcon}<span>${idPart}${hashPart}: ${targetTitle}</span>`;
         } else if (item.type === 'subleaf') {
-          const title = item.original_title || item.parent_original_title || '';
-          const transTitle = item.translated_title || item.parent_translated_title || '';
+          const title = highlight(item.original_title || item.parent_original_title || '');
+          const transTitle = highlight(item.translated_title || item.parent_translated_title || '');
           const separator = title && transTitle ? ' – ' : '';
           metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
         } else {
-          const title = item.original_title || '';
-          const transTitle = item.translated_title || '';
+          const title = highlight(item.original_title || '');
+          const transTitle = highlight(item.translated_title || '');
           const separator = title && transTitle ? ' – ' : '';
           metaLine = `<span>${idPart}: ${title}${separator}${transTitle}</span>`;
+        }
+
+        // Snippet Logic:
+        // If FTS snippet contains <b>, it means the match is IN the snippet (likely in blurb)
+        // If not, and we have a raw blurb, show the full blurb instead of a generic snippet
+        let displaySnippet = item.snippet || '';
+        if (!displaySnippet.includes('<b>') && item.blurb) {
+            displaySnippet = item.blurb;
         }
 
         return `
           <div class="search-preview-item" data-uid="${item.uid}" data-index="${index}">
             <div class="search-preview-meta">${metaLine}</div>
-            <div class="search-preview-snippet">${item.snippet || ''}</div>
+            <div class="search-preview-snippet">${displaySnippet}</div>
           </div>
         `;
       }).join('');
@@ -107,7 +128,7 @@ export function setupQuickNav(onSearchCallback) {
     debounceTimer = setTimeout(async () => {
        const results = await SuttaRepository.searchMetadata(query);
        if (inputField.value.trim().length >= 2) {
-         renderPreview(results);
+         renderPreview(results, query);
        }
     }, 250);
   });
