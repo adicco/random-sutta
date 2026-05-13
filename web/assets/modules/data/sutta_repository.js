@@ -37,25 +37,34 @@ export const SuttaRepository = {
         if (!query || query.length < 2) return [];
         
         // [FTS5] Prepare query for prefix search
-        // remove special FTS characters that might break the query
         const cleanQuery = query.replace(/[*"':]/g, " ").trim();
         if (!cleanQuery) return [];
         
         const terms = cleanQuery.split(/\s+/);
         const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
 
+        // [RANKING] Prioritize UID and Acronym matches
+        // We use a custom weighting: 
+        // 1. Exact UID match (highest)
+        // 2. Exact Acronym match
+        // 3. FTS5 default rank (relevancy across all fields)
         const sql = `
             SELECT 
                 uid, acronym, original_title, translated_title,
-                snippet(metadata_fts, -1, '<b>', '</b>', '...', 15) as snippet
+                snippet(metadata_fts, -1, '<b>', '</b>', '...', 15) as snippet,
+                (CASE 
+                    WHEN uid = ? THEN 0
+                    WHEN acronym = ? THEN 1
+                    ELSE 2 
+                END) as priority
             FROM metadata_fts 
             WHERE metadata_fts MATCH ? 
-            ORDER BY rank 
+            ORDER BY priority, rank 
             LIMIT ?
         `;
         
         try {
-            return await SuttaDB.query(sql, [ftsQuery, limit]);
+            return await SuttaDB.query(sql, [cleanQuery.toLowerCase(), cleanQuery.toUpperCase(), ftsQuery, limit]);
         } catch (e) {
             logger.error("Search", "FTS5 query failed", e);
             return [];
