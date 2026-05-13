@@ -37,13 +37,16 @@ export const SuttaRepository = {
         if (!query || query.length < 2) return [];
         
         // [FTS5] Prepare query for prefix search
-        const cleanQuery = query.replace(/[*"':]/g, " ").trim();
+        // replace dots and other separators with spaces to match tokens
+        const cleanQuery = query.replace(/[.*"':]/g, " ").trim();
         if (!cleanQuery) return [];
         
-        const terms = cleanQuery.split(/\s+/);
+        const terms = cleanQuery.split(/\s+/).filter(t => t.length > 0);
         const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
 
         // [RANKING & CONTEXT] Join with metadata table to get type and target/parent info
+        // We use query.trim() for exact matches to preserve dots in UID/Acronym checks
+        const exactMatchQuery = query.trim();
         // Priorities: 
         // 0: Exact UID Match
         // 1: Exact Acronym Match
@@ -74,7 +77,7 @@ export const SuttaRepository = {
         `;
         
         try {
-            return await SuttaDB.query(sql, [cleanQuery.toLowerCase(), cleanQuery.toUpperCase(), ftsQuery, limit]);
+            return await SuttaDB.query(sql, [exactMatchQuery.toLowerCase(), exactMatchQuery.toUpperCase(), ftsQuery, limit]);
         } catch (e) {
             logger.error("Search", "FTS5 query failed", e);
             return [];
