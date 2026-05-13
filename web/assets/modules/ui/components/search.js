@@ -44,7 +44,26 @@ export function setupQuickNav(onSearchCallback) {
       previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
     } else {
       previewContainer.innerHTML = results.map((item, index) => {
-        const metaLine = `<b>${item.acronym || item.uid}</b>: ${item.original_title || ''} ${item.original_title && item.translated_title ? '–' : ''} ${item.translated_title || ''}`;
+        let metaLine = "";
+        let idPart = `<b>${item.acronym || item.uid}</b>`;
+        
+        if (item.type === 'alias') {
+          const targetId = item.target_acronym || item.target_uid;
+          const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
+          const targetTitle = `${item.target_original_title || ''} ${item.target_original_title && item.target_translated_title ? '–' : ''} ${item.target_translated_title || ''}`;
+          metaLine = `-> ${idPart}${hashPart}: ${targetTitle}`;
+        } else if (item.type === 'subleaf') {
+          const title = item.original_title || item.parent_original_title || '';
+          const transTitle = item.translated_title || item.parent_translated_title || '';
+          const separator = title && transTitle ? ' – ' : '';
+          metaLine = `${idPart}: ${title}${separator}${transTitle}`;
+        } else {
+          const title = item.original_title || '';
+          const transTitle = item.translated_title || '';
+          const separator = title && transTitle ? ' – ' : '';
+          metaLine = `${idPart}: ${title}${separator}${transTitle}`;
+        }
+
         return `
           <div class="search-preview-item" data-uid="${item.uid}" data-index="${index}">
             <div class="search-preview-meta">${metaLine}</div>

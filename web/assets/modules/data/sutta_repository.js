@@ -43,22 +43,24 @@ export const SuttaRepository = {
         const terms = cleanQuery.split(/\s+/);
         const ftsQuery = terms.map(t => `${t}*`).join(' AND ');
 
-        // [RANKING] Prioritize UID and Acronym matches
-        // We use a custom weighting: 
-        // 1. Exact UID match (highest)
-        // 2. Exact Acronym match
-        // 3. FTS5 default rank (relevancy across all fields)
+        // [RANKING & CONTEXT] Join with metadata table to get type and target/parent info
         const sql = `
             SELECT 
-                uid, acronym, original_title, translated_title,
+                m.uid, m.acronym, m.type, m.target_uid, m.parent_uid, m.hash_id,
+                m.original_title, m.translated_title,
+                t.acronym as target_acronym, t.original_title as target_original_title, t.translated_title as target_translated_title,
+                p.acronym as parent_acronym, p.original_title as parent_original_title, p.translated_title as parent_translated_title,
                 snippet(metadata_fts, -1, '<b>', '</b>', '...', 15) as snippet,
                 (CASE 
-                    WHEN uid = ? THEN 0
-                    WHEN acronym = ? THEN 1
+                    WHEN m.uid = ? THEN 0
+                    WHEN m.acronym = ? THEN 1
                     ELSE 2 
                 END) as priority
-            FROM metadata_fts 
-            WHERE metadata_fts MATCH ? 
+            FROM metadata_fts f
+            JOIN metadata m ON f.rowid = m.rowid
+            LEFT JOIN metadata t ON m.target_uid = t.uid
+            LEFT JOIN metadata p ON m.parent_uid = p.uid
+            WHERE f.metadata_fts MATCH ? 
             ORDER BY priority, rank 
             LIMIT ?
         `;
