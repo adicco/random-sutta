@@ -76,8 +76,8 @@ export const SuttaController = {
         if (shouldUpdateUrl) {
             try {
                 const bookParam = FilterComponent.generateBookParam();
-                // [FIX] Preserve the hash during initial update to prevent UI flickers/loss
-                Router.updateURL(null, bookParam, false, scrollTarget, currentScroll);
+                // [FIX] Ensure the URL is updated with the requested suttaId or search query
+                Router.updateURL(suttaId, bookParam, false, scrollTarget, currentScroll);
             } catch (e) {}
         }
 

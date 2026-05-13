@@ -65,15 +65,21 @@ export async function renderSutta(suttaId, data, options = {}) {
     const nav = data.nav || {};
     const bottomNavHtml = UIFactory.createBottomNavHtml(nav.prev, nav.next, data.navMeta || {});
     
-    // Thêm Familiarity Bar
-    const famBarTop = FamiliarityBar.generateHtml(data.uid, true);
-    const famBarBottom = FamiliarityBar.generateHtml(data.uid, false);
+    // Thêm Familiarity Bar (Chỉ hiển thị cho Leaf)
+    let famBarTop = "";
+    let famBarBottom = "";
+    if (isLeaf) {
+        famBarTop = FamiliarityBar.generateHtml(data.uid, true);
+        famBarBottom = FamiliarityBar.generateHtml(data.uid, false);
+    }
     
     if (famHeaderContainer) famHeaderContainer.innerHTML = famBarTop;
     container.innerHTML = renderResult.html + famBarBottom + bottomNavHtml;
     
     // Bind events for the newly added familiarity buttons
-    FamiliarityBar.bindEvents();
+    if (isLeaf) {
+        FamiliarityBar.bindEvents();
+    }
 
     HeaderView.update(renderResult.displayInfo, nav.prev, nav.next, data.navMeta);
 
