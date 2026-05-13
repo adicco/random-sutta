@@ -76,8 +76,19 @@ export class SuttaDB {
             // Check nếu file thực sự tồn tại trong VFS bằng cách mở thử
             const testInstance = await initSQLitePersistent({ dbName });
             const empty = await testInstance.isEmpty();
+            
+            // [NEW] Kiểm tra schema FTS nếu là core db
+            let ftsMissing = false;
+            if (dbName === 'sutta_core.db' && !empty) {
+                const tables = await testInstance.run("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata_fts'");
+                if (tables.length === 0) ftsMissing = true;
+            }
+
             await testInstance.close();
-            if (empty) needsUpdate = true;
+            if (empty || ftsMissing) {
+                if (ftsMissing) logger.warn("Storage", "Schema update required (FTS missing). forcing update.");
+                needsUpdate = true;
+            }
         }
 
         // 2. Nếu cần update, download và import
@@ -156,20 +167,40 @@ export class SuttaDB {
         }
 
         // 2. Try to update from network with a short timeout
-        try {
+        const tryFetch = async (url) => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            try {
+                const resp = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                if (resp.ok) {
+                    const contentType = resp.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        return await resp.json();
+                    }
+                    // If we got HTML (Vite dev server fallback), it's not our manifest
+                    const text = await resp.text();
+                    if (text.trim().startsWith("<!DOCTYPE")) return null;
+                    return JSON.parse(text);
+                }
+            } catch (e) {}
+            return null;
+        };
+
+        try {
+            // Try paths: relative, root-relative, and app-relative (for dev quirks)
+            let data = await tryFetch('assets/db/db_manifest.json');
+            if (!data) data = await tryFetch('/assets/db/db_manifest.json');
             
-            const resp = await fetch('assets/db/db_manifest.json', { signal: controller.signal });
-            clearTimeout(timeoutId);
-            
-            if (resp.ok) {
-                this.manifest = await resp.json();
+            if (data) {
+                this.manifest = data;
                 await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
                 logger.info("Manifest", "Updated from network");
+            } else {
+                logger.warn("Manifest", "Network fetch failed or returned invalid data, using cache");
             }
         } catch (e) {
-            logger.warn("Manifest", "Network fetch failed or timed out, using cache", e);
+            logger.warn("Manifest", "Manifest update process failed", e);
         }
     }
 
@@ -183,9 +214,26 @@ export class SuttaDB {
     }
 
     static async _fetchFile(fileName, onProgress) {
-        const url = `assets/db/${fileName}?v=${this.manifest?.files?.[fileName]?.hash || Date.now()}`;
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status} for ${fileName}`);
+        const query = `?v=${this.manifest?.files?.[fileName]?.hash || Date.now()}`;
+        
+        const tryFetchFile = async (basePath) => {
+            try {
+                const url = `${basePath}${fileName}${query}`;
+                const response = await fetch(url);
+                if (response.ok) {
+                    const contentType = response.headers.get("content-type");
+                    // Check if we got HTML instead of a DB file
+                    if (contentType && contentType.includes("text/html")) return null;
+                    return response;
+                }
+            } catch (e) {}
+            return null;
+        };
+
+        let response = await tryFetchFile('assets/db/');
+        if (!response) response = await tryFetchFile('/assets/db/');
+        
+        if (!response) throw new Error(`Could not fetch database file: ${fileName}`);
 
         const total = parseInt(response.headers.get('content-length') || "0", 10);
         let loaded = 0;
