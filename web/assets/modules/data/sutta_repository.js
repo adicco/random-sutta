@@ -60,7 +60,9 @@ export const SuttaRepository = {
                     WHEN m.uid = ? THEN 0
                     WHEN m.acronym = ? THEN 1
                     WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 2
-                    ELSE 3 
+                    WHEN m.book_id LIKE 'pli-tv-%' THEN 3
+                    WHEN m.book_id IN ('ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana') THEN 4
+                    ELSE 5 
                 END) as priority
             FROM metadata_fts f
             JOIN metadata m ON f.rowid = m.rowid
