@@ -4,6 +4,7 @@ import { SuttaRepository } from "data/sutta_repository.js";
 import { RandomBuffer } from "services/random_buffer.js";
 import { renderSutta } from "ui/views/renderer.js";
 import { Router } from "core/router.js";
+import { ViewManager } from "ui/managers/view_manager.js";
 import { FilterComponent } from "ui/components/filters/index.js";
 import { PopupAPI } from "ui/components/popup/index.js";
 import { Scroller } from "ui/common/scroller.js";
@@ -119,7 +120,7 @@ export const SuttaController = {
                     };
                     
                     // [FIX] Ensure we switch to reader view for search results
-                    if (window.switchView) window.switchView('reader');
+                    ViewManager.switchView('reader');
                     
                     await renderSutta(suttaId, searchData, options);
                     logger.timerEnd(`Render: ${suttaId}`);
