@@ -33,7 +33,7 @@ export const SuttaRepository = {
         return null;
     },
 
-    async searchMetadata(query, limit = 10) {
+    async searchMetadata(query, limit = 8) {
         if (!query || query.length < 2) return [];
         
         // [FTS5] Prepare query for prefix search
@@ -50,7 +50,7 @@ export const SuttaRepository = {
                 m.original_title, m.translated_title,
                 t.acronym as target_acronym, t.original_title as target_original_title, t.translated_title as target_translated_title,
                 p.acronym as parent_acronym, p.original_title as parent_original_title, p.translated_title as parent_translated_title,
-                snippet(metadata_fts, -1, '<b>', '</b>', '...', 15) as snippet,
+                snippet(metadata_fts, -1, '<b>', '</b>', '...', 25) as snippet,
                 (CASE 
                     WHEN m.uid = ? THEN 0
                     WHEN m.acronym = ? THEN 1
