@@ -128,7 +128,7 @@ header {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 95%;
-  z-index: 1500;
+  z-index: 10000;
 }
 
 #nav-title-display #nav-search-container.hidden {
@@ -171,7 +171,7 @@ header {
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100vw - 20px);
+  width: calc(100vw - 40px);
   max-width: 600px;
   background: var(--bg-card);
   border-radius: var(--radius-md);
@@ -179,7 +179,7 @@ header {
   margin-top: 12px;
   max-height: 400px;
   overflow-y: auto;
-  z-index: 2000;
+  z-index: 10005;
   border: 1px solid var(--border-color);
 }
 
