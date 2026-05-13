@@ -45,6 +45,9 @@ export const SuttaRepository = {
 
         // [RANKING & CONTEXT] Join with metadata table to get type and target/parent info
         const exactMatchQuery = query.trim();
+        const normalizedUid = exactMatchQuery.toLowerCase().replace(/\s/g, "");
+        const phrase = exactMatchQuery.toLowerCase();
+
         const sql = `
             SELECT 
                 m.uid, m.type, m.target_uid, m.parent_uid, m.hash_id,
@@ -55,10 +58,11 @@ export const SuttaRepository = {
                 (CASE 
                     WHEN m.uid = ? THEN 0
                     WHEN m.acronym = ? THEN 1
-                    WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 2
-                    WHEN m.book_id LIKE 'pli-tv-%' THEN 3
-                    WHEN m.book_id IN ('ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana') THEN 4
-                    ELSE 5 
+                    WHEN (m.original_title LIKE '%' || ? || '%' OR m.translated_title LIKE '%' || ? || '%' OR m.blurb LIKE '%' || ? || '%') THEN 2
+                    WHEN m.book_id IN ('dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig') THEN 3
+                    WHEN m.book_id LIKE 'pli-tv-%' THEN 4
+                    WHEN m.book_id IN ('ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana') THEN 5
+                    ELSE 6 
                 END) as priority
             FROM metadata_fts f
             JOIN metadata m ON f.rowid = m.rowid
@@ -70,7 +74,13 @@ export const SuttaRepository = {
         `;
         
         try {
-            return await SuttaDB.query(sql, [exactMatchQuery.toLowerCase(), exactMatchQuery.toUpperCase(), ftsQuery, limit]);
+            return await SuttaDB.query(sql, [
+                normalizedUid, 
+                exactMatchQuery.toUpperCase(), 
+                phrase, phrase, phrase,
+                ftsQuery, 
+                limit
+            ]);
         } catch (e) {
             logger.error("Search", "FTS5 query failed", e);
             return [];
