@@ -63,11 +63,11 @@ export const SearchRenderer = {
 
             return `
                 <a href="?q=${item.uid}" onclick="event.preventDefault(); ${action}" class="search-full-item">
-                    <div class="search-full-title">
-                        <span class="search-translated-title">${translatedTitle}</span>
+                    <div class="search-translated-title">${translatedTitle}</div>
+                    <div class="search-secondary-line">
+                        ${originalTitle ? `<span class="search-original-title">${originalTitle}</span>` : '<span></span>'}
                         ${uidPart}
                     </div>
-                    ${originalTitle ? `<div class="search-original-title">${originalTitle}</div>` : ''}
                     ${displaySnippet ? `<div class="search-full-snippet">${displaySnippet}</div>` : ''}
                 </a>
             `;
