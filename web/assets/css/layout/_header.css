@@ -208,29 +208,30 @@ header {
 }
 
 .search-preview-meta {
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  font-size: 0.68rem;
+  color: var(--text-main);
+  opacity: 0.75;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   margin-bottom: 2px;
 }
 
 .search-preview-meta b {
   color: var(--text-main);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .search-preview-meta .match-highlight {
   color: var(--primary-color);
   background: none;
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .search-preview-alias-icon {
