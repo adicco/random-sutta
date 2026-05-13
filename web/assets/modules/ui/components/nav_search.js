@@ -1,5 +1,6 @@
 // Path: web/assets/modules/ui/components/nav_search.js
 import { SuttaRepository } from "data/sutta_repository.js";
+import { SearchHighlight } from "utils/search_highlight.js";
 
 export function setupQuickNav(onSearchCallback) {
   const displayContainer = document.getElementById("nav-title-display");
@@ -43,86 +44,18 @@ export function setupQuickNav(onSearchCallback) {
     if (!results || results.length === 0) {
       previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
     } else {
-      // 1. Prepare highlight patterns
-      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
-      let patterns = [];
-      
-      queryTerms.forEach(term => {
-          // Escape for regex
-          const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          
-          // Pattern 1: Exact term (e.g. "king", "an1.1")
-          patterns.push(new RegExp(`(?![^<]*>)(${escaped})`, "gi"));
-          
-          // Pattern 2: If alpha-numeric (mn1), allow spaces/dots between alpha and numeric
-          const acronymMatch = term.match(/^([a-z]+)([\d.]+)$/i);
-          if (acronymMatch) {
-              const alpha = acronymMatch[1];
-              const digits = acronymMatch[2].replace(/\./g, '\\.');
-              patterns.push(new RegExp(`(?![^<]*>)(${alpha}[\\s.]*${digits})`, "gi"));
-          }
-      });
-      patterns.sort((a, b) => b.source.length - a.source.length);
-
-      const stripHtml = (html) => {
-        if (!html) return "";
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || "";
-      };
-
-      const highlight = (text, isLine1 = true) => {
-        if (!text) return "";
-        let highlighted = text;
-        const tag = isLine1 ? '<b class="match-highlight">' : '<b>';
-        patterns.forEach(regex => {
-          highlighted = highlighted.replace(regex, `${tag}$1</b>`);
-        });
-        return highlighted;
-      };
-
-      const smartSnippet = (text) => {
-        if (!text) return "";
-        const cleanText = stripHtml(text);
-        
-        // Find the first match position
-        let matchPos = -1;
-        for (const regex of patterns) {
-            const m = regex.exec(cleanText);
-            if (m) {
-                matchPos = m.index;
-                break;
-            }
-        }
-
-        if (matchPos === -1) return cleanText.length > 120 ? cleanText.substring(0, 120) + "..." : cleanText;
-
-        // Extract a window around the match (approx 120 chars total)
-        const windowSize = 120;
-        let start = Math.max(0, matchPos - Math.floor(windowSize / 2));
-        let end = start + windowSize;
-
-        if (end > cleanText.length) {
-            end = cleanText.length;
-            start = Math.max(0, end - windowSize);
-        }
-
-        let snippet = cleanText.substring(start, end);
-        if (start > 0) snippet = "..." + snippet.substring(snippet.indexOf(" ") + 1);
-        if (end < cleanText.length) snippet = snippet.substring(0, snippet.lastIndexOf(" ")) + "...";
-
-        return snippet;
-      };
+      const patterns = SearchHighlight.getRegexPatterns(query);
 
       previewContainer.innerHTML = results.map((item, index) => {
-        const uidPart = `<b>${highlight(item.uid, true)}</b>`;
+        const uidPart = `<b>${SearchHighlight.highlight(item.uid, patterns, true)}</b>`;
         const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
         
         let metaLine = "";
         let rawContent = "";
 
         if (item.type === 'alias' || item.type === 'subleaf') {
-          const targetTitle = highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title, true) || '';
-          const targetTrans = highlight(item.type === 'alias' ? item.target_translated_title : item.parent_translated_title, true) || '';
+          const targetTitle = SearchHighlight.highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title, patterns, true) || '';
+          const targetTrans = SearchHighlight.highlight(item.type === 'alias' ? item.target_translated_title : item.parent_translated_title, patterns, true) || '';
           const separator = targetTitle && targetTrans ? ' – ' : '';
           
           metaLine = `${uidPart} ${aliasIcon} <span>${targetTitle}${separator}${targetTrans}</span>`;
@@ -130,8 +63,8 @@ export function setupQuickNav(onSearchCallback) {
           // Dòng 2: Ưu tiên Blurb của Đích (Alias) hoặc Cha (Subleaf)
           rawContent = (item.type === 'alias' ? item.target_blurb : item.parent_blurb) || item.blurb || "";
         } else {
-          const title = highlight(item.original_title || '', true);
-          const transTitle = highlight(item.translated_title || '', true);
+          const title = SearchHighlight.highlight(item.original_title || '', patterns, true);
+          const transTitle = SearchHighlight.highlight(item.translated_title || '', patterns, true);
           const separator = title && transTitle ? ' – ' : '';
           
           metaLine = `${uidPart}: <span>${title}${separator}${transTitle}</span>`;
@@ -143,10 +76,10 @@ export function setupQuickNav(onSearchCallback) {
         // Snippet Logic:
         let displaySnippet = "";
         if (rawContent) {
-            displaySnippet = highlight(smartSnippet(rawContent), false);
+            displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 120), patterns, false);
         } else if (item.snippet) {
             // Strip FTS snippet to prevent tag leakage from DB, then re-highlight
-            displaySnippet = highlight(stripHtml(item.snippet), false);
+            displaySnippet = SearchHighlight.highlight(SearchHighlight.stripHtml(item.snippet), patterns, false);
         }
 
         // Kiểm tra loại bỏ snippet dư thừa
