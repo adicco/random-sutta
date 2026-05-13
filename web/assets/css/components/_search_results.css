@@ -1,0 +1,108 @@
+/* Path: web/assets/css/components/_search_results.css */
+
+.search-results-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 15px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.search-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 15px;
+}
+
+.search-title {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  font-weight: 700;
+  margin: 0;
+}
+
+.search-stats {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
+.search-result-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.search-full-item {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 15px 20px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  text-decoration: none;
+}
+
+.search-full-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+.search-full-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-full-meta b {
+  color: var(--text-main);
+}
+
+.search-full-meta .match-highlight {
+  color: var(--primary-color);
+  background: none;
+  font-weight: 800;
+}
+
+.search-full-title {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.search-full-snippet {
+  font-size: 1rem;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+.search-full-snippet b {
+  background: rgba(var(--primary-rgb), 0.15);
+  color: var(--primary-color);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.search-no-results {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-muted);
+}
+
+.search-no-results i {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}

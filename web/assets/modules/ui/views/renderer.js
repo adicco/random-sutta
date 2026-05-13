@@ -1,6 +1,7 @@
 // Path: web/assets/modules/ui/views/renderer.js
 import { LeafRenderer } from "./renderers/leaf_renderer.js";
 import { BranchRenderer } from "./renderers/branch_renderer.js";
+import { SearchRenderer } from "./renderers/search_renderer.js";
 import { setupTableOfHeadings } from "ui/components/toh/toh_controller.js";
 import { UIFactory } from "ui/common/ui_factory.js";
 import { HeaderView } from "./header_view.js";
@@ -26,9 +27,15 @@ export async function renderSutta(suttaId, data, options = {}) {
     let renderResult = null;
     let isLeaf = false;
 
+    // [NEW] Trường hợp Kết quả tìm kiếm
+    if (data.type === 'search_results') {
+        renderResult = SearchRenderer.render(data);
+        document.getElementById("breadcrumb-container")?.classList.add("hidden");
+        document.getElementById("toh-wrapper")?.classList.add("hidden");
+    }
     // [FIX LOGIC] Phân loại dựa trên Meta Type thay vì chỉ dựa vào sự tồn tại của Content
     // Nếu có content -> Chắc chắn render Leaf
-    if (data.content) {
+    else if (data.content) {
         renderResult = LeafRenderer.render(data);
         isLeaf = true;
     } 

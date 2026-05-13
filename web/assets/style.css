@@ -26,6 +26,7 @@
 @import "css/components/_toh.css";
 @import "css/components/_splash.css";
 @import "css/components/_loader.css";
+@import "css/components/_search_results.css";
 
 /* [REFACTORED] TTS Styles Module */
 @import "css/components/tts/_index.css";

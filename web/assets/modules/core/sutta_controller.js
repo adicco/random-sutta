@@ -102,6 +102,25 @@ export const SuttaController = {
             logger.debug('loadSutta', `Data Fetch/Logic: ${(endFetch - startFetch).toFixed(2)}ms`);
             
             if (!result) {
+                // [NEW] If direct lookup fails, try searching metadata
+                const searchResults = await SuttaRepository.searchMetadata(suttaId, 50);
+                if (searchResults && searchResults.length > 0) {
+                    const searchData = {
+                        uid: suttaId,
+                        type: 'search_results',
+                        results: searchResults,
+                        query: suttaId,
+                        displayInfo: {
+                            uid: suttaId,
+                            title: `Search: ${suttaId}`,
+                            acronym: "Search"
+                        }
+                    };
+                    await renderSutta(suttaId, searchData, options);
+                    logger.timerEnd(`Render: ${suttaId}`);
+                    return true;
+                }
+
                 this.currentNav = { prev: null, next: null }; // Clear nav on error
                 renderSutta(suttaId, null, null, options);
                 logger.timerEnd(`Render: ${suttaId}`);
