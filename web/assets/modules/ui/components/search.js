@@ -43,43 +43,44 @@ export function setupQuickNav(onSearchCallback) {
     if (!results || results.length === 0) {
       previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
     } else {
-      // Normalize query for highlighting: remove spaces and diacritics for a "fuzzy" match
-      const cleanQuery = query.toLowerCase().replace(/\s/g, "");
+      // 1. Prepare highlight terms
       const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+      let highlightTerms = [];
+      
+      queryTerms.forEach(term => {
+          highlightTerms.push(term);
+          // If query is "mn1", also highlight "mn" and "1" separately
+          const parts = term.match(/^([a-z]+)(\d+)$/i);
+          if (parts) {
+              if (parts[1].length > 1) highlightTerms.push(parts[1]);
+              highlightTerms.push(parts[2]);
+          }
+      });
+      // Sort by length descending to prevent partial matches from stealing highlights
+      highlightTerms = [...new Set(highlightTerms)].sort((a, b) => b.length - a.length);
       
       const highlight = (text) => {
         if (!text) return "";
         let highlighted = text;
-        
-        // 1. Try matching the full normalized query (e.g. "mn1" in "MN 1")
-        // We do this by finding the match in a normalized version but applying it to the original
-        if (cleanQuery.length > 1) {
-            const normalizedText = text.toLowerCase().replace(/\s/g, "");
-            if (normalizedText.includes(cleanQuery)) {
-                // This is a bit tricky to highlight exactly in the original text if there are spaces.
-                // For now, let's fallback to term-based highlighting which is safer for HTML.
-            }
-        }
-
-        // 2. Term-based highlighting
-        queryTerms.forEach(term => {
-          if (term.length < 2 && !/^\d+$/.test(term)) return; // Don't highlight single letters unless they are numbers
-          const regex = new RegExp(`(${term})`, "gi");
+        highlightTerms.forEach(term => {
+          if (term.length < 1) return;
+          // Avoid re-highlighting existing tags
+          // We use a trick: match the term only if it's NOT inside a tag
+          const regex = new RegExp(`(?![^<]*>)(${term})`, "gi");
           highlighted = highlighted.replace(regex, '<b class="match-highlight">$1</b>');
         });
         return highlighted;
       };
 
       previewContainer.innerHTML = results.map((item, index) => {
-        let metaLine = "";
-        
         // Prepare highlighted parts
         const highlightedId = highlight(item.acronym || item.uid);
         const highlightedOriginalTitle = highlight(item.original_title || '');
         const highlightedTranslatedTitle = highlight(item.translated_title || '');
         
         const idPart = `<b>${highlightedId}</b>`;
-        
+        let metaLine = "";
+
         if (item.type === 'alias') {
           const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
           const hashPart = item.hash_id ? ` #${item.hash_id}` : "";
@@ -98,19 +99,18 @@ export function setupQuickNav(onSearchCallback) {
         }
 
         // Snippet Logic:
-        // 1. If match is in Line 1 (metaLine contains highlight tags)
-        // 2. And we have a blurb
-        // 3. And the FTS snippet seems redundant (just the UID or Acronym)
-        // -> Then show the full blurb for context.
-        
+        // Prioritize blurb if the FTS snippet is just repeating the ID/Acronym
         let displaySnippet = item.snippet || '';
-        const hasLine1Match = metaLine.includes('class="match-highlight"');
-        const snippetIsRedundant = !displaySnippet.includes('<b>') || 
-                                  (displaySnippet.replace(/<[^>]*>/g, '').length < 15);
+        const snippetPureText = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
+        const acronymPure = (item.acronym || '').toLowerCase().replace(/\s/g, '');
+        const uidPure = item.uid.toLowerCase();
+        
+        const isRedundant = !snippetPureText || 
+                            snippetPureText === acronymPure || 
+                            snippetPureText === uidPure || 
+                            (snippetPureText.length < 12 && !displaySnippet.includes('<b>'));
 
-        if (hasLine1Match && item.blurb && snippetIsRedundant) {
-            displaySnippet = item.blurb;
-        } else if (!displaySnippet && item.blurb) {
+        if (item.blurb && (isRedundant || !displaySnippet.includes('<b>'))) {
             displaySnippet = item.blurb;
         }
 
