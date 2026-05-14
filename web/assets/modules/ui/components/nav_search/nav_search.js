@@ -107,11 +107,11 @@ export function setupQuickNav(onSearchCallback) {
   });
 
   previewContainer.addEventListener("click", (e) => {
-    const item = e.target.closest(".search-preview-item");
+    const item = e.target.closest(".nav-search-item");
     if (item) {
       const uid = item.dataset.uid;
-      inputField.value = uid;
-      performSearch();
+      if (onSearchCallback) onSearchCallback(uid);
+      cancelSearch();
     }
   });
 
@@ -135,7 +135,10 @@ export function setupQuickNav(onSearchCallback) {
       if (activeIndex >= 0) {
         const activeItem = previewContainer.querySelector(`.nav-search-item[data-index="${activeIndex}"]`);
         if (activeItem) {
-          inputField.value = activeItem.dataset.uid;
+          const uid = activeItem.dataset.uid;
+          if (onSearchCallback) onSearchCallback(uid);
+          cancelSearch();
+          return;
         }
       }
       performSearch();
