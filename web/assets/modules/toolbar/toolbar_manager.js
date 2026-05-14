@@ -45,8 +45,14 @@ export const ToolbarManager = {
         if (this.searchInput) {
             this.searchInput.addEventListener("input", (e) => {
                 if (this.searchDebounce) clearTimeout(this.searchDebounce);
+                const val = e.target.value;
+                if (val) {
+                    localStorage.setItem("toolbar_search_query", val);
+                } else {
+                    localStorage.removeItem("toolbar_search_query");
+                }
                 this.searchDebounce = setTimeout(() => {
-                    this._performSearch(e.target.value);
+                    this._performSearch(val);
                 }, 300);
             });
 
@@ -89,9 +95,19 @@ export const ToolbarManager = {
         // Update root container dynamically in case it changed or wasn't ready
         this.searchEngine.root = document.getElementById("sutta-container");
         
+        // Restore saved query
+        const savedQuery = localStorage.getItem("toolbar_search_query");
+        if (savedQuery && this.searchInput) {
+            this.searchInput.value = savedQuery;
+            this._performSearch(savedQuery);
+        }
+        
         // Slight delay to allow CSS transition before focusing
         setTimeout(() => {
-            if (this.searchInput) this.searchInput.focus();
+            if (this.searchInput) {
+                this.searchInput.focus();
+                this.searchInput.select();
+            }
         }, 100);
     },
 
@@ -100,8 +116,6 @@ export const ToolbarManager = {
         this.isOpen = false;
         this.toolbar.classList.add("hidden");
         
-        // Clear search
-        if (this.searchInput) this.searchInput.value = "";
         this.searchEngine.clear();
         this._updateUI();
     },
