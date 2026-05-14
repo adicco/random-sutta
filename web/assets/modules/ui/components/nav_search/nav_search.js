@@ -26,12 +26,6 @@ export function setupQuickNav(onSearchCallback) {
       inputMode.classList.remove("hidden");
       document.body.classList.add("nav-search-active");
 
-      // Bring reader view to front to escape stacking context trap
-      const readerView = document.getElementById("reader-view");
-      if (readerView) {
-          ZIndexManager.bringToFront(readerView);
-      }
-      
       // Restore persisted query if within 10 minutes
       const savedQuery = localStorage.getItem("nav_search_query");
       const savedTime = localStorage.getItem("nav_search_time");
