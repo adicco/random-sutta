@@ -1,5 +1,15 @@
 {
   "appId": "com.randomsutta.app",
   "appName": "Random Sutta",
-  "webDir": "dist/web"
+  "webDir": "dist/web",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "appendUserAgent": "RandomSuttaApp",
+    "backgroundColor": "#ffffff",
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  }
 }
