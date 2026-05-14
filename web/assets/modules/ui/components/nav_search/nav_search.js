@@ -135,10 +135,29 @@ export function setupQuickNav(onSearchCallback) {
     debounceTimer = setTimeout(() => triggerSearch(query), 250);
   });
 
+  function extractAndSetOptimisticTitle(activeItem) {
+    if (!activeItem) return;
+    const uid = activeItem.dataset.uid;
+    let titleText = uid;
+    
+    // Attempt to extract the translated title from the rendered HTML (strip highlights)
+    const transEl = activeItem.querySelector(".nav-search-trans");
+    if (transEl) {
+       titleText = transEl.textContent.trim();
+    }
+    
+    const navMainTitle = document.getElementById("nav-main-title");
+    const navSubTitle = document.getElementById("nav-sub-title");
+    
+    if (navMainTitle) navMainTitle.textContent = titleText;
+    if (navSubTitle) navSubTitle.textContent = uid.toUpperCase();
+  }
+
   previewContainer.addEventListener("click", (e) => {
     const item = e.target.closest(".nav-search-item");
     if (item) {
       const uid = item.dataset.uid;
+      extractAndSetOptimisticTitle(item);
       if (onSearchCallback) onSearchCallback(uid);
       cancelSearch();
     }
@@ -152,6 +171,13 @@ export function setupQuickNav(onSearchCallback) {
       cancelSearch();
       return;
     }
+    
+    // Try to optimistically update based on query if it looks like a UID
+    const navMainTitle = document.getElementById("nav-main-title");
+    const navSubTitle = document.getElementById("nav-sub-title");
+    if (navMainTitle) navMainTitle.textContent = "Loading...";
+    if (navSubTitle) navSubTitle.textContent = cleanQuery.toUpperCase();
+
     // Gọi callback (thường là SuttaController.loadSutta)
     if (onSearchCallback) onSearchCallback(cleanQuery);
     cancelSearch();
@@ -165,6 +191,7 @@ export function setupQuickNav(onSearchCallback) {
         const activeItem = previewContainer.querySelector(`.nav-search-item[data-index="${activeIndex}"]`);
         if (activeItem) {
           const uid = activeItem.dataset.uid;
+          extractAndSetOptimisticTitle(activeItem);
           if (onSearchCallback) onSearchCallback(uid);
           cancelSearch();
           return;
