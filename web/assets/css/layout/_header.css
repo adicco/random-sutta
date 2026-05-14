@@ -258,11 +258,10 @@ header {
 }
 
 .nav-search-blurb {
-  font-size: 0.72rem;
+  font-size: 0.9rem;
   font-weight: 300;
-  color: var(--text-muted);
-  opacity: 0.9;
-  margin-top: 0px;
+  color: var(--text-main);
+  margin-top: 3px;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
