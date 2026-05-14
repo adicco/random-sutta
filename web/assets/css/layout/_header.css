@@ -81,6 +81,11 @@ header {
   background-color: rgba(0, 0, 0, 0.03);
 }
 
+/* Ensure the search UI overlays everything when active */
+body.nav-search-active #reader-view {
+  z-index: 2100;
+}
+
 #nav-title-text {
   width: 100%;
   display: flex;

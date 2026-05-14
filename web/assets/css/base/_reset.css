@@ -24,6 +24,12 @@ html {
    This prevents 'position: fixed' elements from breaking context on iOS
 */
 #landing-view, 
+#reader-view {
+  position: relative;
+  z-index: 1;
+}
+
+#landing-view, 
 #reader-view, 
 .popup-container {
   filter: 
