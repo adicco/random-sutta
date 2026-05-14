@@ -1,10 +1,10 @@
-// Path: web/assets/modules/ui/components/nav_search_renderer.js
+// Path: web/assets/modules/ui/components/nav_search/nav_search_renderer.js
 import { SearchHighlight } from "utils/search_highlight.js";
 
 export const NavSearchRenderer = {
     render: function(results, query, previewContainer) {
         if (!results || results.length === 0) {
-            previewContainer.innerHTML = '<div class="search-preview-empty">Không tìm thấy kết quả</div>';
+            previewContainer.innerHTML = '<div class="nav-search-empty">Không tìm thấy kết quả</div>';
             return;
         }
 
@@ -12,7 +12,7 @@ export const NavSearchRenderer = {
 
         previewContainer.innerHTML = results.map((item, index) => {
             const uidHighlight = `<b>${SearchHighlight.highlight(item.uid, patterns, true)}</b>`;
-            const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+            const aliasIcon = `<svg class="nav-search-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
             
             let translatedTitle = "";
             let originalTitle = "";
@@ -27,7 +27,7 @@ export const NavSearchRenderer = {
                 translatedTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig || '', patterns, true);
                 originalTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
                 
-                uidPart = `<span class="search-preview-uid">${uidHighlight} ${aliasIcon} ${isAlias ? 'Redirect' : ''}</span>`;
+                uidPart = `<span class="nav-search-uid">${uidHighlight} ${aliasIcon}</span>`;
                 rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
             } else {
                 const orig = item.original_title || '';
@@ -36,7 +36,7 @@ export const NavSearchRenderer = {
                 translatedTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig, patterns, true);
                 originalTitle = trans ? SearchHighlight.highlight(orig, patterns, true) : '';
                 
-                uidPart = `<span class="search-preview-uid">${uidHighlight}</span>`;
+                uidPart = `<span class="nav-search-uid">${uidHighlight}</span>`;
                 rawContent = item.blurb || "";
             }
 
@@ -50,13 +50,13 @@ export const NavSearchRenderer = {
             }
 
             return `
-                <div class="search-preview-item" data-uid="${item.uid}" data-index="${index}">
-                <div class="search-preview-translated-title">${translatedTitle}</div>
-                <div class="search-preview-secondary-line">
-                    ${originalTitle ? `<span class="search-preview-original-title">${originalTitle}</span>` : '<span></span>'}
+                <div class="nav-search-item" data-uid="${item.uid}" data-index="${index}">
+                <div class="nav-search-meta">
                     ${uidPart}
+                    ${originalTitle ? `<span class="nav-search-orig">${originalTitle}</span>` : ''}
+                    <span class="nav-search-trans">${translatedTitle}</span>
                 </div>
-                ${displaySnippet ? `<div class="search-blurb-snippet">${displaySnippet}</div>` : ''}
+                ${displaySnippet ? `<div class="nav-search-blurb">${displaySnippet}</div>` : ''}
                 </div>
             `;
         }).join('');

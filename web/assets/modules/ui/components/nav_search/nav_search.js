@@ -133,21 +133,21 @@ export function setupQuickNav(onSearchCallback) {
   inputField.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       if (activeIndex >= 0) {
-        const activeItem = previewContainer.querySelector(`.search-preview-item[data-index="${activeIndex}"]`);
+        const activeItem = previewContainer.querySelector(`.nav-search-item[data-index="${activeIndex}"]`);
         if (activeItem) {
           inputField.value = activeItem.dataset.uid;
         }
       }
       performSearch();
     } else if (e.key === "ArrowDown" || (e.ctrlKey && e.key === "n")) {
-      const items = previewContainer.querySelectorAll(".search-preview-item");
+      const items = previewContainer.querySelectorAll(".nav-search-item");
       if (items.length > 0) {
         activeIndex = (activeIndex + 1) % items.length;
         updateActiveItem();
         e.preventDefault();
       }
     } else if (e.key === "ArrowUp" || (e.ctrlKey && e.key === "p")) {
-      const items = previewContainer.querySelectorAll(".search-preview-item");
+      const items = previewContainer.querySelectorAll(".nav-search-item");
       if (items.length > 0) {
         activeIndex = (activeIndex - 1 + items.length) % items.length;
         updateActiveItem();
@@ -174,4 +174,6 @@ export function setupQuickNav(onSearchCallback) {
   });
 
   return { activateSearchMode };
+}
+;
 }
