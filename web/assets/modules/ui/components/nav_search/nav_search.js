@@ -175,5 +175,3 @@ export function setupQuickNav(onSearchCallback) {
 
   return { activateSearchMode };
 }
-;
-}
