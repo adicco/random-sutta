@@ -23,9 +23,32 @@ export function setupQuickNav(onSearchCallback) {
   function activateSearchMode() {
       textMode.classList.add("hidden");
       inputMode.classList.remove("hidden");
-      inputField.value = ""; 
-      inputField.focus();
-      hidePreview();
+      
+      // Restore persisted query if within 10 minutes
+      const savedQuery = localStorage.getItem("nav_search_query");
+      const savedTime = localStorage.getItem("nav_search_time");
+      const now = Date.now();
+      
+      if (savedQuery && savedTime && (now - parseInt(savedTime)) < 600000) {
+          inputField.value = savedQuery;
+          inputField.select();
+          // Trigger search immediately to populate preview
+          triggerSearch(savedQuery);
+      } else {
+          inputField.value = ""; 
+          inputField.focus();
+          hidePreview();
+      }
+  }
+
+  function saveQuery(query) {
+      if (query.length >= 2) {
+          localStorage.setItem("nav_search_query", query);
+          localStorage.setItem("nav_search_time", Date.now().toString());
+      } else {
+          localStorage.removeItem("nav_search_query");
+          localStorage.removeItem("nav_search_time");
+      }
   }
 
   function cancelSearch() {
@@ -39,6 +62,13 @@ export function setupQuickNav(onSearchCallback) {
     previewContainer.innerHTML = "";
     activeIndex = -1;
   }
+  
+  async function triggerSearch(query) {
+       const results = await SuttaRepository.searchMetadata(query, 1000);
+       if (inputField.value.trim().length >= 2) {
+         renderPreview(results, query);
+       }
+  }
 
   function renderPreview(results, query) {
     if (!results || results.length === 0) {
@@ -47,54 +77,52 @@ export function setupQuickNav(onSearchCallback) {
       const patterns = SearchHighlight.getRegexPatterns(query);
 
       previewContainer.innerHTML = results.map((item, index) => {
-        const uidPart = `<b>${SearchHighlight.highlight(item.uid, patterns, true)}</b>`;
-        const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+        const uidHighlight = `<b>${SearchHighlight.highlight(item.uid, patterns, true)}</b>`;
+        const aliasIcon = `<svg class="search-preview-alias-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:14px; height:14px; opacity:0.8; color:var(--primary-color); display:inline-block; vertical-align:middle; margin:0 4px;"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
         
-        let metaLine = "";
+        let translatedTitle = "";
+        let originalTitle = "";
+        let uidPart = "";
         let rawContent = "";
 
         if (item.type === 'alias' || item.type === 'subleaf') {
-          const targetTitle = SearchHighlight.highlight(item.type === 'alias' ? item.target_original_title : item.parent_original_title, patterns, true) || '';
-          const targetTrans = SearchHighlight.highlight(item.type === 'alias' ? item.target_translated_title : item.parent_translated_title, patterns, true) || '';
-          const separator = targetTitle && targetTrans ? ' – ' : '';
+          const isAlias = item.type === 'alias';
+          const orig = isAlias ? item.target_original_title : item.parent_original_title;
+          const trans = isAlias ? item.target_translated_title : item.parent_translated_title;
           
-          metaLine = `${uidPart} ${aliasIcon} <span>${targetTitle}${separator}${targetTrans}</span>`;
+          translatedTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig || '', patterns, true);
+          originalTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
           
-          // Dòng 2: Ưu tiên Blurb của Đích (Alias) hoặc Cha (Subleaf)
-          rawContent = (item.type === 'alias' ? item.target_blurb : item.parent_blurb) || item.blurb || "";
+          uidPart = `<span class="search-preview-uid">${uidHighlight} ${aliasIcon} ${isAlias ? 'Redirect' : ''}</span>`;
+          rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
         } else {
-          const title = SearchHighlight.highlight(item.original_title || '', patterns, true);
-          const transTitle = SearchHighlight.highlight(item.translated_title || '', patterns, true);
-          const separator = title && transTitle ? ' – ' : '';
+          const orig = item.original_title || '';
+          const trans = item.translated_title || '';
           
-          metaLine = `${uidPart}: <span>${title}${separator}${transTitle}</span>`;
+          translatedTitle = trans ? SearchHighlight.highlight(trans, patterns, true) : SearchHighlight.highlight(orig, patterns, true);
+          originalTitle = trans ? SearchHighlight.highlight(orig, patterns, true) : '';
           
-          // Dòng 2: Ưu tiên Blurb
+          uidPart = `<span class="search-preview-uid">${uidHighlight}</span>`;
           rawContent = item.blurb || "";
         }
 
-        // Snippet Logic:
+        if (!translatedTitle) {
+            translatedTitle = "Untitled";
+        }
+
         let displaySnippet = "";
         if (rawContent) {
             displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 120), patterns, false);
-        } else if (item.snippet) {
-            // Strip FTS snippet to prevent tag leakage from DB, then re-highlight
-            displaySnippet = SearchHighlight.highlight(SearchHighlight.stripHtml(item.snippet), patterns, false);
-        }
-
-        // Kiểm tra loại bỏ snippet dư thừa
-        if (displaySnippet && !item.blurb && !item.target_blurb && !item.parent_blurb) {
-            const snippetPure = displaySnippet.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-            const metaLinePure = metaLine.replace(/<[^>]*>/g, '').toLowerCase().replace(/\s/g, '');
-            if (metaLinePure.includes(snippetPure) || snippetPure.length < 5) {
-                displaySnippet = "";
-            }
         }
 
         return `
           <div class="search-preview-item" data-uid="${item.uid}" data-index="${index}">
-            <div class="search-preview-meta">${metaLine}</div>
-            <div class="search-preview-snippet">${displaySnippet}</div>
+            <div class="search-preview-translated-title">${translatedTitle}</div>
+            <div class="search-preview-secondary-line">
+                ${originalTitle ? `<span class="search-preview-original-title">${originalTitle}</span>` : '<span></span>'}
+                ${uidPart}
+            </div>
+            ${displaySnippet ? `<div class="search-blurb-snippet">${displaySnippet}</div>` : ''}
           </div>
         `;
       }).join('');
@@ -127,17 +155,14 @@ export function setupQuickNav(onSearchCallback) {
   inputField.addEventListener("input", () => {
     clearTimeout(debounceTimer);
     const query = inputField.value.trim();
+    saveQuery(query);
+    
     if (query.length < 2) {
       hidePreview();
       return;
     }
     
-    debounceTimer = setTimeout(async () => {
-       const results = await SuttaRepository.searchMetadata(query);
-       if (inputField.value.trim().length >= 2) {
-         renderPreview(results, query);
-       }
-    }, 250);
+    debounceTimer = setTimeout(() => triggerSearch(query), 250);
   });
 
   previewContainer.addEventListener("click", (e) => {
@@ -150,13 +175,15 @@ export function setupQuickNav(onSearchCallback) {
   });
 
   const performSearch = () => {
-    const query = inputField.value.trim().toLowerCase().replace(/\s/g, "");
-    if (!query) {
+    const query = inputField.value.trim();
+    const cleanQuery = query.toLowerCase().replace(/\s/g, "");
+    saveQuery(query); // Save original query on explicit search
+    if (!cleanQuery) {
       cancelSearch();
       return;
     }
     // Gọi callback (thường là SuttaController.loadSutta)
-    if (onSearchCallback) onSearchCallback(query);
+    if (onSearchCallback) onSearchCallback(cleanQuery);
     cancelSearch();
   };
 
