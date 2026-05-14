@@ -176,7 +176,7 @@ header {
 }
 
 /* --- Search Preview Dropdown --- */
-.search-preview-dropdown {
+.nav-search-preview {
   position: absolute;
   top: 100%;
   left: 50%;
@@ -186,7 +186,7 @@ header {
   background: var(--bg-card);
   border-radius: var(--radius-md);
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-  margin-top: 12px;
+  margin-top: 5px;
   max-height: 400px;
   overflow-y: auto;
   overscroll-behavior: contain;

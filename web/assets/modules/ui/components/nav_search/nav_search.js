@@ -1,4 +1,4 @@
-// Path: web/assets/modules/ui/components/nav_search.js
+// Path: web/assets/modules/ui/components/nav_search/nav_search.js
 import { SuttaRepository } from "data/sutta_repository.js";
 import { NavSearchRenderer } from "./nav_search_renderer.js";
 
@@ -14,8 +14,8 @@ export function setupQuickNav(onSearchCallback) {
   // Create preview container
   const previewContainer = document.createElement("div");
   previewContainer.id = "nav-search-preview";
-  previewContainer.className = "search-preview-dropdown hidden";
-  inputMode.appendChild(previewContainer);
+  previewContainer.className = "nav-search-preview hidden";
+  displayContainer.appendChild(previewContainer);
 
   let debounceTimer;
   let activeIndex = -1;
@@ -23,6 +23,7 @@ export function setupQuickNav(onSearchCallback) {
   function activateSearchMode() {
       textMode.classList.add("hidden");
       inputMode.classList.remove("hidden");
+      document.body.classList.add("nav-search-active");
       
       // Restore persisted query if within 10 minutes
       const savedQuery = localStorage.getItem("nav_search_query");
@@ -55,6 +56,7 @@ export function setupQuickNav(onSearchCallback) {
   function cancelSearch() {
     inputMode.classList.add("hidden");
     textMode.classList.remove("hidden");
+    document.body.classList.remove("nav-search-active");
     hidePreview();
   }
 
