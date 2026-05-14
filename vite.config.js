@@ -5,28 +5,14 @@ import path from 'path';
 import fs from 'fs';
 
 // --- HỆ THỐNG COMPILER HTML (Hỗ trợ Partials) ---
-const expandHtml = (sourcePath) => {
-    if (!fs.existsSync(sourcePath)) return `<!-- ERROR: ${sourcePath} not found -->`;
-    const content = fs.readFileSync(sourcePath, 'utf-8');
-    const baseDir = path.dirname(sourcePath);
+const expandHtmlContent = (content, baseDir) => {
     const includeRegex = /<include\s+src=["'](.*?)["']\s*\/?>(?:<\/include>)?/g;
-    
     return content.replace(includeRegex, (match, src) => {
         const filePath = path.resolve(baseDir, src);
-        return expandHtml(filePath); // Đệ quy chèn các partials
+        if (!fs.existsSync(filePath)) return `<!-- ERROR: ${filePath} not found -->`;
+        const childContent = fs.readFileSync(filePath, 'utf-8');
+        return expandHtmlContent(childContent, path.dirname(filePath)); // Đệ quy chèn các partials
     });
-};
-
-const compileIndexHtml = (buildVersion) => {
-    const templatePath = path.resolve('web/index.template.html');
-    const outputPath = path.resolve('web/index.html');
-    
-    if (fs.existsSync(templatePath)) {
-        let html = expandHtml(templatePath);
-        html = html.replace(/__APP_VERSION__/g, buildVersion);
-        fs.writeFileSync(outputPath, html, 'utf-8');
-        console.log(`   ✅ Compiled web/index.html from partials (v${buildVersion})`);
-    }
 };
 
 // --- HỆ THỐNG AUTO-ALIAS TỰ ĐỘNG ---
@@ -120,16 +106,19 @@ export default defineConfig(({ mode }) => {
             basicSsl(),
             {
                 name: 'html-compiler',
-                configResolved() {
-                    compileIndexHtml(buildVersion);
+                transformIndexHtml: {
+                    order: 'pre',
+                    handler(html) {
+                        const expanded = expandHtmlContent(html, path.resolve('web'));
+                        return expanded.replace(/__APP_VERSION__/g, buildVersion);
+                    }
                 },
                 configureServer(server) {
-                    // Watch for changes in partials or template
+                    // Watch for changes in partials
                     server.watcher.add(path.resolve('web/partials/*.html'));
-                    server.watcher.add(path.resolve('web/index.template.html'));
                     server.watcher.on('change', (file) => {
-                        if (file.includes('web/partials') || file.includes('index.template.html')) {
-                            compileIndexHtml(buildVersion);
+                        if (file.includes('web/partials')) {
+                            server.ws.send({ type: 'full-reload' });
                         }
                     });
                 }
