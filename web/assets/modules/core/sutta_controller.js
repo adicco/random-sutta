@@ -105,7 +105,7 @@ export const SuttaController = {
             
             if (!result) {
                 // [NEW] If direct lookup fails, try searching metadata
-                const searchResults = await SuttaRepository.searchMetadata(suttaId, 50);
+                const searchResults = await SuttaRepository.searchMetadata(suttaId, 1000);
                 if (searchResults && searchResults.length > 0) {
                     const searchData = {
                         uid: suttaId,
