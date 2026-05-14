@@ -150,6 +150,16 @@ header {
   background: var(--bg-card);
 }
 
+#nav-sutta-input::selection {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+#nav-sutta-input::-moz-selection {
+  background-color: var(--primary-color);
+  color: white;
+}
+
 #nav-search-btn {
   background-color: var(--primary-color);
   color: white;
@@ -220,7 +230,7 @@ header {
 
 .nav-search-uid {
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: 500;
   text-transform: uppercase;
   display: flex;
   align-items: center;
@@ -234,7 +244,7 @@ header {
 
 .nav-search-trans {
   color: var(--text-main);
-  font-weight: 600;
+  font-weight: 350;
 }
 
 .nav-search-item b {
@@ -259,7 +269,7 @@ header {
 
 .nav-search-blurb {
   font-size: 0.9rem;
-  font-weight: 300;
+  font-weight: 400;
   color: var(--text-main);
   margin-top: 3px;
   line-height: 1.35;

@@ -32,8 +32,8 @@ export function setupQuickNav(onSearchCallback) {
       if (savedQuery && savedTime && (now - parseInt(savedTime)) < 600000) {
           inputField.value = savedQuery;
           inputField.select();
-          // Trigger search immediately to populate preview
-          triggerSearch(savedQuery);
+          // Trigger search immediately to populate preview and restore scroll
+          triggerSearch(savedQuery, true);
       } else {
           inputField.value = ""; 
           inputField.focus();
@@ -48,6 +48,7 @@ export function setupQuickNav(onSearchCallback) {
       } else {
           localStorage.removeItem("nav_search_query");
           localStorage.removeItem("nav_search_time");
+          localStorage.removeItem("nav_search_scroll");
       }
   }
 
@@ -63,12 +64,27 @@ export function setupQuickNav(onSearchCallback) {
     activeIndex = -1;
   }
   
-  async function triggerSearch(query) {
+  // Track scroll position
+  previewContainer.addEventListener("scroll", () => {
+      localStorage.setItem("nav_search_scroll", previewContainer.scrollTop);
+  }, { passive: true });
+
+  async function triggerSearch(query, isRestore = false) {
        const results = await SuttaRepository.searchMetadata(query, 1000);
        if (inputField.value.trim().length >= 2) {
          NavSearchRenderer.render(results, query, previewContainer);
          previewContainer.classList.remove("hidden");
-         previewContainer.scrollTop = 0; // Reset scroll position when results change
+         
+         if (isRestore) {
+             const savedScroll = localStorage.getItem("nav_search_scroll");
+             if (savedScroll) {
+                 previewContainer.scrollTop = parseInt(savedScroll, 10);
+             }
+         } else {
+             previewContainer.scrollTop = 0; // Reset scroll position when query actually changes
+             localStorage.setItem("nav_search_scroll", "0");
+         }
+         
          activeIndex = -1;
        }
   }
