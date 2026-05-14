@@ -232,5 +232,11 @@ export function setupQuickNav(onSearchCallback) {
     }, 200);
   });
 
+  window.addEventListener("resize", () => {
+    if (document.body.classList.contains("nav-search-active")) {
+      updatePreviewPosition();
+    }
+  }, { passive: true });
+
   return { activateSearchMode };
 }
