@@ -16,16 +16,26 @@ export function setupQuickNav(onSearchCallback) {
   const previewContainer = document.createElement("div");
   previewContainer.id = "nav-search-preview";
   previewContainer.className = "nav-search-preview hidden";
-  displayContainer.appendChild(previewContainer);
+  document.body.appendChild(previewContainer);
 
   let debounceTimer;
   let activeIndex = -1;
+
+  function updatePreviewPosition() {
+    const rect = displayContainer.getBoundingClientRect();
+    previewContainer.style.top = `${rect.bottom + 5}px`;
+    previewContainer.style.left = `${rect.left + rect.width / 2}px`;
+  }
 
   function activateSearchMode() {
       textMode.classList.add("hidden");
       inputMode.classList.remove("hidden");
       document.body.classList.add("nav-search-active");
 
+      // Bring preview to front
+      ZIndexManager.bringToFront(previewContainer);
+      updatePreviewPosition();
+      
       // Restore persisted query if within 10 minutes
       const savedQuery = localStorage.getItem("nav_search_query");
       const savedTime = localStorage.getItem("nav_search_time");

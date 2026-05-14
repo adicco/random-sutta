@@ -31,7 +31,8 @@ html {
 
 #landing-view, 
 #reader-view, 
-.popup-container {
+.popup-container,
+.nav-search-preview {
   filter: 
     sepia(calc(var(--sepia-val) * 1%)) 
     hue-rotate(calc(var(--sepia-val) * var(--sepia-hue-coeff) * 1deg)) 
