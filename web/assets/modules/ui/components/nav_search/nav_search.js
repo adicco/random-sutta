@@ -74,7 +74,7 @@ export function setupQuickNav(onSearchCallback) {
   }
 
   function updateActiveItem() {
-    const items = previewContainer.querySelectorAll(".search-preview-item");
+    const items = previewContainer.querySelectorAll(".nav-search-item");
     items.forEach((item, index) => {
       if (index === activeIndex) {
         item.classList.add("active");
