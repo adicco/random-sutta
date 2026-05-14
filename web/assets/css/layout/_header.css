@@ -74,6 +74,7 @@ header {
   align-items: center;
   position: relative;
   transition: background-color 0.2s;
+  z-index: 1000;
 }
 
 #nav-title-display:hover {

@@ -1,6 +1,7 @@
 // Path: web/assets/modules/ui/components/nav_search/nav_search.js
 import { SuttaRepository } from "data/sutta_repository.js";
 import { NavSearchRenderer } from "./nav_search_renderer.js";
+import { ZIndexManager } from "utils/z_index_manager.js";
 
 export function setupQuickNav(onSearchCallback) {
   const displayContainer = document.getElementById("nav-title-display");
@@ -24,6 +25,9 @@ export function setupQuickNav(onSearchCallback) {
       textMode.classList.add("hidden");
       inputMode.classList.remove("hidden");
       document.body.classList.add("nav-search-active");
+
+      // Bring header/search area to front
+      ZIndexManager.bringToFront(displayContainer);
       
       // Restore persisted query if within 10 minutes
       const savedQuery = localStorage.getItem("nav_search_query");
