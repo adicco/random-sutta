@@ -59,16 +59,13 @@
             </label>
           </div>
 
-          <!-- [NEW] Auto-Switch Threshold Slider -->
-          <div class="setting-item-block">
-            <div class="setting-label-row">
-                <span class="toggle-label">Comment Auto-Switch Range</span>
-                <span id="label-auto-switch-threshold" class="setting-value-badge">40%</span>
+          <!-- [NEW] Auto-Switch Threshold Toggle -->
+          <div class="setting-item-row">
+            <div style="display: flex; align-items: center;">
+                <span class="toggle-label">Auto-Switch Range</span>
+                <span class="tooltip-trigger" data-tooltip-id="comment-auto">?</span>
             </div>
-            <div class="setting-input-row">
-                <input type="range" id="input-auto-switch-threshold" min="0" max="90" step="5" value="40" class="setting-range-slider">
-            </div>
-            <div class="setting-help-text">Controls how far a comment must travel from bottom before activating.</div>
+            <button id="btn-auto-switch-threshold" class="setting-value-badge clickable" title="Click to cycle range">40%</button>
           </div>
         </div>
 

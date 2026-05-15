@@ -6,8 +6,7 @@ export const DrawerManager = {
         const toggleDrawerBtn = document.getElementById("btn-toggle-settings");
         const settingDrawer = document.getElementById("setting-drawer");
         
-        const autoSwitchInput = document.getElementById("input-auto-switch-threshold");
-        const autoSwitchLabel = document.getElementById("label-auto-switch-threshold");
+        const autoSwitchBtn = document.getElementById("btn-auto-switch-threshold");
 
         if (toggleDrawerBtn && settingDrawer) {
             // 1. Toggle Button Click
@@ -17,19 +16,21 @@ export const DrawerManager = {
                 toggleDrawerBtn.classList.toggle("open");
                 
                 // [NEW] Sync UI state when opening
-                if (autoSwitchInput && autoSwitchLabel) {
+                if (autoSwitchBtn) {
                     const val = PopupState.autoSwitchThreshold;
-                    autoSwitchInput.value = val;
-                    autoSwitchLabel.textContent = `${val}%`;
+                    autoSwitchBtn.textContent = `${val}%`;
                 }
             });
 
-            // 2. Auto-Switch Threshold Change
-            if (autoSwitchInput && autoSwitchLabel) {
-                autoSwitchInput.addEventListener("input", (e) => {
-                    const val = parseInt(e.target.value);
-                    autoSwitchLabel.textContent = `${val}%`;
-                    PopupState.setAutoSwitchThreshold(val);
+            // 2. Auto-Switch Threshold Cycle (Click to cycle)
+            if (autoSwitchBtn) {
+                autoSwitchBtn.addEventListener("click", () => {
+                    const current = PopupState.autoSwitchThreshold;
+                    // Cycle: 0 -> 20 -> 40 -> 60 -> 80 -> 0
+                    let next = (current + 20) % 100;
+                    
+                    autoSwitchBtn.textContent = `${next}%`;
+                    PopupState.setAutoSwitchThreshold(next);
                 });
             }
 
