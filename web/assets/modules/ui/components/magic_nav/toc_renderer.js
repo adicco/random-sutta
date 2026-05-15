@@ -78,7 +78,7 @@ export const TocRenderer = {
             const meta = metaMap[id] || {};
             const type = meta.type || 'branch'; 
             
-            const paddingLeft = 15 + (currentLevel * 10);
+            const paddingLeft = 15 + (currentLevel * 16);
             const isActive = id === currentUid;
             const isBookmarked = bookmarkedSet.has(id) ? "bookmarked" : "";
             const famLevel = historyMap[id] ? historyMap[id].level : 0;
