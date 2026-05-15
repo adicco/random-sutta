@@ -96,6 +96,13 @@ export const SuttaController = {
         logger.info('loadSutta', `Request: ${suttaId} (URL update: ${shouldUpdateUrl}, Cached: ${!!preFetchedData})`);
         logger.timer(`Render: ${suttaId}`);
 
+        // [FIX] Define isTeleporting here to be accessible in both performRender and the reveal logic below
+        const isTeleporting = !isTransition && container;
+        if (isTeleporting) {
+            container.style.visibility = 'hidden';
+            document.documentElement.style.scrollBehavior = 'auto';
+        }
+
         const performRender = async () => {
             // A. Fetch data
             const startFetch = performance.now();
@@ -169,19 +176,12 @@ export const SuttaController = {
                 }
             }
 
-            // B. [TELEPORT STEP 1] Stealth Mode
-            const isTeleporting = !isTransition && scrollTarget && container;
-            if (isTeleporting) {
-                container.style.visibility = 'hidden';
-                document.documentElement.style.scrollBehavior = 'auto';
-            }
-
             // C. Render Content
             const startRender = performance.now();
             const success = await renderSutta(suttaId, result, options);
             const endRender = performance.now();
             logger.debug('loadSutta', `DOM Rendering: ${(endRender - startRender).toFixed(2)}ms`);
-            
+
             if (success) {
                 PopupAPI.scan();
                 if (!shouldUpdateUrl) {
@@ -200,7 +200,7 @@ export const SuttaController = {
                  Router.updateURL(suttaId, bookParam, false, scrollTarget ? `#${scrollTarget}` : null, currentScroll);
                  this._saveProgress(suttaId, currentScroll);
             }
-            
+
             logger.timerEnd(`Render: ${suttaId}`);
             return success;
         };
@@ -216,44 +216,38 @@ export const SuttaController = {
                 Scroller.smoothScrollTo(scrollTarget);
                 Scroller.highlightElement(scrollTarget);
             } else {
-                Scroller.restoreScrollTop(0);
+                await Scroller.restoreScrollTop(0);
             }
         } else {
             const status = await performRender();
             if (status === 'ALIAS_REDIRECTED') return;
             
+            // [TELEPORT STEP 2] Instant Jump
             if (scrollTarget) {
-                // [TELEPORT STEP 2] Instant Jump Synchronously
-                // DOM đã có, container đang hidden. Jump ngay lập tức.
                 Scroller.jumpTo(scrollTarget);
                 Scroller.highlightElement(scrollTarget);
                 this._saveProgress(suttaId, Scroller.getScrollTop());
-
-                // [TELEPORT STEP 3] Reveal
-                if (container) {
-                    // Sử dụng double requestAnimationFrame để đảm bảo jump đã render xong trong buffer
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            container.style.visibility = '';
-                            // Cleanup styles
-                            setTimeout(() => {
-                                document.documentElement.style.scrollBehavior = '';
-                            }, 50);
-                        });
-                    });
-                }
             } else if (scrollY > 0) {
-                // Restore scroll position (Back button)
-                Scroller.restoreScrollTop(scrollY);
-                // Reveal ngay nếu container bị ẩn (từ logic trên)
-                if (container) container.style.visibility = '';
+                await Scroller.restoreScrollTop(scrollY);
             } else {
-                // Top of page
-                Scroller.restoreScrollTop(0);
-                if (container) container.style.visibility = '';
+                await Scroller.restoreScrollTop(0);
+            }
+
+            // [TELEPORT STEP 3] Reveal
+            if (isTeleporting && container) {
+                // Sử dụng double requestAnimationFrame để đảm bảo jump đã render xong trong buffer
+                // Điều này cực kỳ quan trọng để triệt tiêu "nháy" khi nhảy từ cuối trang cũ lên đầu trang mới
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        container.style.visibility = '';
+                        document.documentElement.style.scrollBehavior = '';
+                    });
+                });
+            } else if (container) {
+                container.style.visibility = '';
             }
         }
-        
+
         // Final save after all scrolls are done
         this._saveProgress(suttaId, (scrollY > 0 && !scrollTarget) ? scrollY : undefined);
         
@@ -275,6 +269,11 @@ export const SuttaController = {
         logger.error("loadSutta", "Error loading sutta", e);
     } finally {
         this._showLoader(false);
+        // [SAFETY] Ensure container is revealed even if an error occurred
+        if (container && container.style.visibility === 'hidden') {
+            container.style.visibility = '';
+            document.documentElement.style.scrollBehavior = '';
+        }
     }
   },
 

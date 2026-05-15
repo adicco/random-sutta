@@ -34,32 +34,44 @@ export const Scroller = {
     },
 
     restoreScrollTop: function(y) {
-        if (typeof y !== 'number' || y < 0) return;
-        
-        let attempts = 0;
-        const maxAttempts = 10;
-        
-        const attemptScroll = () => {
-            const currentHeight = document.documentElement.scrollHeight;
-            const viewportHeight = window.innerHeight;
-            
-            // Nếu chiều cao trang hiện tại chưa đủ để cuộn tới y, và chưa hết lượt thử
-            if (currentHeight < y + viewportHeight && attempts < maxAttempts) {
-                attempts++;
-                setTimeout(() => requestAnimationFrame(attemptScroll), 100);
+        return new Promise((resolve) => {
+            if (typeof y !== 'number' || y < 0) {
+                resolve();
                 return;
             }
-
-            document.documentElement.style.scrollBehavior = 'auto';
-            window.scrollTo({ top: y, behavior: 'instant' });
             
-            // Giữ fixed cho đến khi ổn định
-            setTimeout(() => { 
-                document.documentElement.style.scrollBehavior = ''; 
-            }, 100);
-        };
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            const attemptScroll = () => {
+                const currentHeight = document.documentElement.scrollHeight;
+                const viewportHeight = window.innerHeight;
+                
+                // Nếu chiều cao trang hiện tại chưa đủ để cuộn tới y, và chưa hết lượt thử
+                if (currentHeight < y + viewportHeight && attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(() => requestAnimationFrame(attemptScroll), 100);
+                    return;
+                }
 
-        setTimeout(() => requestAnimationFrame(attemptScroll), 50);
+                document.documentElement.style.scrollBehavior = 'auto';
+                window.scrollTo({ top: y, behavior: 'instant' });
+                
+                // Giữ fixed cho đến khi ổn định
+                setTimeout(() => { 
+                    document.documentElement.style.scrollBehavior = ''; 
+                    resolve();
+                }, 100);
+            };
+
+            // [OPTIMIZATION] If y=0, we don't need to wait as much for height calculation
+            const initialDelay = (y === 0) ? 0 : 50;
+            if (initialDelay === 0) {
+                requestAnimationFrame(attemptScroll);
+            } else {
+                setTimeout(() => requestAnimationFrame(attemptScroll), initialDelay);
+            }
+        });
     },
 
     /**

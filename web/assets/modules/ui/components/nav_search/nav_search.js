@@ -65,6 +65,10 @@ export function setupQuickNav(onSearchCallback) {
   }
 
   function cancelSearch() {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = null;
+    }
     inputMode.classList.add("hidden");
     textMode.classList.remove("hidden");
     document.body.classList.remove("nav-search-active");
@@ -84,7 +88,12 @@ export function setupQuickNav(onSearchCallback) {
 
   async function triggerSearch(query, isRestore = false) {
        const results = await SuttaRepository.searchMetadata(query, 1000);
-       if (inputField.value.trim().length >= 2) {
+       
+       // [FIX] Guard: Only show if search mode is still active and query still matches
+       const isActive = document.body.classList.contains("nav-search-active");
+       const currentQuery = inputField.value.trim();
+       
+       if (isActive && currentQuery.length >= 2) {
          NavSearchRenderer.render(results, query, previewContainer);
          previewContainer.classList.remove("hidden");
          
