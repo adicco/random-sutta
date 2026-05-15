@@ -65,6 +65,7 @@ export const QuicklookUI = {
         this.currentSourceUrl = sourceUrl;
 
         this.elements.popup.classList.remove("hidden");
+        document.body.classList.add("quicklook-open");
         
         // [Z-INDEX] Bring to front
         ZIndexManager.bringToFront(this.elements.popup);
@@ -82,6 +83,7 @@ export const QuicklookUI = {
 
     hide() {
         this.elements.popup?.classList.add("hidden");
+        document.body.classList.remove("quicklook-open");
         if (this.elements.content) this.elements.content.innerHTML = "";
         this.currentSourceUrl = null;
     },
