@@ -211,7 +211,7 @@ p {
 
 /* --- LEAF BLURB --- */
 #leaf-blurb-container {
-  padding: 0 20px;
+  padding: 0;
 }
 
 .leaf-blurb {
@@ -220,7 +220,7 @@ p {
   line-height: 1.6;
   margin: 10px auto 15px;
   max-width: var(--container-width, 800px);
-  padding: 0;
+  padding: 0 40px;
   background-color: transparent;
   border-radius: 0;
   border: none;
@@ -229,11 +229,9 @@ p {
 }
 
 @media (max-width: 600px) {
-  #leaf-blurb-container {
-    padding: 0 15px;
-  }
   .leaf-blurb {
     font-size: 0.9rem;
-    margin: 10px auto 20px;
+    padding: 0 35px;
+    margin: 8px auto 12px;
   }
 }
