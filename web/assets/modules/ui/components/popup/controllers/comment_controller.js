@@ -72,12 +72,12 @@ export const CommentController = {
         markers.forEach((marker, index) => {
             const rect = marker.getBoundingClientRect();
             
-            // Condition: Must be above the 30% bottom threshold
-            if (rect.top < thresholdBottom) {
-                // We want the one closest to the top (but still visible or slightly above)
-                const distance = Math.abs(rect.top); // rect.top is distance from top of viewport
-                if (distance < minTopDistance) {
-                    minTopDistance = distance;
+            // [FIXED] Must be visible (rect.top >= 0) to avoid switching before it appears when scrolling up.
+            // Also must be above the 30% bottom threshold.
+            if (rect.top >= 0 && rect.top < thresholdBottom) {
+                // Closest to the top edge (rect.top is distance from top of viewport)
+                if (rect.top < minTopDistance) {
+                    minTopDistance = rect.top;
                     bestIndex = index;
                 }
             }
