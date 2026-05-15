@@ -16,6 +16,7 @@ import {
   BookmarkManager,
   ReadManager,
   SyncUIManager,
+  TooltipManager,
 } from "ui/managers/index.js";
 import { ViewManager } from "ui/managers/view_manager.js";
 import { ScrollManager } from "ui/managers/scroll_manager.js";
@@ -50,6 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   BookmarkManager.init();
   ReadManager.init();
   SyncUIManager.init();
+  TooltipManager.init();
   ScrollManager.init();
 
   // Initialize Components

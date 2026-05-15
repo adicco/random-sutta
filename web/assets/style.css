@@ -42,5 +42,6 @@
 @import "css/components/_misc.css";
 @import "css/components/_sync_widget.css";
 @import "css/components/_toggle.css";
+@import "css/components/_tooltip.css";
 @import "css/components/lookup/lookup_main.css";
 @import "css/components/toolbar/_global_toolbar.css";
