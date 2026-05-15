@@ -64,15 +64,49 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
     """
     Trích xuất danh sách subleaf dựa vào thẻ <article> (ưu tiên) hoặc <h2>.
     Trả về list of dict: {"uid": str, "extract_id": str, "title": str}
+    
+    [RULE] Nếu tìm thấy bất kỳ thẻ <article> nào (khác với root_uid), ta coi như 
+    file này đã được phân mảnh theo Article và sẽ bỏ qua việc quét <h2>.
     """
-    found_items = []
-    seen_uids = set()
     sorted_keys = sorted(content.keys(), key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x)])
+
+    # --- PHASE 1: COLLECT ARTICLES ---
+    article_items = []
+    seen_uids = set()
 
     for seg_key in sorted_keys:
         content_items = content[seg_key]
-        if not isinstance(content_items, list):
-            continue
+        if not isinstance(content_items, list): continue
+            
+        html_content = ""
+        for item in content_items:
+            if item.get("type") == "html":
+                html_content = item.get("content", "")
+                break
+        
+        if html_content:
+            matches = ARTICLE_ID_PATTERN.findall(html_content)
+            for aid in matches:
+                if aid != root_uid and aid not in seen_uids:
+                    seen_uids.add(aid)
+                    article_items.append({
+                        "uid": aid,
+                        "extract_id": aid,
+                        "original_title": "",
+                        "translated_title": ""
+                    })
+
+    # Nếu tìm thấy Article subleafs, trả về luôn và bỏ qua Phase 2
+    if article_items:
+        return article_items
+
+    # --- PHASE 2: COLLECT H2 (Only if no articles found) ---
+    h2_items = []
+    seen_uids = set()
+    
+    for seg_key in sorted_keys:
+        content_items = content[seg_key]
+        if not isinstance(content_items, list): continue
             
         html_content = ""
         root_text = ""
@@ -87,21 +121,7 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
             elif t == "translation":
                 trans_text = item.get("content", "")
                 
-        # 1. Check for <article id="...">
-        if html_content:
-            matches = ARTICLE_ID_PATTERN.findall(html_content)
-            for aid in matches:
-                if aid != root_uid and aid not in seen_uids:
-                    seen_uids.add(aid)
-                    found_items.append({
-                        "uid": aid,
-                        "extract_id": aid,
-                        "original_title": "",
-                        "translated_title": ""
-                    })
-                    
-        # 2. Check for <h2>
-        if not root_uid.startswith("dhp") and ("<h2>" in html_content or "<h2 " in html_content):
+        if "<h2>" in html_content or "<h2 " in html_content:
             trans_title = re.sub(r'<[^>]+>', '', trans_text).strip()
             root_title = re.sub(r'<[^>]+>', '', root_text).strip()
             
@@ -111,14 +131,14 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
                 uid = f"{root_uid}-{slug}"
                 if uid not in seen_uids:
                     seen_uids.add(uid)
-                    found_items.append({
+                    h2_items.append({
                         "uid": uid,
                         "extract_id": seg_key,
                         "original_title": root_title,
                         "translated_title": trans_title
                     })
 
-    return found_items
+    return h2_items
 
 def _generate_smart_acronym(parent_acronym: str, start: int, end: int, replacement: str) -> str:
     if not parent_acronym: return ""
