@@ -259,5 +259,9 @@ export const SuttaController = {
     } else {
         setTimeout(() => DictProvider.init(), 1000);
     }
+  },
+
+  _saveProgress: function() {
+    SuttaPersistence.save();
   }
 };
