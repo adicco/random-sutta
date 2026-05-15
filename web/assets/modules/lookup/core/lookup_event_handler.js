@@ -44,10 +44,10 @@ export const LookupEventHandler = {
         while (start > 0 && !clusterDelimiters.test(textContent[start - 1])) start--;
         while (end < textContent.length && !clusterDelimiters.test(textContent[end])) end++;
 
-        // Sub-pass: Trim trailing sentence-ending punctuation that might be caught in the cluster
-        // but keep internal Pali markers like ”ti, 'ti.
-        const trailingPunc = /[.,;:?!()…]$/;
-        const leadingPunc = /^[.,;:?!()…]/;
+        // Sub-pass: Trim trailing sentence-ending punctuation and quotes that are at the EXTREME edges
+        // but keep internal Pali markers like ”ti, 'ti, ‘ti, etc.
+        const trailingPunc = /[.,;:?!()…"'‘’“”]$/;
+        const leadingPunc = /^[.,;:?!()…"'‘’“”]/;
         
         let word = textContent.substring(start, end);
         
