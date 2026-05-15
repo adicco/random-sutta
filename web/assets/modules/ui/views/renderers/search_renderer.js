@@ -17,6 +17,9 @@ export const SearchRenderer = {
             let uidPart = "";
             let rawContent = "";
 
+            let displaySnippet = "";
+            let skipSnippet = false;
+
             if (item.type === 'alias' || item.type === 'subleaf') {
                 const isAlias = item.type === 'alias';
                 const orig = isAlias ? item.target_original_title : item.parent_original_title;
@@ -28,7 +31,15 @@ export const SearchRenderer = {
                 uidPart = `<span class="search-uid">${uidHighlight} ${aliasIcon} ${isAlias ? 'Redirect' : ''}</span>`;
                 
                 if (!isAlias && item.translated_title) {
-                    rawContent = item.translated_title;
+                    const cleanOrig = (item.original_title || "").trim();
+                    const cleanTrans = (item.translated_title || "").trim();
+                    
+                    let parts = [];
+                    if (cleanOrig) parts.push(`<i>${cleanOrig}</i>`);
+                    if (cleanTrans) parts.push(cleanTrans);
+                    
+                    rawContent = parts.join(" ");
+                    skipSnippet = true;
                 } else {
                     rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
                 }
@@ -47,9 +58,12 @@ export const SearchRenderer = {
                 translatedTitle = "Untitled"; // Edge case fallback
             }
 
-            let displaySnippet = "";
             if (rawContent) {
-                displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 250), patterns, false);
+                if (skipSnippet) {
+                    displaySnippet = SearchHighlight.highlight(rawContent, patterns, false);
+                } else {
+                    displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 250), patterns, false);
+                }
             }
 
             const action = `window.loadSutta('${item.uid}', true, 0, { transition: true })`;

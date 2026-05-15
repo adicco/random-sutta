@@ -40,7 +40,7 @@ export const NavSearchRenderer = {
                     if (cleanOrig) parts.push(`<i>${cleanOrig}</i>`);
                     if (cleanTrans) parts.push(cleanTrans);
                     
-                    rawContent = parts.join(" — ");
+                    rawContent = parts.join(" ");
                     skipSnippet = true;
                 } else {
                     rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
