@@ -1,6 +1,7 @@
 # Path: src/sutta_processor/logic/range_expander.py
 import re
 import logging
+import unicodedata
 from typing import Dict, Any, List, Tuple, Set, Optional
 
 logger = logging.getLogger("SuttaProcessor.Logic.RangeExpander")
@@ -52,27 +53,72 @@ def expand_range_ids(uid: str) -> List[str]:
         return _expand_alias_ids(prefix, start, end)
     return []
 
-def _extract_unique_article_ids(content: Dict[str, Any]) -> List[str]:
-    found_ids = []
-    seen_ids = set()
+def _slugify(text: str) -> str:
+    # Remove leading numbers like "1. " or "1.2 "
+    text = re.sub(r'^\d+(\.\d+)*\.\s*', '', text)
+    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
+    text = re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
+    return text
+
+def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Dict[str, str]]:
+    """
+    Trích xuất danh sách subleaf dựa vào thẻ <article> (ưu tiên) hoặc <h2>.
+    Trả về list of dict: {"uid": str, "extract_id": str, "title": str}
+    """
+    found_items = []
+    seen_uids = set()
     sorted_keys = sorted(content.keys(), key=lambda x: [int(c) if c.isdigit() else c for c in re.split(r'(\d+)', x)])
 
     for seg_key in sorted_keys:
-        # [UPDATED] content[seg_key] is now a list of objects
         content_items = content[seg_key]
         if not isinstance(content_items, list):
             continue
             
+        html_content = ""
+        root_text = ""
+        trans_text = ""
+        
         for item in content_items:
-            if item.get("type") == "html":
-                html = item.get("content", "")
-                if html:
-                    matches = ARTICLE_ID_PATTERN.findall(html)
-                    for aid in matches:
-                        if aid not in seen_ids:
-                            seen_ids.add(aid)
-                            found_ids.append(aid)
-    return found_ids
+            t = item.get("type")
+            if t == "html":
+                html_content = item.get("content", "")
+            elif t == "root":
+                root_text = item.get("content", "")
+            elif t == "translation":
+                trans_text = item.get("content", "")
+                
+        # 1. Check for <article id="...">
+        if html_content:
+            matches = ARTICLE_ID_PATTERN.findall(html_content)
+            for aid in matches:
+                if aid != root_uid and aid not in seen_uids:
+                    seen_uids.add(aid)
+                    found_items.append({
+                        "uid": aid,
+                        "extract_id": aid,
+                        "original_title": "",
+                        "translated_title": ""
+                    })
+                    
+        # 2. Check for <h2>
+        if "<h2>" in html_content or "<h2 " in html_content:
+            trans_title = re.sub(r'<[^>]+>', '', trans_text).strip()
+            root_title = re.sub(r'<[^>]+>', '', root_text).strip()
+            
+            slug_base = root_title if root_title else trans_title
+            if slug_base:
+                slug = _slugify(slug_base)
+                uid = f"{root_uid}-{slug}"
+                if uid not in seen_uids:
+                    seen_uids.add(uid)
+                    found_items.append({
+                        "uid": uid,
+                        "extract_id": seg_key,
+                        "original_title": root_title,
+                        "translated_title": trans_title
+                    })
+
+    return found_items
 
 def _generate_smart_acronym(parent_acronym: str, start: int, end: int, replacement: str) -> str:
     if not parent_acronym: return ""
@@ -106,11 +152,12 @@ def generate_subleaf_shortcuts(
     
     result_meta = {}
     ordered_structure_ids = []
-    article_ids = _extract_unique_article_ids(content)
+    
+    subleaf_items = _extract_subleaf_metadata(content, root_uid)
     root_range_info = _parse_range_string(root_uid)
 
     # --- CASE A: SINGLE LEAF ---
-    if len(article_ids) <= 1:
+    if len(subleaf_items) <= 1:
         ordered_structure_ids.append(root_uid)
         
         if root_range_info:
@@ -129,9 +176,14 @@ def generate_subleaf_shortcuts(
 
     # --- CASE B: MULTI SUBLEAFS ---
     else:
-        logger.debug(f"   🌿 HTML Articles Detected: {root_uid} -> {len(article_ids)} subleafs")
+        logger.debug(f"   🌿 Subleafs Detected: {root_uid} -> {len(subleaf_items)} subleafs")
 
-        for sub_uid in article_ids:
+        for sub_item in subleaf_items:
+            sub_uid = sub_item["uid"]
+            extract_id = sub_item["extract_id"]
+            orig_title = sub_item.get("original_title", "")
+            trans_title = sub_item.get("translated_title", "")
+            
             ordered_structure_ids.append(sub_uid)
             
             sub_acronym = ""
@@ -145,9 +197,13 @@ def generate_subleaf_shortcuts(
             result_meta[sub_uid] = {
                 "type": "subleaf",
                 "parent_uid": root_uid,
-                "extract_id": sub_uid,
+                "extract_id": extract_id,
                 "acronym": sub_acronym
             }
+            if orig_title:
+                result_meta[sub_uid]["original_title"] = orig_title
+            if trans_title:
+                result_meta[sub_uid]["translated_title"] = trans_title
 
             sub_range = _parse_range_string(sub_uid)
             if sub_range:

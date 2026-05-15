@@ -6,37 +6,54 @@ const logger = getLogger("SuttaExtractor");
 export const SuttaExtractor = {
     /**
      * Trích xuất một bài kinh con từ một tập dữ liệu lớn (Content Chunk).
-     * Hỗ trợ 2 cơ chế:
-     * 1. Prefix Match (Cũ): Dựa vào ID segment (vd: an1.1:1.1)
+     * Hỗ trợ 3 cơ chế:
+     * 1. Heading Range (Mới nhất): Trích xuất từ một thẻ h2 cho tới khi gặp thẻ h2 hoặc h1 khác
      * 2. Article Tag (Mới): Dựa vào thẻ <article id="..."> trong HTML
+     * 3. Prefix Match (Cũ): Dựa vào ID segment (vd: an1.1:1.1)
      */
     extract(parentContent, targetId) {
         if (!parentContent || !targetId) return null;
 
-        // --- CHIẾN LƯỢC 1: PREFIX MATCH (Nhanh nhất) ---
-        // Dành cho trường hợp targetId là prefix của segment (vd: dhp1 trích từ dhp1-20)
-        // Kiểm tra nhanh segment đầu tiên khớp
         const keys = Object.keys(parentContent);
         // Sắp xếp keys để đảm bảo thứ tự (quan trọng cho việc quét HTML)
         keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 
-        const prefixMatches = {};
-        let hasPrefixMatch = false;
-        
-        // Regex an toàn cho prefix (thêm dấu : hoặc . để tránh an1 khớp an10)
-        // Tuy nhiên với logic Article mới, ta ưu tiên quét HTML trước nếu ID trông giống Range
-        
+        // --- CHIẾN LƯỢC 1: HEADING RANGE (Dựa trên Extract ID trùng Segment Key) ---
+        // Nếu targetId chính là một segment key (VD: "dn1:1.0")
+        if (parentContent[targetId]) {
+            const headingMatches = {};
+            let isCapturing = false;
+            
+            for (const key of keys) {
+                const segment = parentContent[key];
+                const html = segment.html || "";
+                
+                if (key === targetId) {
+                    isCapturing = true;
+                } else if (isCapturing) {
+                    // Nếu đang capture mà gặp <h2> hoặc <h1> khác thì dừng lại
+                    if (/<h[12]/i.test(html)) {
+                        break;
+                    }
+                }
+                
+                if (isCapturing) {
+                    headingMatches[key] = segment;
+                }
+            }
+            
+            if (Object.keys(headingMatches).length > 0) {
+                return headingMatches;
+            }
+        }
+
         // --- CHIẾN LƯỢC 2: HTML ARTICLE SCAN (Chính xác cho Range) ---
         // Regex bắt thẻ mở: <article ... id="targetId" ... >
-        // Lưu ý: targetId có thể chứa dấu chấm, cần escape nếu dùng trong new RegExp, 
-        // nhưng ở đây ta check string includes hoặc match đơn giản.
-        
-        // Pattern: <article (mọi thứ) id='targetId' (mọi thứ)> hoặc id="targetId"
         const startRegex = new RegExp(`<article[^>]*\\sid=['"]${this._escapeRegExp(targetId)}['"]`, 'i');
         const endRegex = /<\/article>/i;
 
         const articleMatches = {};
-        let isCapturing = false;
+        let isCapturingArticle = false;
         let foundArticle = false;
 
         for (const key of keys) {
@@ -44,20 +61,18 @@ export const SuttaExtractor = {
             const html = segment.html || "";
 
             // 1. Kiểm tra điểm bắt đầu
-            if (!isCapturing && startRegex.test(html)) {
-                isCapturing = true;
+            if (!isCapturingArticle && startRegex.test(html)) {
+                isCapturingArticle = true;
                 foundArticle = true;
             }
 
             // 2. Đang trong trạng thái Capture
-            if (isCapturing) {
+            if (isCapturingArticle) {
                 articleMatches[key] = segment;
 
                 // 3. Kiểm tra điểm kết thúc
-                // Nếu gặp thẻ đóng </article>, dừng ngay sau segment này
                 if (endRegex.test(html)) {
-                    isCapturing = false;
-                    // Break luôn vì một file extracted chỉ chứa 1 bài kinh
+                    isCapturingArticle = false;
                     break; 
                 }
             }
@@ -68,11 +83,10 @@ export const SuttaExtractor = {
         }
 
         // --- FALLBACK: CHIẾN LƯỢC PREFIX (Nếu không tìm thấy Article Tag) ---
-        // Logic cũ: Tìm những segment bắt đầu bằng targetId
+        const prefixMatches = {};
+        let hasPrefixMatch = false;
+
         for (const key of keys) {
-            // Logic match lỏng: key bắt đầu bằng targetId
-            // Cần cẩn thận: targetId="an1.1" không được khớp "an1.10"
-            // Quy tắc: targetId + ":" hoặc targetId là toàn bộ key (ít gặp)
             if (key === targetId || key.startsWith(targetId + ':')) {
                 prefixMatches[key] = parentContent[key];
                 hasPrefixMatch = true;
