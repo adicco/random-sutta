@@ -101,7 +101,7 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
                     })
                     
         # 2. Check for <h2>
-        if "<h2>" in html_content or "<h2 " in html_content:
+        if not root_uid.startswith("dhp") and ("<h2>" in html_content or "<h2 " in html_content):
             trans_title = re.sub(r'<[^>]+>', '', trans_text).strip()
             root_title = re.sub(r'<[^>]+>', '', root_text).strip()
             
