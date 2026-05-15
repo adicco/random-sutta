@@ -84,6 +84,11 @@ export const CommentController = {
         }
     },
 
+    scanComments() {
+        const list = PopupScanner.scan("sutta-container");
+        PopupState.setComments(list);
+    },
+
     openByText(text) {
         const comments = PopupState.getComments();
         if (comments.length === 0) this.scanComments();
