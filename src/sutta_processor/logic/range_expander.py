@@ -187,12 +187,19 @@ def generate_subleaf_shortcuts(
             ordered_structure_ids.append(sub_uid)
             
             sub_acronym = ""
-            if root_range_info:
+            if root_range_info and sub_uid.startswith(root_range_info[0]):
+                # Fallback for ranges (e.g., dhp1-20 -> dhp1)
                 r_prefix, r_start, r_end = root_range_info
-                if sub_uid.startswith(r_prefix):
-                    suffix = sub_uid[len(r_prefix):]
-                    display_suffix = suffix.replace("-", "–")
-                    sub_acronym = _generate_smart_acronym(parent_acronym, r_start, r_end, display_suffix)
+                suffix = sub_uid[len(r_prefix):]
+                display_suffix = suffix.replace("-", "–")
+                sub_acronym = _generate_smart_acronym(parent_acronym, r_start, r_end, display_suffix)
+                
+            if not sub_acronym and parent_acronym and sub_uid.startswith(root_uid + "-"):
+                # Handle heading-based subleafs (e.g., dn1-attalokapannattivatthu)
+                suffix = sub_uid[len(root_uid) + 1:] # Skip root_uid and hyphen
+                # Convert slug to Title Case
+                formatted_suffix = suffix.replace("-", " ").title()
+                sub_acronym = f"{parent_acronym} {formatted_suffix}"
 
             result_meta[sub_uid] = {
                 "type": "subleaf",
