@@ -1,4 +1,4 @@
-# Path: web/assets/modules/ui/managers/tooltip_manager.js
+// Path: web/assets/modules/ui/managers/tooltip_manager.js
 import { TOOLTIP_DATA } from "data/tooltips.js";
 import { getLogger } from "utils/logger.js";
 

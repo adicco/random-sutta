@@ -1,4 +1,4 @@
-# Path: web/assets/modules/data/tooltips.js
+// Path: web/assets/modules/data/tooltips.js
 /**
  * Centralized data for feature explanations.
  * This can be expanded with more tooltips in the future.
