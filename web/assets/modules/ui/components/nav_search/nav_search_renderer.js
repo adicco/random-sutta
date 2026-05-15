@@ -30,7 +30,14 @@ export const NavSearchRenderer = {
                 uidPart = `<span class="nav-search-uid">${uidHighlight} ${aliasIcon}</span>`;
                 
                 if (!isAlias && item.translated_title) {
-                    rawContent = item.translated_title;
+                    const cleanOrig = (item.original_title || "").trim();
+                    const cleanTrans = (item.translated_title || "").trim();
+                    
+                    let parts = [];
+                    if (cleanOrig) parts.push(`<i>${cleanOrig}</i>`);
+                    if (cleanTrans) parts.push(cleanTrans);
+                    
+                    rawContent = parts.join(" — ");
                 } else {
                     rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
                 }
