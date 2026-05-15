@@ -27,6 +27,13 @@
     align-items: center;
     padding: 12px 0;
     border-top: 1px solid var(--border-light);
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.setting-label-group {
+    display: flex;
+    align-items: center;
 }
 
 .setting-value-badge {
@@ -65,6 +72,24 @@
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+/* Responsive adjustment for narrow screens (e.g. iPhone) */
+@media (max-width: 420px) {
+    .setting-item-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .setting-label-group {
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .setting-multi-badge-row {
+        justify-content: flex-end;
+    }
 }
 
 .setting-badge-label {
