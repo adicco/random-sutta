@@ -19,6 +19,9 @@ export const NavSearchRenderer = {
             let uidPart = "";
             let rawContent = "";
 
+            let displaySnippet = "";
+            let skipSnippet = false;
+
             if (item.type === 'alias' || item.type === 'subleaf') {
                 const isAlias = item.type === 'alias';
                 const orig = isAlias ? item.target_original_title : item.parent_original_title;
@@ -38,6 +41,7 @@ export const NavSearchRenderer = {
                     if (cleanTrans) parts.push(cleanTrans);
                     
                     rawContent = parts.join(" — ");
+                    skipSnippet = true;
                 } else {
                     rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
                 }
@@ -56,9 +60,12 @@ export const NavSearchRenderer = {
                 translatedTitle = "Untitled";
             }
 
-            let displaySnippet = "";
             if (rawContent) {
-                displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 120), patterns, false);
+                if (skipSnippet) {
+                    displaySnippet = SearchHighlight.highlight(rawContent, patterns, false);
+                } else {
+                    displaySnippet = SearchHighlight.highlight(SearchHighlight.smartSnippet(rawContent, patterns, 120), patterns, false);
+                }
             }
 
             return `
