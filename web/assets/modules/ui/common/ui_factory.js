@@ -68,14 +68,13 @@ export const UIFactory = {
     
     // Invisible Random Bottom Trigger
     html += `
-      <button 
-        onclick="window.triggerRandomSutta()" 
-        class="nav-invisible-random" 
+      <button
+        onclick="window.triggerRandomSutta({ fromBottom: true })"
+        class="nav-invisible-random"
         title="Tap here for Random Sutta"
         aria-label="Random Sutta">
       </button>
-    `;
-    
+    `;    
     // Nút Next
     html += this.createNavButton(nextId, 'right', metaMap);
     

@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.SuttaDB = SuttaDB; 
   window.SuttaController = SuttaController; 
   window.loadSutta = (id, u, s, o) => SuttaController.loadSutta(id, u, s, o);
-  window.triggerRandomSutta = () => SuttaController.loadRandomSutta(true);
+  window.triggerRandomSutta = (options = {}) => SuttaController.loadRandomSutta(true, options);
 
   // Initialize UI Managers
   DrawerManager.init();

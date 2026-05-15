@@ -96,13 +96,6 @@ export const SuttaController = {
         logger.info('loadSutta', `Request: ${suttaId} (URL update: ${shouldUpdateUrl}, Cached: ${!!preFetchedData})`);
         logger.timer(`Render: ${suttaId}`);
 
-        // [FIX] Define isTeleporting here to be accessible in both performRender and the reveal logic below
-        const isTeleporting = !isTransition && container;
-        if (isTeleporting) {
-            container.style.visibility = 'hidden';
-            document.documentElement.style.scrollBehavior = 'auto';
-        }
-
         const performRender = async () => {
             // A. Fetch data
             const startFetch = performance.now();
@@ -219,6 +212,15 @@ export const SuttaController = {
                 await Scroller.restoreScrollTop(0);
             }
         } else {
+            // [OPTIMIZATION] Only use "Stealth Mode" (hidden container) for bottom random jumps
+            // to eliminate flicker when teleporting from bottom to top.
+            const container = document.getElementById("sutta-container");
+            const isBottomJump = options.fromBottom === true && Scroller.getScrollTop() > 300;
+            
+            if (isBottomJump && container) {
+                container.style.visibility = 'hidden';
+            }
+
             const status = await performRender();
             if (status === 'ALIAS_REDIRECTED') return;
             
@@ -230,21 +232,19 @@ export const SuttaController = {
             } else if (scrollY > 0) {
                 await Scroller.restoreScrollTop(scrollY);
             } else {
-                await Scroller.restoreScrollTop(0);
+                // [FIX] Tránh dùng restoreScrollTop(0) vốn có delay nếu không cần thiết
+                if (Scroller.getScrollTop() > 0) {
+                    await Scroller.restoreScrollTop(0);
+                }
             }
 
-            // [TELEPORT STEP 3] Reveal
-            if (isTeleporting && container) {
-                // Sử dụng double requestAnimationFrame để đảm bảo jump đã render xong trong buffer
-                // Điều này cực kỳ quan trọng để triệt tiêu "nháy" khi nhảy từ cuối trang cũ lên đầu trang mới
+            // [TELEPORT STEP 3] Reveal for bottom jump
+            if (isBottomJump && container) {
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         container.style.visibility = '';
-                        document.documentElement.style.scrollBehavior = '';
                     });
                 });
-            } else if (container) {
-                container.style.visibility = '';
             }
         }
 
@@ -358,7 +358,7 @@ export const SuttaController = {
     }
   },
 
-  loadRandomSutta: async function (shouldUpdateUrl = true) {
+  loadRandomSutta: async function (shouldUpdateUrl = true, options = {}) {
     try {
       PopupAPI.hideAll();
       logger.timer('Random Process Total');
@@ -375,7 +375,10 @@ export const SuttaController = {
 
       const suttaUid = input.uid || input.payload.uid;
       logger.info('loadRandom', `Selected: ${suttaUid}`);
-      await this.loadSutta(input, shouldUpdateUrl, 0, { transition: false });
+      
+      // [NEW] If triggered from bottom, we might want to handle it differently (e.g. instant teleport)
+      // but for now we follow the user directive to just ensure it's an instant jump
+      await this.loadSutta(input, shouldUpdateUrl, 0, { transition: false, ...options });
 
       logger.timerEnd('Random Process Total');
     } catch (e) {
