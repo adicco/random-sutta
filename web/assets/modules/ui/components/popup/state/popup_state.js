@@ -15,9 +15,14 @@ export const PopupState = {
     nestedActiveIndex: -1,
     nestedActiveText: null,
 
-    isAutoSwitch: false,
+    isAutoSwitch: localStorage.getItem("comment_auto_switch") === "true",
 
     setComments(list) { this.comments = list || []; },
+
+    setAutoSwitch(enabled) {
+        this.isAutoSwitch = enabled;
+        localStorage.setItem("comment_auto_switch", enabled);
+    },
     getComments() { return this.comments; },
 
     setCommentActive(index) {

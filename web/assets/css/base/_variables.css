@@ -138,8 +138,8 @@
   --shadow-card: 0 4px 15px rgba(62, 39, 35, 0.08);
   --shadow-hover: 0 12px 24px rgba(62, 39, 35, 0.15);
 
-  --highlight-color-background: rgba(139, 69, 19, 0.08);
-  --highlight-color-segment: rgba(255, 167, 38, 0.15);
+  --highlight-color-background: rgba(139, 69, 19, 0.04);
+  --highlight-color-segment: rgba(255, 167, 38, 0.12);
 
   /* Fonts & Spacing */
   --font-main: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto",
@@ -197,8 +197,8 @@
   --shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.8);
 
   /* Highlights */
-  --highlight-color-background: rgba(255, 255, 255, 0.08);
-  --highlight-color-segment: rgba(255, 179, 0, 0.15);
+  --highlight-color-background: rgba(255, 255, 255, 0.04);
+  --highlight-color-segment: rgba(255, 179, 0, 0.12);
 
   /* TTS Specific */
   --tts-cached-color: #66bb6a;

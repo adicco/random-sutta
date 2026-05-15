@@ -19,6 +19,9 @@ export const CommentController = {
             }
         });
 
+        // Initialize Auto-Switch button state
+        CommentUI.updateAutoButton(PopupState.isAutoSwitch);
+
         // Attach Resizer
         const commentPopup = document.getElementById("comment-popup");
         const resizeHandle = document.getElementById("comment-resize-handle");
@@ -40,9 +43,10 @@ export const CommentController = {
     },
 
     toggleAuto() {
-        PopupState.isAutoSwitch = !PopupState.isAutoSwitch;
-        CommentUI.updateAutoButton(PopupState.isAutoSwitch);
-        if (PopupState.isAutoSwitch) {
+        const newState = !PopupState.isAutoSwitch;
+        PopupState.setAutoSwitch(newState);
+        CommentUI.updateAutoButton(newState);
+        if (newState) {
             this.handleAutoSwitch();
         }
     },
@@ -130,6 +134,11 @@ export const CommentController = {
             const item = comments[index];
             const context = PopupScanner.getContextText(comments, index);
             CommentUI.render(item.text, index, total, context);
+
+            // [FIXED] Ensure segment highlight matches the currently active comment
+            if (item && item.id) {
+                Scroller.highlightElement(item.id);
+            }
         }
     },
 
