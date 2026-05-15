@@ -52,9 +52,24 @@ export const LookupManager = {
         // Keyboard Navigation
         document.addEventListener("keydown", (e) => {
             const lookupEl = document.getElementById("lookup-popup");
-            if (LookupUI.isVisible() && lookupEl && lookupEl.classList.contains("is-top-layer")) {
-                if (e.key === "ArrowLeft") LookupNavigator.navigate(-1, this._performLookup.bind(this));
-                if (e.key === "ArrowRight") LookupNavigator.navigate(1, this._performLookup.bind(this));
+            if (LookupUI.isVisible() && lookupEl) {
+                // [NEW] Modern Z-Index Check: Is this the highest element?
+                // We compare its inline style zIndex with currentMaxZIndex from ZIndexManager
+                const currentZ = parseInt(lookupEl.style.zIndex || 0);
+                
+                // If the popup is visible and has the highest z-index, handle arrows
+                // Note: We don't need an exact match with currentMaxZIndex if it's high enough, 
+                // but usually it will be the highest if it was just clicked/opened.
+                if (currentZ >= 2100) { 
+                    if (e.key === "ArrowLeft") {
+                        e.preventDefault(); // Prevent scroll
+                        LookupNavigator.navigate(-1, (text, node) => this._performLookup(text, node));
+                    }
+                    if (e.key === "ArrowRight") {
+                        e.preventDefault(); // Prevent scroll
+                        LookupNavigator.navigate(1, (text, node) => this._performLookup(text, node));
+                    }
+                }
             }
         });
         
