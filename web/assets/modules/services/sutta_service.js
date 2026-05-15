@@ -99,6 +99,7 @@ export const SuttaService = {
                 return null;
             }
             hintBook = loc[0];
+            uid = loc[1]; // Use canonical UID
         }
 
         const isFileProtocol = window.location.protocol === 'file:';

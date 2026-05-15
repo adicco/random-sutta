@@ -103,6 +103,14 @@ export const SuttaController = {
             const endFetch = performance.now();
             logger.debug('loadSutta', `Data Fetch/Logic: ${(endFetch - startFetch).toFixed(2)}ms`);
             
+            if (result && result.uid && result.uid !== suttaId && !result.isAlias && shouldUpdateUrl) {
+                // [NEW] Update URL to canonical UID if it was corrected (e.g., 'dn 1' -> 'dn1')
+                try {
+                    const bookParam = FilterComponent.generateBookParam();
+                    Router.updateURL(result.uid, bookParam, false, scrollTarget, Scroller.getScrollTop());
+                } catch (e) {}
+            }
+
             if (!result) {
                 // [NEW] If direct lookup fails, try searching metadata
                 const searchResults = await SuttaRepository.searchMetadata(suttaId, 1000);

@@ -165,21 +165,27 @@ export function setupQuickNav(onSearchCallback) {
 
   const performSearch = () => {
     const query = inputField.value.trim();
-    const cleanQuery = query.toLowerCase().replace(/\s/g, "");
-    saveQuery(query); // Save original query on explicit search
-    if (!cleanQuery) {
+    if (!query) {
       cancelSearch();
       return;
     }
     
+    saveQuery(query); // Save original query on explicit search
+    
+    // Check if it's a direct UID or needs search
+    // We pass the raw query (lowercased) to the callback.
+    // The controller/service will decide if it's a UID (by stripping spaces internally)
+    // or if it should trigger a full search.
+    const searchTarget = query.toLowerCase();
+
     // Try to optimistically update based on query if it looks like a UID
     const navMainTitle = document.getElementById("nav-main-title");
     const navSubTitle = document.getElementById("nav-sub-title");
     if (navMainTitle) navMainTitle.textContent = "Loading...";
-    if (navSubTitle) navSubTitle.textContent = cleanQuery.toUpperCase();
+    if (navSubTitle) navSubTitle.textContent = searchTarget.toUpperCase();
 
     // Gọi callback (thường là SuttaController.loadSutta)
-    if (onSearchCallback) onSearchCallback(cleanQuery);
+    if (onSearchCallback) onSearchCallback(searchTarget);
     cancelSearch();
   };
 
