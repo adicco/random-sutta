@@ -144,19 +144,18 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
             # Check if it's NOT a header (h1, h2, etc.)
             is_any_header = re.search(r'<h[1-6]', html_content, re.IGNORECASE)
             
-            if not is_any_header:
-                cleaned_root = re.sub(r'<[^>]+>', '', root_text).strip()
-                cleaned_trans = re.sub(r'<[^>]+>', '', trans_text).strip()
+            cleaned_root = re.sub(r'<[^>]+>', '', root_text).strip()
+            cleaned_trans = re.sub(r'<[^>]+>', '', trans_text).strip()
+
+            if not is_any_header and (cleaned_root or cleaned_trans):
+                if not has_intro_content:
+                    has_intro_content = True
+                    intro_extract_id = seg_key # First content segment
                 
-                if cleaned_root or cleaned_trans:
-                    if not has_intro_content:
-                        has_intro_content = True
-                        intro_extract_id = seg_key # First content segment
-                    
-                    if not intro_pali_title and cleaned_root:
-                        intro_pali_title = cleaned_root
-                        # Prefer segment with Pali as the starting point if possible
-                        intro_extract_id = seg_key
+                if not intro_pali_title and cleaned_root:
+                    intro_pali_title = cleaned_root
+                    # Prefer segment with Pali as the starting point if possible
+                    intro_extract_id = seg_key
 
     # Add Intro subleaf at the beginning if found
     if has_intro_content:
@@ -245,12 +244,9 @@ def generate_subleaf_shortcuts(
                 sub_acronym = _generate_smart_acronym(parent_acronym, r_start, r_end, display_suffix)
                 
             if not sub_acronym and parent_acronym and sub_uid.startswith(root_uid + "."):
-                # Handle heading-based subleafs (e.g., mn2.1)
+                # Handle heading-based subleafs (e.g., mn2.1, mn2.0)
                 suffix = sub_uid[len(root_uid) + 1:] # Skip root_uid and dot
-                if suffix == "0":
-                    sub_acronym = f"{parent_acronym} Intro"
-                else:
-                    sub_acronym = f"{parent_acronym}.{suffix}"
+                sub_acronym = f"{parent_acronym}.{suffix}"
 
             result_meta[sub_uid] = {
                 "type": "subleaf",
