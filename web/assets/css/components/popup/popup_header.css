@@ -85,6 +85,22 @@
   right: 15px;
 }
 
+.text-btn-small {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 5px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.text-btn-small:hover {
+  opacity: 1;
+}
+
 /* [NEW] Quicklook Title Layout */
 #quicklook-title {
   display: flex;

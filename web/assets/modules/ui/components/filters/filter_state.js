@@ -63,6 +63,12 @@ export const FilterState = {
         return Array.from(filterSet);
     },
 
+    reset() {
+        filterSet.clear();
+        PRIMARY_BOOKS.forEach((b) => filterSet.add(b));
+        this._saveToStorage();
+    },
+
     generateParam() {
         const active = Array.from(filterSet);
         const defaults = PRIMARY_BOOKS;

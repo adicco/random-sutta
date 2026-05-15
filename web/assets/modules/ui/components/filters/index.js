@@ -60,6 +60,7 @@ export const FilterComponent = {
         // [NEW] Close logic for filter popup
         const filterPopup = document.getElementById("filter-popup");
         const closeBtn = document.getElementById("close-filter-popup");
+        const resetBtn = document.getElementById("reset-filter-popup");
         const filterBody = document.querySelector("#filter-popup .popup-body");
 
         if (filterPopup) {
@@ -89,6 +90,15 @@ export const FilterComponent = {
                 if (e.target === filterPopup) {
                     filterPopup.classList.add("hidden");
                 }
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener("click", () => {
+                FilterState.reset();
+                FilterView.updateAllStates(FilterState);
+                const newParam = FilterState.generateParam();
+                Router.updateURL(null, newParam);
             });
         }
     },
