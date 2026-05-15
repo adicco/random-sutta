@@ -6,7 +6,8 @@ export const DrawerManager = {
         const toggleDrawerBtn = document.getElementById("btn-toggle-settings");
         const settingDrawer = document.getElementById("setting-drawer");
         
-        const autoSwitchBtn = document.getElementById("btn-auto-switch-threshold");
+        const autoSwitchTopBtn = document.getElementById("btn-auto-switch-top");
+        const autoSwitchBottomBtn = document.getElementById("btn-auto-switch-bottom");
 
         if (toggleDrawerBtn && settingDrawer) {
             // 1. Toggle Button Click
@@ -16,21 +17,32 @@ export const DrawerManager = {
                 toggleDrawerBtn.classList.toggle("open");
                 
                 // [NEW] Sync UI state when opening
-                if (autoSwitchBtn) {
-                    const val = PopupState.autoSwitchThreshold;
-                    autoSwitchBtn.textContent = `${val}%`;
+                if (autoSwitchTopBtn) {
+                    autoSwitchTopBtn.textContent = `${PopupState.autoSwitchThresholdTop}%`;
+                }
+                if (autoSwitchBottomBtn) {
+                    autoSwitchBottomBtn.textContent = `${PopupState.autoSwitchThresholdBottom}%`;
                 }
             });
 
             // 2. Auto-Switch Threshold Cycle (Click to cycle)
-            if (autoSwitchBtn) {
-                autoSwitchBtn.addEventListener("click", () => {
-                    const current = PopupState.autoSwitchThreshold;
+            if (autoSwitchTopBtn) {
+                autoSwitchTopBtn.addEventListener("click", () => {
+                    const current = PopupState.autoSwitchThresholdTop;
+                    // Cycle: 0 -> 10 -> 20 -> 30 -> 40 -> 0
+                    let next = (current + 10) % 50;
+                    autoSwitchTopBtn.textContent = `${next}%`;
+                    PopupState.setAutoSwitchThresholdTop(next);
+                });
+            }
+
+            if (autoSwitchBottomBtn) {
+                autoSwitchBottomBtn.addEventListener("click", () => {
+                    const current = PopupState.autoSwitchThresholdBottom;
                     // Cycle: 0 -> 20 -> 40 -> 60 -> 80 -> 0
                     let next = (current + 20) % 100;
-                    
-                    autoSwitchBtn.textContent = `${next}%`;
-                    PopupState.setAutoSwitchThreshold(next);
+                    autoSwitchBottomBtn.textContent = `${next}%`;
+                    PopupState.setAutoSwitchThresholdBottom(next);
                 });
             }
 

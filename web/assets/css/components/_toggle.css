@@ -56,6 +56,19 @@
     border-color: var(--primary-color);
 }
 
+.setting-multi-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.setting-badge-label {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
 .switch input {
     opacity: 0;
     width: 0;

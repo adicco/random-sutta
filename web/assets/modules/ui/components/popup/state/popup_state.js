@@ -16,7 +16,8 @@ export const PopupState = {
     nestedActiveText: null,
 
     isAutoSwitch: localStorage.getItem("comment_auto_switch") === "true",
-    autoSwitchThreshold: parseInt(localStorage.getItem("comment_auto_switch_threshold")) || 40,
+    autoSwitchThresholdBottom: parseInt(localStorage.getItem("comment_auto_switch_threshold_bottom")) || 40,
+    autoSwitchThresholdTop: parseInt(localStorage.getItem("comment_auto_switch_threshold_top")) || 10,
 
     setComments(list) { this.comments = list || []; },
 
@@ -25,9 +26,14 @@ export const PopupState = {
         localStorage.setItem("comment_auto_switch", enabled);
     },
 
-    setAutoSwitchThreshold(value) {
-        this.autoSwitchThreshold = value;
-        localStorage.setItem("comment_auto_switch_threshold", value);
+    setAutoSwitchThresholdBottom(value) {
+        this.autoSwitchThresholdBottom = value;
+        localStorage.setItem("comment_auto_switch_threshold_bottom", value);
+    },
+
+    setAutoSwitchThresholdTop(value) {
+        this.autoSwitchThresholdTop = value;
+        localStorage.setItem("comment_auto_switch_threshold_top", value);
     },
     getComments() { return this.comments; },
 
