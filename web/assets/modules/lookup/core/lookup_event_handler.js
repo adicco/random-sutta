@@ -35,18 +35,35 @@ export const LookupEventHandler = {
         const textContent = textNode.textContent;
 
         // 2. Expand to Word Boundaries
-        // [UPDATED] Include all smart quotes and special punctuation
-        const delimiters = /[.,;:"'‘’“”\—?!()…\s]/;
+        // [UPDATED] Refined boundary logic for Pali markers like ”ti, 'ti, etc.
+        // We use wide delimiters to find the initial cluster, then trim sentence-level punctuation.
+        const clusterDelimiters = /[.,;:\—?!()…\s]/; // Exclude quotes/apostrophes here
         let start = offset;
         let end = offset;
 
-        while (start > 0 && !delimiters.test(textContent[start - 1])) start--;
-        while (end < textContent.length && !delimiters.test(textContent[end])) end++;
+        while (start > 0 && !clusterDelimiters.test(textContent[start - 1])) start--;
+        while (end < textContent.length && !clusterDelimiters.test(textContent[end])) end++;
 
-        if (start === end) return;
+        // Sub-pass: Trim trailing sentence-ending punctuation that might be caught in the cluster
+        // but keep internal Pali markers like ”ti, 'ti.
+        const trailingPunc = /[.,;:?!()…]$/;
+        const leadingPunc = /^[.,;:?!()…]/;
+        
+        let word = textContent.substring(start, end);
+        
+        // Trim trailing
+        while (word.length > 0 && trailingPunc.test(word)) {
+            word = word.slice(0, -1);
+            end--;
+        }
+        // Trim leading
+        while (word.length > 0 && leadingPunc.test(word)) {
+            word = word.slice(1);
+            start++;
+        }
 
-        const word = textContent.substring(start, end).trim();
-        if (!word) return;
+        word = word.trim();
+        if (!word || start === end) return;
 
         // 3. Highlight
         const wordRange = document.createRange();
