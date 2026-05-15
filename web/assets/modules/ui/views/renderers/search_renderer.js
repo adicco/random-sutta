@@ -26,7 +26,12 @@ export const SearchRenderer = {
                 originalTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
                 
                 uidPart = `<span class="search-uid">${uidHighlight} ${aliasIcon} ${isAlias ? 'Redirect' : ''}</span>`;
-                rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
+                
+                if (!isAlias && item.translated_title) {
+                    rawContent = item.translated_title;
+                } else {
+                    rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
+                }
             } else {
                 const orig = item.original_title || '';
                 const trans = item.translated_title || '';

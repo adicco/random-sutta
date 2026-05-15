@@ -28,7 +28,12 @@ export const NavSearchRenderer = {
                 originalTitle = trans ? SearchHighlight.highlight(orig || '', patterns, true) : '';
                 
                 uidPart = `<span class="nav-search-uid">${uidHighlight} ${aliasIcon}</span>`;
-                rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
+                
+                if (!isAlias && item.translated_title) {
+                    rawContent = item.translated_title;
+                } else {
+                    rawContent = (isAlias ? item.target_blurb : item.parent_blurb) || item.blurb || "";
+                }
             } else {
                 const orig = item.original_title || '';
                 const trans = item.translated_title || '';
