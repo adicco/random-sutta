@@ -16,12 +16,18 @@ export const PopupState = {
     nestedActiveText: null,
 
     isAutoSwitch: localStorage.getItem("comment_auto_switch") === "true",
+    autoSwitchThreshold: parseInt(localStorage.getItem("comment_auto_switch_threshold")) || 40,
 
     setComments(list) { this.comments = list || []; },
 
     setAutoSwitch(enabled) {
         this.isAutoSwitch = enabled;
         localStorage.setItem("comment_auto_switch", enabled);
+    },
+
+    setAutoSwitchThreshold(value) {
+        this.autoSwitchThreshold = value;
+        localStorage.setItem("comment_auto_switch_threshold", value);
     },
     getComments() { return this.comments; },
 

@@ -64,7 +64,8 @@ export const CommentController = {
         if (markers.length === 0) return;
 
         const viewportHeight = window.innerHeight;
-        const thresholdBottom = viewportHeight * 0.7; // 30% from bottom means top 70% of screen
+        const thresholdPercent = PopupState.autoSwitchThreshold / 100;
+        const thresholdBottom = viewportHeight * (1 - thresholdPercent); // e.g., 40% from bottom means top 60% of screen
 
         let bestIndex = -1;
         let minTopDistance = Infinity;
@@ -73,7 +74,7 @@ export const CommentController = {
             const rect = marker.getBoundingClientRect();
             
             // [FIXED] Must be visible (rect.top >= 0) to avoid switching before it appears when scrolling up.
-            // Also must be above the 30% bottom threshold.
+            // Condition: Must be above the user-defined bottom threshold.
             if (rect.top >= 0 && rect.top < thresholdBottom) {
                 // Closest to the top edge (rect.top is distance from top of viewport)
                 if (rect.top < minTopDistance) {
