@@ -208,3 +208,32 @@ p {
 .comment-marker:hover {
   color: var(--primary-hover);
 }
+
+/* --- LEAF BLURB --- */
+#leaf-blurb-container {
+  padding: 0 20px; /* Thêm padding ngang để không bị dính lề trên mobile */
+}
+
+.leaf-blurb {
+  font-size: 1rem;
+  color: var(--text-main);
+  line-height: 1.6;
+  margin: 10px auto 20px;
+  max-width: var(--container-width, 800px);
+  padding: 15px 20px;
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  box-shadow: var(--shadow-soft);
+}
+
+@media (max-width: 600px) {
+  #leaf-blurb-container {
+    padding: 0 15px;
+  }
+  .leaf-blurb {
+    font-size: 0.95rem;
+    padding: 12px 15px;
+    margin: 8px auto 15px;
+  }
+}

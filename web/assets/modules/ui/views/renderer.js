@@ -13,17 +13,26 @@ let tohInstance = null;
 export async function renderSutta(suttaId, data, options = {}) {
     const container = document.getElementById("sutta-container");
     const famHeaderContainer = document.getElementById("familiarity-bar-header");
+    const leafBlurbContainer = document.getElementById("leaf-blurb-container");
     
     // 1. Kiểm tra data null (giữ nguyên)
     if (!data) {
         container.innerHTML = UIFactory.createErrorHtml(suttaId);
         if (famHeaderContainer) famHeaderContainer.innerHTML = '';
+        if (leafBlurbContainer) {
+            leafBlurbContainer.innerHTML = '';
+            leafBlurbContainer.classList.add("hidden");
+        }
         document.getElementById("breadcrumb-container")?.classList.add("hidden");
         return false;
     }
 
     container.innerHTML = "";
     if (famHeaderContainer) famHeaderContainer.innerHTML = '';
+    if (leafBlurbContainer) {
+        leafBlurbContainer.innerHTML = '';
+        leafBlurbContainer.classList.add("hidden");
+    }
     let renderResult = null;
     let isLeaf = false;
 
@@ -71,6 +80,12 @@ export async function renderSutta(suttaId, data, options = {}) {
     if (isLeaf) {
         famBarTop = FamiliarityBar.generateHtml(data.uid, true);
         famBarBottom = FamiliarityBar.generateHtml(data.uid, false);
+
+        // [NEW] Render Leaf Blurb
+        if (leafBlurbContainer && data.meta && data.meta.blurb) {
+            leafBlurbContainer.innerHTML = `<div class="leaf-blurb">${data.meta.blurb}</div>`;
+            leafBlurbContainer.classList.remove("hidden");
+        }
     }
     
     if (famHeaderContainer) famHeaderContainer.innerHTML = famBarTop;
