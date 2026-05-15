@@ -63,10 +63,12 @@
 }
 
 .setting-badge-label {
-    font-size: 0.75rem;
-    color: var(--text-light);
+    font-size: 0.6rem;
+    color: var(--text-muted);
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    opacity: 0.8;
 }
 
 .switch input {
