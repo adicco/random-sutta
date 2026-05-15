@@ -25,7 +25,7 @@ export const SuttaRepository = {
 
     async resolveLocation(uid) {
         if (!uid) return null;
-        const cleanUid = uid.toLowerCase().trim().replace(/\s/g, "");
+        const cleanUid = uid.toLowerCase().trim();
         const results = await SuttaDB.query("SELECT book_id, uid FROM metadata WHERE uid = ?", [cleanUid]);
         if (results.length > 0) {
             return [results[0].book_id, results[0].uid];
