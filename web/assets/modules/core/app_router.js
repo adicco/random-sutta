@@ -5,6 +5,7 @@ import { ViewManager } from "ui/managers/view_manager.js";
 import { GoogleAuthManager } from "services/sync/google_auth_manager.js";
 import { getLogger } from "utils/logger.js";
 import { RandomBuffer } from "services/index.js";
+import { SuttaPersistence } from "core/sutta/persistence.js";
 
 const logger = getLogger("AppRouter");
 
@@ -27,15 +28,10 @@ export const AppRouter = {
             
             // Check if this is the last read sutta to restore scroll position
             let restoreScroll = 0;
-            try {
-                const saved = localStorage.getItem("last_read_sutta");
-                if (saved) {
-                    const progress = JSON.parse(saved);
-                    if (progress && progress.id === loadId.split('#')[0]) {
-                        restoreScroll = progress.scrollY;
-                    }
-                }
-            } catch (e) {}
+            const progress = SuttaPersistence.load();
+            if (progress && progress.id === loadId.split('#')[0]) {
+                restoreScroll = progress.scrollY;
+            }
 
             console.time("⏱️ Direct Load Total");
             await SuttaController.loadSutta(loadId, true, restoreScroll);
@@ -44,20 +40,13 @@ export const AppRouter = {
             RandomBuffer.startBackgroundWork();
         } else {
             // Root access -> Try restore last read or go to Landing
-            const savedProgress = localStorage.getItem("last_read_sutta");
+            const progress = SuttaPersistence.load();
             let restored = false;
             
-            if (savedProgress) {
-                try {
-                    const progress = JSON.parse(savedProgress);
-                    if (progress && progress.id) {
-                        ViewManager.switchView('reader');
-                        await SuttaController.loadSutta(progress.id, true, progress.scrollY);
-                        restored = true;
-                    }
-                } catch (e) {
-                    console.warn("Restore failed", e);
-                }
+            if (progress && progress.id) {
+                ViewManager.switchView('reader');
+                await SuttaController.loadSutta(progress.id, true, progress.scrollY);
+                restored = true;
             }
 
             if (!restored) {

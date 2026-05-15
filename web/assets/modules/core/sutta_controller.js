@@ -13,53 +13,52 @@ import { TTSOrchestrator } from "tts/core/tts_orchestrator.js";
 import { BookmarkManager } from "ui/managers/bookmark_manager.js";
 import { DictProvider } from "lookup/dict_provider.js";
 
+// [NEW] Sub-modules
+import { SuttaLoaderUI } from "core/sutta/loader_ui.js";
+import { SuttaPersistence } from "core/sutta/persistence.js";
+import { SuttaNavigation } from "core/sutta/navigation.js";
+
 const logger = getLogger("SuttaController");
 
 export const SuttaController = {
-  isRestoring: false, // [NEW] Guard flag
-  isLoading: false, // [NEW] Logical guard
-  currentNav: { prev: null, next: null }, // [NEW] Track navigation IDs
-
   navigatePrev: function() {
-    if (this.isLoading) return false;
-    if (this.currentNav.prev) {
-        // [FIX] Explicitly request transition for gesture navigation to match button behavior
-        this.loadSutta(this.currentNav.prev, true, 0, { transition: true });
+    if (SuttaLoaderUI.isLoading) return false;
+    const prevId = SuttaNavigation.getPrev();
+    if (prevId) {
+        this.loadSutta(prevId, true, 0, { transition: true });
         return true;
     }
     return false;
   },
 
   navigateNext: function() {
-    if (this.isLoading) return false;
-    if (this.currentNav.next) {
-        // [FIX] Explicitly request transition for gesture navigation to match button behavior
-        this.loadSutta(this.currentNav.next, true, 0, { transition: true });
+    if (SuttaLoaderUI.isLoading) return false;
+    const nextId = SuttaNavigation.getNext();
+    if (nextId) {
+        this.loadSutta(nextId, true, 0, { transition: true });
         return true;
     }
     return false;
   },
 
   loadSutta: async function (input, shouldUpdateUrl = true, scrollY = 0, options = {}) {
-    if (this.isLoading && !options.force) return;
-    this._showLoader(true);
+    if (SuttaLoaderUI.isLoading && !options.force) return;
+    SuttaLoaderUI.show();
     
     try {
         const isTransition = options.transition === true;
         const isInitialRestore = scrollY > 0 && !isTransition;
         
-        if (isInitialRestore) this.isRestoring = true;
+        if (isInitialRestore) SuttaPersistence.startRestoring();
 
         const currentScroll = Scroller.getScrollTop();
         const container = document.getElementById("sutta-container");
 
-        // [NEW] Check for pre-fetched data object (from Buffer)
         let preFetchedData = null;
         let suttaId;
         let scrollTarget = null;
 
         if (typeof input === 'object' && input.payload && input.data) {
-            // Input is a buffered object { payload, data }
             preFetchedData = input.data;
             suttaId = input.payload.uid;
         } else if (typeof input === 'object') {
@@ -68,43 +67,29 @@ export const SuttaController = {
             const parts = input.split('#');
             suttaId = parts[0].trim().toLowerCase();
             if (parts.length > 1) {
-                // [FIX] Decode URI component to handle encoded dots/colons in refs
                 scrollTarget = decodeURIComponent(parts[1]);
             }
         }
 
-        // 1. Update URL State
+        // 1. Update URL State (Optional)
         if (shouldUpdateUrl) {
             try {
                 const bookParam = FilterComponent.generateBookParam();
-                // [FIX] Ensure the URL is updated with the requested suttaId or search query
                 Router.updateURL(suttaId, bookParam, false, scrollTarget, currentScroll);
             } catch (e) {}
         }
 
-        // 2. Hide Popups
+        // 2. Clear UI/State
         PopupAPI.hideAll();
+        this._stopTTS();
 
-        // 3. Handle TTS
-        const wasTTSActive = TTSOrchestrator.isSessionActive();
-        const wasPlaying = TTSOrchestrator.isPlaying();
-        TTSOrchestrator.stop();
-        if (!wasTTSActive) {
-            TTSOrchestrator.endSession();
-        }
-
-        logger.info('loadSutta', `Request: ${suttaId} (URL update: ${shouldUpdateUrl}, Cached: ${!!preFetchedData})`);
+        logger.info('loadSutta', `Request: ${suttaId} (URL: ${shouldUpdateUrl}, Buffered: ${!!preFetchedData})`);
         logger.timer(`Render: ${suttaId}`);
 
         const performRender = async () => {
-            // A. Fetch data
-            const startFetch = performance.now();
             const result = preFetchedData || await SuttaService.loadSutta(suttaId);
-            const endFetch = performance.now();
-            logger.debug('loadSutta', `Data Fetch/Logic: ${(endFetch - startFetch).toFixed(2)}ms`);
             
             if (result && result.uid && result.uid !== suttaId && !result.isAlias && shouldUpdateUrl) {
-                // [NEW] Update URL to canonical UID if it was corrected (e.g., 'dn 1' -> 'dn1')
                 try {
                     const bookParam = FilterComponent.generateBookParam();
                     Router.updateURL(result.uid, bookParam, false, scrollTarget, Scroller.getScrollTop());
@@ -112,95 +97,31 @@ export const SuttaController = {
             }
 
             if (!result) {
-                // [NEW] If direct lookup fails, try searching metadata
-                const searchResults = await SuttaRepository.searchMetadata(suttaId, 1000);
-                if (searchResults && searchResults.length > 0) {
-                    const searchData = {
-                        uid: suttaId,
-                        type: 'search_results',
-                        results: searchResults,
-                        query: suttaId,
-                        displayInfo: {
-                            uid: suttaId,
-                            title: `Search: ${suttaId}`,
-                            acronym: "Search"
-                        }
-                    };
-                    
-                    // [FIX] Ensure we switch to reader view for search results
-                    ViewManager.switchView('reader');
-                    
-                    await renderSutta(suttaId, searchData, options);
-                    logger.timerEnd(`Render: ${suttaId}`);
-                    return true;
-                }
-
-                this.currentNav = { prev: null, next: null }; // Clear nav on error
-                renderSutta(suttaId, null, null, options);
-                logger.timerEnd(`Render: ${suttaId}`);
-                return false;
+                return await this._handleMissingSutta(suttaId, options);
             }
 
-            // [NEW] Update Navigation State
-            if (result.nav) {
-                this.currentNav = { prev: result.nav.prev, next: result.nav.next };
-            } else {
-                this.currentNav = { prev: null, next: null };
-            }
+            // Update Navigation State
+            SuttaNavigation.update(result.nav);
 
             if (result.isAlias) {
-                let redirectId = result.targetUid;
-                // [FIX] Preserve original scrollTarget if alias doesn't provide a specific hashId
-                const finalHash = result.hashId || scrollTarget;
-                if (finalHash) redirectId += `#${finalHash}`;
-                
-                // We return here, let the recursive call handle its own loader visibility
-                // [FIX] Use force: true to bypass the isLoading guard during recursive alias resolution
-                await this.loadSutta(redirectId, true, 0, { transition: false, force: true });
-                logger.timerEnd(`Render: ${suttaId}`);
-                return 'ALIAS_REDIRECTED';
+                return await this._handleAlias(result, scrollTarget);
             }
             
-            // [NEW] Normalize scrollTarget if it's a simple segment number (Leaf mode)
-            if (scrollTarget && !scrollTarget.includes(':')) {
-                const isSegmentNumber = /^[\d\.]+$/.test(scrollTarget);
-                if (isSegmentNumber) {
-                    scrollTarget = `${suttaId}:${scrollTarget}`;
-                }
-            }
+            this._normalizeScrollTarget(suttaId, scrollTarget);
 
-            // C. Render Content
-            const startRender = performance.now();
+            // Rendering
             const success = await renderSutta(suttaId, result, options);
-            const endRender = performance.now();
-            logger.debug('loadSutta', `DOM Rendering: ${(endRender - startRender).toFixed(2)}ms`);
 
             if (success) {
-                PopupAPI.scan();
-                if (!shouldUpdateUrl) {
-                    logger.debug("SuttaController", "Triggering popup restore...");
-                    PopupAPI.restore();
-                }
-                if (wasTTSActive) {
-                    setTimeout(() => {
-                        TTSOrchestrator.refreshSession(wasPlaying);
-                    }, 100);
-                }
-            }
-
-            if (success && shouldUpdateUrl) {
-                 const bookParam = FilterComponent.generateBookParam();
-                 Router.updateURL(suttaId, bookParam, false, scrollTarget ? `#${scrollTarget}` : null, currentScroll);
-                 this._saveProgress(suttaId, currentScroll);
+                this._handleSuccessfulRender(suttaId, scrollTarget, currentScroll, shouldUpdateUrl);
             }
 
             logger.timerEnd(`Render: ${suttaId}`);
             return success;
         };
 
-        // Execute Scroll/Transition Strategy
+        // Execution Logic
         if (isTransition) {
-            // [FIX] Handle alias redirection in transition mode
             const status = await performRender();
             if (status === 'ALIAS_REDIRECTED') return;
 
@@ -212,149 +133,41 @@ export const SuttaController = {
                 await Scroller.restoreScrollTop(0);
             }
         } else {
-            // [OPTIMIZATION] Only use "Stealth Mode" (hidden container) for bottom random jumps
-            // to eliminate flicker when teleporting from bottom to top.
-            const container = document.getElementById("sutta-container");
             const isBottomJump = options.fromBottom === true && Scroller.getScrollTop() > 300;
-            
-            if (isBottomJump && container) {
-                container.style.visibility = 'hidden';
-            }
+            if (isBottomJump && container) container.style.visibility = 'hidden';
 
             const status = await performRender();
             if (status === 'ALIAS_REDIRECTED') return;
             
-            // [TELEPORT STEP 2] Instant Jump
             if (scrollTarget) {
                 Scroller.jumpTo(scrollTarget);
                 Scroller.highlightElement(scrollTarget);
-                this._saveProgress(suttaId, Scroller.getScrollTop());
+                SuttaPersistence.save(suttaId, Scroller.getScrollTop());
             } else if (scrollY > 0) {
                 await Scroller.restoreScrollTop(scrollY);
-            } else {
-                // [FIX] Tránh dùng restoreScrollTop(0) vốn có delay nếu không cần thiết
-                if (Scroller.getScrollTop() > 0) {
-                    await Scroller.restoreScrollTop(0);
-                }
+            } else if (Scroller.getScrollTop() > 0) {
+                await Scroller.restoreScrollTop(0);
             }
 
-            // [TELEPORT STEP 3] Reveal for bottom jump
             if (isBottomJump && container) {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        container.style.visibility = '';
-                    });
-                });
+                requestAnimationFrame(() => requestAnimationFrame(() => { container.style.visibility = ''; }));
             }
         }
 
-        // Final save after all scrolls are done
-        this._saveProgress(suttaId, (scrollY > 0 && !scrollTarget) ? scrollY : undefined);
+        SuttaPersistence.save(suttaId, (scrollY > 0 && !scrollTarget) ? scrollY : undefined);
+        SuttaPersistence.endRestoring();
         
-        // Clear guard after a short delay to allow UI to settle
-        if (this.isRestoring) {
-            setTimeout(() => { this.isRestoring = false; }, 500);
-        }
-        
-        // [NEW] Update Bookmark Star
         BookmarkManager.updateButtonState(suttaId);
+        this._initBackgroundTasks();
 
-        // [NEW] Preload dictionary connections in the background to speed up first lookup
-        if (window.requestIdleCallback) {
-            window.requestIdleCallback(() => DictProvider.init(), { timeout: 2000 });
-        } else {
-            setTimeout(() => DictProvider.init(), 1000);
-        }
     } catch (e) {
         logger.error("loadSutta", "Error loading sutta", e);
     } finally {
-        this._showLoader(false);
-        // [SAFETY] Ensure container is revealed even if an error occurred
+        SuttaLoaderUI.hide();
+        const container = document.getElementById("sutta-container");
         if (container && container.style.visibility === 'hidden') {
             container.style.visibility = '';
-            document.documentElement.style.scrollBehavior = '';
         }
-    }
-  },
-
-  /**
-   * [NEW] Save current reading progress to localStorage
-   */
-  _saveProgress: function (id, scrollY) {
-    if (this.isRestoring && scrollY === undefined) {
-        logger.debug("Progress", "Save skipped: Restoration in progress");
-        return;
-    }
-    
-    try {
-        const params = new URLSearchParams(window.location.search);
-        const suttaId = id || params.get("q");
-        if (!suttaId) return;
-
-        const currentScroll = (scrollY !== undefined) ? scrollY : Scroller.getScrollTop();
-        
-        const progress = {
-            id: suttaId,
-            scrollY: currentScroll,
-            timestamp: Date.now()
-        };
-        
-        localStorage.setItem("last_read_sutta", JSON.stringify(progress));
-        window.dispatchEvent(new CustomEvent("local-data-changed"));
-        logger.debug("Progress", `Saved: ${suttaId} at ${currentScroll}`);
-    } catch (e) {
-        console.warn("Could not save progress:", e);
-    }
-  },
-
-  _loaderTimer: null,
-
-  _showLoader: function (show) {
-    const loader = document.getElementById("sutta-loader");
-    const btns = [
-      document.getElementById("btn-random"),
-      document.getElementById("btn-landing-random"),
-      document.getElementById("nav-prev"),
-      document.getElementById("nav-next")
-    ];
-
-    if (show) {
-      if (this.isLoading) return; 
-      this.isLoading = true;
-
-      if (this._loaderTimer) clearTimeout(this._loaderTimer);
-      // [OPTIMIZATION] Tăng delay lên 400ms để triệt tiêu hoàn toàn nháy (flicker) cho các bài kinh đã cache
-      this._loaderTimer = setTimeout(() => {
-        if (!this.isLoading) return; // Nếu đã load xong trong lúc đợi thì thôi
-
-        btns.forEach(btn => { if (btn) btn.disabled = true; });
-
-        if (loader) {
-          loader.classList.remove("hidden");
-          loader.offsetHeight; // Force reflow
-          loader.classList.add("visible");
-        }
-      }, 400); 
-    } else {
-      this.isLoading = false;
-
-      if (this._loaderTimer) {
-        clearTimeout(this._loaderTimer);
-        this._loaderTimer = null;
-      }
-
-      // Re-enable buttons immediately for responsiveness
-      btns.forEach(btn => { if (btn) btn.disabled = false; });
-
-      if (loader) {
-        loader.classList.remove("visible");
-        // [NEW] Use a stable delay for hiding to match CSS transitions
-        setTimeout(() => {
-          if (!this.isLoading) {
-            loader.classList.add("hidden");
-          }
-        }, 300);
-      }
     }
   },
 
@@ -367,22 +180,84 @@ export const SuttaController = {
       const input = await RandomBuffer.getPayload(filters);
 
       const isValid = input && (input.uid || (input.payload && input.payload.uid));
-
-      if (!isValid) {
-        logger.warn('Random Process Total', 'Payload empty');
-        return;
-      }
+      if (!isValid) return;
 
       const suttaUid = input.uid || input.payload.uid;
       logger.info('loadRandom', `Selected: ${suttaUid}`);
       
-      // [NEW] If triggered from bottom, we might want to handle it differently (e.g. instant teleport)
-      // but for now we follow the user directive to just ensure it's an instant jump
       await this.loadSutta(input, shouldUpdateUrl, 0, { transition: false, ...options });
 
       logger.timerEnd('Random Process Total');
     } catch (e) {
       logger.error("Random", "Failed to load random sutta", e);
     }
+  },
+
+  // --- INTERNAL HELPERS ---
+
+  _stopTTS: function() {
+    const wasActive = TTSOrchestrator.isSessionActive();
+    TTSOrchestrator.stop();
+    if (!wasActive) TTSOrchestrator.endSession();
+  },
+
+  _handleMissingSutta: async function(suttaId, options) {
+    const searchResults = await SuttaRepository.searchMetadata(suttaId, 1000);
+    if (searchResults && searchResults.length > 0) {
+        const searchData = {
+            uid: suttaId,
+            type: 'search_results',
+            results: searchResults,
+            query: suttaId,
+            displayInfo: { uid: suttaId, title: `Search: ${suttaId}`, acronym: "Search" }
+        };
+        ViewManager.switchView('reader');
+        await renderSutta(suttaId, searchData, options);
+        logger.timerEnd(`Render: ${suttaId}`);
+        return true;
+    }
+    SuttaNavigation.update(null);
+    renderSutta(suttaId, null, null, options);
+    logger.timerEnd(`Render: ${suttaId}`);
+    return false;
+  },
+
+  _handleAlias: async function(result, scrollTarget) {
+    let redirectId = result.targetUid;
+    const finalHash = result.hashId || scrollTarget;
+    if (finalHash) redirectId += `#${finalHash}`;
+    await this.loadSutta(redirectId, true, 0, { transition: false, force: true });
+    return 'ALIAS_REDIRECTED';
+  },
+
+  _normalizeScrollTarget: function(suttaId, scrollTarget) {
+    if (scrollTarget && !scrollTarget.includes(':')) {
+        const isSegmentNumber = /^[\d\.]+$/.test(scrollTarget);
+        if (isSegmentNumber) return `${suttaId}:${scrollTarget}`;
+    }
+    return scrollTarget;
+  },
+
+  _handleSuccessfulRender: function(suttaId, scrollTarget, currentScroll, shouldUpdateUrl) {
+    PopupAPI.scan();
+    if (!shouldUpdateUrl) PopupAPI.restore();
+    
+    if (TTSOrchestrator.isSessionActive()) {
+        setTimeout(() => TTSOrchestrator.refreshSession(TTSOrchestrator.isPlaying()), 100);
+    }
+
+    if (shouldUpdateUrl) {
+        const bookParam = FilterComponent.generateBookParam();
+        Router.updateURL(suttaId, bookParam, false, scrollTarget ? `#${scrollTarget}` : null, currentScroll);
+        SuttaPersistence.save(suttaId, currentScroll);
+    }
+  },
+
+  _initBackgroundTasks: function() {
+    if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => DictProvider.init(), { timeout: 2000 });
+    } else {
+        setTimeout(() => DictProvider.init(), 1000);
+    }
   }
-  };
+};
