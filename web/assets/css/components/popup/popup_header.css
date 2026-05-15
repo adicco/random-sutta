@@ -201,17 +201,22 @@
   min-height: 50px;
   /* border-top: 1px solid var(--border-light); */ /* Separate from body */
   border-left: 5px solid var(--primary-color);
-
-  /* Make it obvious it's clickable */
-  cursor: pointer;
-  transition: background-color 0.2s;
 }
 
-.quicklook-footer:hover {
-  background-color: var(--bg-hover);
-}
-
-/* Ensure title in footer looks correct */
+/* Ensure title in footer looks correct and is clickable */
 .quicklook-footer .ql-title {
   /* Inherit existing title flex properties */
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: -8px; /* Offset padding */
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  flex: 1; /* Allow title to take up available space but not overlap close btn */
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.quicklook-footer .ql-title:hover {
+  background-color: var(--bg-hover);
 }

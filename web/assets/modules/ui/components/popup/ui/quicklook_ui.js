@@ -25,12 +25,9 @@ export const QuicklookUI = {
             callbacks.onClose();
         });
 
-        // [NEW] Footer Click -> Open Original Link
-        if (this.elements.footer) {
-            this.elements.footer.addEventListener("click", (e) => {
-                // Ignore if clicking the close button
-                if (e.target.closest("#close-quicklook")) return;
-                
+        // [NEW] Title Click -> Open Original Link
+        if (this.elements.title) {
+            this.elements.title.addEventListener("click", (e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 
