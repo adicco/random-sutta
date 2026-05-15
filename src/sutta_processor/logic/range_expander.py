@@ -264,6 +264,16 @@ def generate_subleaf_shortcuts(
             if trans_title:
                 result_meta[sub_uid]["translated_title"] = trans_title
 
+            # Generate blurb for search display (e.g., "<i>Pali Title</i> — Translated Title")
+            blurb_parts = []
+            if orig_title:
+                blurb_parts.append(f"<i>{orig_title}</i>")
+            if trans_title:
+                blurb_parts.append(trans_title)
+            
+            if blurb_parts:
+                result_meta[sub_uid]["blurb"] = " — ".join(blurb_parts)
+
             sub_range = _parse_range_string(sub_uid)
             if sub_range:
                 p_prefix, p_start, p_end = sub_range
