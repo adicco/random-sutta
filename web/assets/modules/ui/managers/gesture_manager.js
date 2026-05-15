@@ -77,9 +77,24 @@ export const GestureManager = {
         // --- Explicit Invisible Edge Buttons ---
         const edgeLeft = document.getElementById("edge-nav-left");
         const edgeRight = document.getElementById("edge-nav-right");
+        const toggleEdgeNav = document.getElementById("toggle-edge-nav");
+
+        // Load setting
+        const EDGE_NAV_KEY = "setting_edge_nav_enabled";
+        let edgeNavEnabled = localStorage.getItem(EDGE_NAV_KEY) !== "false"; // Default true
+        
+        if (toggleEdgeNav) {
+            toggleEdgeNav.checked = edgeNavEnabled;
+            toggleEdgeNav.addEventListener("change", (e) => {
+                edgeNavEnabled = e.target.checked;
+                localStorage.setItem(EDGE_NAV_KEY, edgeNavEnabled);
+                logger.info("Settings", `Edge Nav ${edgeNavEnabled ? 'Enabled' : 'Disabled'}`);
+            });
+        }
 
         if (edgeLeft) {
             edgeLeft.addEventListener("click", () => {
+                if (!edgeNavEnabled) return;
                 const btnPrev = document.getElementById("nav-prev");
                 if (btnPrev && !btnPrev.disabled) {
                     logger.debug("EdgeBtn", "Prev Sutta");
@@ -94,6 +109,7 @@ export const GestureManager = {
 
         if (edgeRight) {
             edgeRight.addEventListener("click", () => {
+                if (!edgeNavEnabled) return;
                 const btnNext = document.getElementById("nav-next");
                 if (btnNext && !btnNext.disabled) {
                     logger.debug("EdgeBtn", "Next Sutta");
