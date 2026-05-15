@@ -12,7 +12,7 @@ function createContextFooter(currentUid, metaEntry, contextMeta) {
     // Kiểm tra xem title có trùng acronym không (tránh in lặp)
     const hasDistinctTitle = title && title.toLowerCase() !== acronym.toLowerCase();
     const targetId = metaEntry.extract_id || currentUid;
-    const action = `window.loadSutta('${parentId}#${targetId}', true, 0, { transition: true })`;
+    const action = `window.loadSutta('${parentId}#${targetId}', true, 0, { transition: false })`;
 
     return `
         <div class="sutta-context-footer">
