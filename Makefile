@@ -1,5 +1,5 @@
 # Path: Makefile
-.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini app
+.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini app clean-releases
 
 # Python command (sử dụng môi trường hiện tại do direnv quản lý)
 PYTHON := python3
@@ -179,13 +179,26 @@ beta: apk epub macos
 	$(PYTHON) -m src.release_system --publish
 
 # Publish Official
-official: apk epub macos
+official: apk epub app
 	@echo "🚀 PUBLISHING OFFICIAL..."
 	$(PYTHON) -m src.release_system --official
 
 # Publish + Deploy
 publish: official deploy
 	@echo "🌟 PUBLISHED AND DEPLOYED!"
+
+# Delete all releases except the latest one
+clean-releases:
+	@echo "🧹 Cleaning up old GitHub releases..."
+	@latest=$$(gh release list --limit 1 --json tagName --jq '.[0].tagName'); \
+	all_tags=$$(gh release list --limit 100 --json tagName --jq '.[].tagName'); \
+	for tag in $$all_tags; do \
+		if [ "$$tag" != "$$latest" ]; then \
+			echo "🗑️ Deleting release and tag: $$tag"; \
+			gh release delete "$$tag" --yes --cleanup-tag; \
+		fi; \
+	done
+	@echo "✅ Cleanup complete. Only latest release ($$latest) remains."
 
 # ==============================================================================
 # 🧹 CLEANUP
