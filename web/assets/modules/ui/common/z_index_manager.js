@@ -1,7 +1,8 @@
 // Path: web/assets/modules/ui/common/z_index_manager.js
 
 // Start higher than CSS defaults (usually around 1000-1050)
-let currentMaxZIndex = 1100;
+// And also higher than legacy .is-top-layer (2000)
+let currentMaxZIndex = 2100;
 
 export const ZIndexManager = {
     /**

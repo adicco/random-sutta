@@ -6,6 +6,8 @@ import { QuicklookUI } from '../ui/quicklook_ui.js';
 import { Scroller } from 'ui/common/scroller.js';
 import { ResizeHandler } from 'ui/common/resize_handler.js';
 
+import { ZIndexManager } from 'ui/common/z_index_manager.js';
+
 export const CommentController = {
     init() {
         CommentUI.init({
@@ -82,12 +84,6 @@ export const CommentController = {
             const item = comments[index];
             const context = PopupScanner.getContextText(comments, index);
             CommentUI.render(item.text, index, total, context);
-
-            // [STACKING] Bring to Front
-            const commentEl = document.getElementById("comment-popup");
-            const lookupEl = document.getElementById("lookup-popup");
-            if (commentEl) commentEl.classList.add("is-top-layer");
-            if (lookupEl) lookupEl.classList.remove("is-top-layer");
         }
     },
 
@@ -138,15 +134,12 @@ export const CommentController = {
             // If there was a main comment active, restore it
             if (PopupState.activeIndex !== -1) {
                 this.activate(PopupState.activeIndex);
-                // Return top layer to Quicklook as it was "under" the nested comment
                 const qlEl = document.getElementById("quicklook-popup");
-                if (qlEl) qlEl.classList.add("is-top-layer");
-                const commentEl = document.getElementById("comment-popup");
-                if (commentEl) commentEl.classList.remove("is-top-layer");
+                if (qlEl) ZIndexManager.bringToFront(qlEl);
             } else {
                 CommentUI.hide();
                 const qlEl = document.getElementById("quicklook-popup");
-                if (qlEl) qlEl.classList.add("is-top-layer");
+                if (qlEl) ZIndexManager.bringToFront(qlEl);
             }
             return;
         }
@@ -155,15 +148,5 @@ export const CommentController = {
         QuicklookUI.hide(); // Close child popup (Quicklook)
         PopupState.clearActive();
         Scroller.highlightElement(null);
-
-        // [STACKING] Yield 'top-layer' to Lookup if it's still open
-        const commentEl = document.getElementById("comment-popup");
-        if (commentEl) commentEl.classList.remove("is-top-layer");
-
-        const lookupEl = document.getElementById("lookup-popup");
-        // Check visibility via class hidden logic
-        if (lookupEl && !lookupEl.classList.contains("hidden")) {
-            lookupEl.classList.add("is-top-layer");
-        }
     }
 };

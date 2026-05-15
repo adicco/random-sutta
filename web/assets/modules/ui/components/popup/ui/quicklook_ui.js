@@ -1,4 +1,6 @@
 // Path: web/assets/modules/ui/components/popup/ui/quicklook_ui.js
+import { ZIndexManager } from 'ui/common/z_index_manager.js';
+
 export const QuicklookUI = {
     elements: {},
     currentSourceUrl: null, // Store URL for footer click
@@ -14,6 +16,9 @@ export const QuicklookUI = {
         };
 
         if (!this.elements.popup) return;
+
+        // [Z-INDEX] Manage stacking order
+        ZIndexManager.register(this.elements.popup);
 
         this.elements.closeBtn.addEventListener("click", (e) => {
             e.stopPropagation();
@@ -60,7 +65,9 @@ export const QuicklookUI = {
         this.currentSourceUrl = sourceUrl;
 
         this.elements.popup.classList.remove("hidden");
-        this.elements.popup.classList.add("is-top-layer"); // [NEW] Ensure it is top layer when opened
+        
+        // [Z-INDEX] Bring to front
+        ZIndexManager.bringToFront(this.elements.popup);
         
         if (this.elements.popupBody) this.elements.popupBody.scrollTop = 0;
     },

@@ -7,6 +7,8 @@ import { SuttaService } from 'services/sutta_service.js';
 import { LeafRenderer } from 'ui/views/renderers/leaf_renderer.js';
 import { getLogger } from 'utils/logger.js';
 
+import { ZIndexManager } from 'ui/common/z_index_manager.js';
+
 const logger = getLogger("QuicklookCtrl");
 const SCROLL_OFFSET = 60;
 
@@ -55,10 +57,7 @@ export const QuicklookController = {
 
             // [CRITICAL] Manage stacking: Comment must be above Quicklook
             const commentEl = document.getElementById("comment-popup");
-            const quicklookEl = document.getElementById("quicklook-popup");
-            
-            if (commentEl) commentEl.classList.add("is-top-layer");
-            if (quicklookEl) quicklookEl.classList.remove("is-top-layer");
+            if (commentEl) ZIndexManager.bringToFront(commentEl);
         }
     },
 

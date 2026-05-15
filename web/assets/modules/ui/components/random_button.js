@@ -1,6 +1,7 @@
 // Path: web/assets/modules/ui/components/random_button.js
 import { SuttaController } from "core/sutta_controller.js";
 import { ViewManager } from "ui/managers/view_manager.js";
+import { ZIndexManager } from "ui/common/z_index_manager.js";
 
 export const RandomButton = {
     init: function() {
@@ -28,7 +29,7 @@ export const RandomButton = {
                 isLongPress = true;
                 const popup = document.getElementById("filter-popup");
                 if (popup) {
-                    popup.style.zIndex = 1150; // Ensure it's above other things
+                    ZIndexManager.bringToFront(popup); // Ensure it's above other things
                     popup.classList.remove("hidden");
                     if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback on open
                 }

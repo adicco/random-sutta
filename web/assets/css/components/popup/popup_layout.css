@@ -187,5 +187,5 @@ body.popup-open, body.lookup-open {
 
 /* [DYNAMIC STACKING] Force active popup to top */
 .is-top-layer {
-    z-index: 2000 !important;
+    z-index: 2000;
 }

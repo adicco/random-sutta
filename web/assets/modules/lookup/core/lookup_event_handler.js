@@ -4,8 +4,9 @@ import { DictProvider } from 'lookup/dict_provider.js'; // [FIXED] Use alias
 
 export const LookupEventHandler = {
     handleClick(e, onLookupCallback) {
-        const container = document.getElementById("sutta-container");
-        if (!container || !container.contains(e.target)) return;
+        // [UPDATED] Allow lookup in both main container and Quicklook popup
+        const container = e.target.closest(".sutta-text-view");
+        if (!container) return;
         
         // [UPDATED] Ignore clicks on links, buttons, existing highlights, AND comment markers
         if (e.target.closest("a, button, .lookup-highlight, .comment-marker")) return;

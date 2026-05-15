@@ -272,12 +272,6 @@ export const LookupManager = {
             LookupUI.render(renderData, cleanText, segmentText, results, clickOffset); 
             document.body.classList.add("lookup-open");
 
-            // [STACKING] Bring to Front
-            const lookupEl = document.getElementById("lookup-popup");
-            const commentEl = document.getElementById("comment-popup");
-            if (lookupEl) lookupEl.classList.add("is-top-layer");
-            if (commentEl) commentEl.classList.remove("is-top-layer");
-            
             // Auto Scroll (only if first look, not nav)
             if (!LookupState.isNavigating) {
                 LookupHighlighter.scrollToElement(contextNode, true);

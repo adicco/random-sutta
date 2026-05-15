@@ -38,8 +38,31 @@ export const LookupHighlighter = {
 
     scrollToElement(element, force = false) {
         if (!element) return;
+        
         const rect = element.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
+        
+        // [NEW] Support for scrolling inside Popups (like Quicklook)
+        const scrollContainer = element.closest('.popup-body');
+        
+        if (scrollContainer) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            
+            // Check if already visible in popup
+            const isInSafeZone = (rect.top >= containerRect.top + 50 && rect.bottom <= containerRect.bottom - 50);
+            if (!force && isInSafeZone) return;
+
+            const ratio = AppConfig.LOOKUP?.SCROLL_OFFSET_RATIO || 0.25;
+            const targetPosition = scrollContainer.scrollTop + (rect.top - containerRect.top) - (viewportHeight * ratio);
+            
+            scrollContainer.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+            return;
+        }
+
+        // --- Standard Window Scroll ---
         
         // Define Safe Zone (e.g., 15% to 60% from top)
         // If the element is within this range, we don't need to scroll.
