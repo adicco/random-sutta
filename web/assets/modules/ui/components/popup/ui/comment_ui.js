@@ -14,7 +14,7 @@ export const CommentUI = {
             closeBtn: document.getElementById("close-comment"),
             btnPrev: document.getElementById("btn-comment-prev"),
             btnNext: document.getElementById("btn-comment-next"),
-            btnAuto: document.getElementById("btn-comment-auto"),
+            btnAuto: document.getElementById("btn-comment-auto-header"),
             infoLabel: document.getElementById("comment-index-info"),
             popupBody: document.querySelector("#comment-popup .popup-body") 
         };
