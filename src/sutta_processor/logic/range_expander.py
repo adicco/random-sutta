@@ -53,13 +53,6 @@ def expand_range_ids(uid: str) -> List[str]:
         return _expand_alias_ids(prefix, start, end)
     return []
 
-def _slugify(text: str) -> str:
-    # Remove leading numbers like "1. " or "1.2 "
-    text = re.sub(r'^\d+(\.\d+)*\.\s*', '', text)
-    text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
-    text = re.sub(r'[^a-z0-9]+', '-', text.lower()).strip('-')
-    return text
-
 def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Dict[str, str]]:
     """
     Trích xuất danh sách subleaf dựa vào thẻ <article> (ưu tiên) hoặc <h2>.
@@ -102,7 +95,12 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
 
     # --- PHASE 2: COLLECT H2 (Only if no articles found) ---
     h2_items = []
-    seen_uids = set()
+    h2_counter = 0
+    
+    intro_pali_title = ""
+    intro_extract_id = ""
+    has_intro_content = False
+    found_first_h2 = False
     
     for seg_key in sorted_keys:
         content_items = content[seg_key]
@@ -120,23 +118,55 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
                 root_text = item.get("content", "")
             elif t == "translation":
                 trans_text = item.get("content", "")
-                
-        if "<h2>" in html_content or "<h2 " in html_content:
-            trans_title = re.sub(r'<[^>]+>', '', trans_text).strip()
-            root_title = re.sub(r'<[^>]+>', '', root_text).strip()
+        
+        is_h2 = "<h2>" in html_content or "<h2 " in html_content
+        
+        if is_h2:
+            found_first_h2 = True
+            h2_counter += 1
             
-            slug_base = root_title if root_title else trans_title
-            if slug_base:
-                slug = _slugify(slug_base)
-                uid = f"{root_uid}-{slug}"
-                if uid not in seen_uids:
-                    seen_uids.add(uid)
-                    h2_items.append({
-                        "uid": uid,
-                        "extract_id": seg_key,
-                        "original_title": root_title,
-                        "translated_title": trans_title
-                    })
+            # Clean titles: strip tags and leading digits
+            raw_trans_title = re.sub(r'<[^>]+>', '', trans_text).strip()
+            raw_root_title = re.sub(r'<[^>]+>', '', root_text).strip()
+            
+            # Remove prefix like "1. ", "2. ", etc.
+            clean_trans_title = re.sub(r'^\d+\.\s*', '', raw_trans_title)
+            clean_root_title = re.sub(r'^\d+\.\s*', '', raw_root_title)
+            
+            uid = f"{root_uid}.{h2_counter}"
+            h2_items.append({
+                "uid": uid,
+                "extract_id": seg_key,
+                "original_title": clean_root_title,
+                "translated_title": clean_trans_title
+            })
+        elif not found_first_h2:
+            # Check if it's NOT a header (h1, h2, etc.)
+            is_any_header = re.search(r'<h[1-6]', html_content, re.IGNORECASE)
+            
+            if not is_any_header:
+                cleaned_root = re.sub(r'<[^>]+>', '', root_text).strip()
+                cleaned_trans = re.sub(r'<[^>]+>', '', trans_text).strip()
+                
+                if cleaned_root or cleaned_trans:
+                    if not has_intro_content:
+                        has_intro_content = True
+                        intro_extract_id = seg_key # First content segment
+                    
+                    if not intro_pali_title and cleaned_root:
+                        intro_pali_title = cleaned_root
+                        # Prefer segment with Pali as the starting point if possible
+                        intro_extract_id = seg_key
+
+    # Add Intro subleaf at the beginning if found
+    if has_intro_content:
+        intro_uid = f"{root_uid}.0"
+        h2_items.insert(0, {
+            "uid": intro_uid,
+            "extract_id": intro_extract_id,
+            "original_title": intro_pali_title,
+            "translated_title": "Intro"
+        })
 
     return h2_items
 
@@ -214,12 +244,13 @@ def generate_subleaf_shortcuts(
                 display_suffix = suffix.replace("-", "–")
                 sub_acronym = _generate_smart_acronym(parent_acronym, r_start, r_end, display_suffix)
                 
-            if not sub_acronym and parent_acronym and sub_uid.startswith(root_uid + "-"):
-                # Handle heading-based subleafs (e.g., dn1-attalokapannattivatthu)
-                suffix = sub_uid[len(root_uid) + 1:] # Skip root_uid and hyphen
-                # Convert slug to Title Case
-                formatted_suffix = suffix.replace("-", " ").title()
-                sub_acronym = f"{parent_acronym} {formatted_suffix}"
+            if not sub_acronym and parent_acronym and sub_uid.startswith(root_uid + "."):
+                # Handle heading-based subleafs (e.g., mn2.1)
+                suffix = sub_uid[len(root_uid) + 1:] # Skip root_uid and dot
+                if suffix == "0":
+                    sub_acronym = f"{parent_acronym} Intro"
+                else:
+                    sub_acronym = f"{parent_acronym}.{suffix}"
 
             result_meta[sub_uid] = {
                 "type": "subleaf",
