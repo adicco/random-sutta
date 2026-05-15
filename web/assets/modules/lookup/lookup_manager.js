@@ -31,7 +31,7 @@ export const LookupManager = {
         const resizeHandle = document.getElementById("lookup-resize-handle");
         if (lookupPopup && resizeHandle) {
             ResizeHandler.attach(lookupPopup, resizeHandle, {
-                storageKey: 'lookup_popup_height',
+                storageKey: 'bottom_popup_height',
                 cssVar: '--popup-comment-height' // Shared with comments for coordinated UI
             });
         }

@@ -36,7 +36,12 @@
 }
 
 #filter-popup {
-  height: var(--popup-filter-height);
+  height: auto !important; /* Force auto height to match content levels */
+  max-height: 80vh;
+}
+
+#filter-resize-handle {
+    display: none !important;
 }
 
 /* --- RESIZE HANDLE --- */

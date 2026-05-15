@@ -65,14 +65,6 @@ export const FilterView = {
         moreBtn.onclick = () => {
             secondaryDiv.classList.toggle("hidden");
             moreBtn.textContent = secondaryDiv.classList.contains("hidden") ? "Others" : "Hide";
-            
-            // [NEW] Clear custom height so it auto-resizes to fit new content
-            const popup = document.getElementById("filter-popup");
-            if (popup) {
-                popup.style.removeProperty('--popup-filter-height');
-                // Remove from local storage as well to reset to auto height
-                localStorage.removeItem('filter_popup_height');
-            }
         };
     },
 

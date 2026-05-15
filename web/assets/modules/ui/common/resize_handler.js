@@ -38,7 +38,13 @@ export const ResizeHandler = {
                 const h = parseInt(savedHeight);
                 // Apply safety limits to saved height
                 const vhLimit = (window.innerHeight * maxHeightVh) / 100;
-                const finalMax = maxHeightPx ? Math.min(vhLimit, maxHeightPx) : vhLimit;
+                
+                // [FIX] Handle maxHeightPx if it's a function or number
+                const currentMaxPx = (typeof maxHeightPx === 'function') 
+                    ? maxHeightPx() 
+                    : (maxHeightPx || vhLimit);
+
+                const finalMax = Math.min(vhLimit, currentMaxPx);
                 const safeH = Math.max(minHeight, Math.min(h, finalMax));
                 
                 popup.style.height = `${safeH}px`;

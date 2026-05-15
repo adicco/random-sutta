@@ -2,6 +2,7 @@
 // [FIXED] Đường dẫn import lùi 3 cấp: filters -> components -> ui -> modules -> data
 import { PRIMARY_BOOKS } from 'data/constants.js';
 
+const STORAGE_KEY = "active_book_filters";
 const filterSet = new Set();
 
 export const FilterState = {
@@ -12,9 +13,26 @@ export const FilterState = {
         if (bParam) {
             const booksFromUrl = bParam.toLowerCase().split(",").map((s) => s.trim());
             booksFromUrl.forEach((b) => initialBooks.add(b));
+            // Save to storage when URL param is used to keep it persistent
+            this._saveToStorage();
         } else {
-            // Mặc định chọn hết Primary
-            PRIMARY_BOOKS.forEach((b) => initialBooks.add(b));
+            // Load from localStorage if available
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const books = JSON.parse(saved);
+                    if (Array.isArray(books) && books.length > 0) {
+                        books.forEach(b => initialBooks.add(b));
+                    } else {
+                        PRIMARY_BOOKS.forEach((b) => initialBooks.add(b));
+                    }
+                } catch (e) {
+                    PRIMARY_BOOKS.forEach((b) => initialBooks.add(b));
+                }
+            } else {
+                // Mặc định chọn hết Primary
+                PRIMARY_BOOKS.forEach((b) => initialBooks.add(b));
+            }
         }
         
         initialBooks.forEach(b => filterSet.add(b));
@@ -26,16 +44,19 @@ export const FilterState = {
 
     add(bookId) {
         filterSet.add(bookId);
+        this._saveToStorage();
     },
 
     delete(bookId) {
         filterSet.delete(bookId);
+        this._saveToStorage();
     },
 
     // Chế độ Solo: Chỉ giữ 1 cuốn
     setSolo(bookId) {
         filterSet.clear();
         filterSet.add(bookId);
+        this._saveToStorage();
     },
 
     getActiveList() {
@@ -59,5 +80,9 @@ export const FilterState = {
         }
         
         return null;
+    },
+
+    _saveToStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(filterSet)));
     }
 };

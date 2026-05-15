@@ -23,7 +23,7 @@ export const CommentController = {
         const resizeHandle = document.getElementById("comment-resize-handle");
         if (commentPopup && resizeHandle) {
             ResizeHandler.attach(commentPopup, resizeHandle, {
-                storageKey: 'comment_popup_height',
+                storageKey: 'bottom_popup_height',
                 cssVar: '--popup-comment-height',
                 maxHeightVh: 80,
                 maxHeightPx: () => {
