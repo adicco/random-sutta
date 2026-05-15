@@ -285,6 +285,12 @@ header {
   font-weight: 600;
 }
 
+.nav-search-blurb i {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
 .nav-search-empty {
   padding: 20px;
   text-align: center;

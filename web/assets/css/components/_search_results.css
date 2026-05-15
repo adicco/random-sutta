@@ -112,6 +112,12 @@
   border-radius: 2px;
 }
 
+.search-blurb-snippet i {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
 .search-no-results {
   text-align: center;
   padding: 50px 20px;
