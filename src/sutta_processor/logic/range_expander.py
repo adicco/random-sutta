@@ -101,6 +101,7 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
     intro_extract_id = ""
     has_intro_content = False
     found_first_h2 = False
+    found_h1 = False
     
     for seg_key in sorted_keys:
         content_items = content[seg_key]
@@ -120,6 +121,7 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
                 trans_text = item.get("content", "")
         
         is_h2 = "<h2>" in html_content or "<h2 " in html_content
+        is_h1 = "<h1>" in html_content or "<h1 " in html_content
         
         if is_h2:
             found_first_h2 = True
@@ -140,8 +142,11 @@ def _extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Di
                 "original_title": clean_root_title,
                 "translated_title": clean_trans_title
             })
-        elif not found_first_h2:
-            # Check if it's NOT a header (h1, h2, etc.)
+        elif is_h1:
+            found_h1 = True
+            continue
+        elif found_h1 and not found_first_h2:
+            # Check if it's NOT a header (h3, h4, etc.)
             is_any_header = re.search(r'<h[1-6]', html_content, re.IGNORECASE)
             
             cleaned_root = re.sub(r'<[^>]+>', '', root_text).strip()
