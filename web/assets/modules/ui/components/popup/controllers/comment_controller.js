@@ -13,6 +13,7 @@ export const CommentController = {
         CommentUI.init({
             onClose: () => this.close(),
             onNavigate: (dir) => this.navigate(dir),
+            onToggleAuto: () => this.toggleAuto(),
             onLinkClick: (href) => {
                 window.dispatchEvent(new CustomEvent('popup:request-link', { detail: { href } }));
             }
@@ -38,9 +39,49 @@ export const CommentController = {
         }
     },
 
-    scanComments() {
-        const list = PopupScanner.scan("sutta-container");
-        PopupState.setComments(list);
+    toggleAuto() {
+        PopupState.isAutoSwitch = !PopupState.isAutoSwitch;
+        CommentUI.updateAutoButton(PopupState.isAutoSwitch);
+        if (PopupState.isAutoSwitch) {
+            this.handleAutoSwitch();
+        }
+    },
+
+    handleAutoSwitch() {
+        if (!PopupState.isAutoSwitch || !CommentUI.isVisible()) return;
+
+        const comments = PopupState.getComments();
+        if (comments.length === 0) return;
+
+        const container = document.getElementById("sutta-container");
+        if (!container) return;
+
+        const markers = Array.from(container.querySelectorAll(".comment-marker"));
+        if (markers.length === 0) return;
+
+        const viewportHeight = window.innerHeight;
+        const thresholdBottom = viewportHeight * 0.7; // 30% from bottom means top 70% of screen
+
+        let bestIndex = -1;
+        let minTopDistance = Infinity;
+
+        markers.forEach((marker, index) => {
+            const rect = marker.getBoundingClientRect();
+            
+            // Condition: Must be above the 30% bottom threshold
+            if (rect.top < thresholdBottom) {
+                // We want the one closest to the top (but still visible or slightly above)
+                const distance = Math.abs(rect.top); // rect.top is distance from top of viewport
+                if (distance < minTopDistance) {
+                    minTopDistance = distance;
+                    bestIndex = index;
+                }
+            }
+        });
+
+        if (bestIndex !== -1 && bestIndex !== PopupState.activeIndex) {
+            this.activate(bestIndex);
+        }
     },
 
     openByText(text) {

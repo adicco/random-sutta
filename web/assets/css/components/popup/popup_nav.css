@@ -78,12 +78,30 @@
   box-shadow: none;
 }
 
+.popup-nav-btn.active {
+    background-color: var(--primary-color);
+    color: white !important;
+    border-color: var(--primary-color);
+    opacity: 1 !important;
+}
+
+.popup-nav-btn.active svg {
+    stroke: white;
+}
+
 /* Mobile/Touch Devices: Hide completely (Use Swipe) 
    We use 'pointer: coarse' to detect touch screens accurately, 
    instead of relying on screen width.
 */
 @media (pointer: coarse) {
+  /* [NEW] Show Nav Bar on touch devices if auto-switch button is present, 
+     because user needs to toggle it. Or keep it hidden and use another gesture?
+     Actually, user wants a button to toggle. Let's show it on mobile too if it's the nav bar.
+  */
   .popup-nav-bar {
-    display: none !important;
+    display: flex !important;
+    opacity: 0.8; /* Slightly visible on mobile by default */
+    bottom: 10px;
+    right: 10px;
   }
 }

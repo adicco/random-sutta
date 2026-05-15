@@ -14,6 +14,7 @@ export const CommentUI = {
             closeBtn: document.getElementById("close-comment"),
             btnPrev: document.getElementById("btn-comment-prev"),
             btnNext: document.getElementById("btn-comment-next"),
+            btnAuto: document.getElementById("btn-comment-auto"),
             infoLabel: document.getElementById("comment-index-info"),
             popupBody: document.querySelector("#comment-popup .popup-body") 
         };
@@ -41,6 +42,12 @@ export const CommentUI = {
             this.elements.btnNext.addEventListener("click", () => {
                 this.elements.btnNext.blur();
                 callbacks.onNavigate(1);
+            });
+        }
+        if (this.elements.btnAuto) {
+            this.elements.btnAuto.addEventListener("click", () => {
+                this.elements.btnAuto.blur();
+                callbacks.onToggleAuto();
             });
         }
 
@@ -120,6 +127,12 @@ export const CommentUI = {
     hide() {
         this.elements.popup?.classList.add("hidden");
         document.body.classList.remove("popup-open"); // [NEW] Remove class from body
+    },
+
+    updateAutoButton(isEnabled) {
+        if (this.elements.btnAuto) {
+            this.elements.btnAuto.classList.toggle("active", isEnabled);
+        }
     },
 
     isVisible() {

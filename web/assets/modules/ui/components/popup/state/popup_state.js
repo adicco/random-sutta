@@ -15,6 +15,8 @@ export const PopupState = {
     nestedActiveIndex: -1,
     nestedActiveText: null,
 
+    isAutoSwitch: false,
+
     setComments(list) { this.comments = list || []; },
     getComments() { return this.comments; },
 
