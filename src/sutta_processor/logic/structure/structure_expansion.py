@@ -66,9 +66,14 @@ def expand_structure_with_subleaves(
                         if "extract_id" in sc_data:
                             entry["extract_id"] = sc_data["extract_id"]
                         
-                        if api_info.get("translated_title"):
+                        if sc_data.get("translated_title"):
+                            entry["translated_title"] = sc_data["translated_title"]
+                        elif api_info.get("translated_title"):
                             entry["translated_title"] = api_info["translated_title"]
-                        if api_info.get("original_title"):
+                            
+                        if sc_data.get("original_title"):
+                            entry["original_title"] = sc_data["original_title"]
+                        elif api_info.get("original_title"):
                             entry["original_title"] = api_info["original_title"]
                     
                         target_meta_dict[sc_id] = entry
