@@ -5,6 +5,20 @@ from .range_rules import ARTICLE_ID_PATTERN
 
 __all__ = ["extract_subleaf_metadata"]
 
+def _extract_first_word(text: str) -> str:
+    """Trích xuất từ đầu tiên và loại bỏ dấu câu bao quanh (quotes, commas, etc.)"""
+    if not text:
+        return ""
+    # Remove HTML tags if any
+    text = re.sub(r'<[^>]+>', '', text)
+    words = text.split()
+    if not words:
+        return ""
+    first_word = words[0]
+    # Loại bỏ các ký tự đặc biệt ở đầu và cuối từ: “ ” „ ‘ ’ " ' , . ; : ! ? ( ) [ ] — -
+    cleaned = re.sub(r'^[“„‘’"\'(—\-]+|[,”’‘"\'();:!?.\[\]—\-]+$', '', first_word)
+    return cleaned
+
 def extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Dict[str, str]]:
     """
     Trích xuất danh sách subleaf dựa vào thẻ <article> (ưu tiên) hoặc <h2>.
@@ -110,7 +124,7 @@ def extract_subleaf_metadata(content: Dict[str, Any], root_uid: str) -> List[Dic
                     intro_extract_id = seg_key # First content segment
                 
                 if not intro_pali_title and cleaned_root:
-                    intro_pali_title = cleaned_root
+                    intro_pali_title = _extract_first_word(cleaned_root)
                     # Prefer segment with Pali as the starting point if possible
                     intro_extract_id = seg_key
 
