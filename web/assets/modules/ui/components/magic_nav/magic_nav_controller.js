@@ -58,14 +58,15 @@ export const MagicNav = {
                 this.collapseToLevel(this._currentTocLevel);
             } else if (action === 'toc-toggle-all') {
                 const tocContent = document.getElementById("magic-toc-content");
+                // Check if there are ANY expanded nodes (not having 'collapsed' class)
                 const anyOpen = tocContent?.querySelector('.toc-node-wrapper:not(.collapsed)');
                 
                 if (anyOpen) {
-                    // Collapse all and remember current level
+                    // Currently expanded -> Collapse all and remember current level
                     this._lastTocLevel = this._currentTocLevel;
                     this._currentTocLevel = 0;
                 } else {
-                    // Restore last level or expand to a large number
+                    // Currently collapsed -> Restore last level (at least 1)
                     this._currentTocLevel = Math.max(1, this._lastTocLevel);
                 }
                 this.collapseToLevel(this._currentTocLevel);
