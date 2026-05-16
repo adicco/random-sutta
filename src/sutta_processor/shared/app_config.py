@@ -59,7 +59,6 @@ DB_CHUNK_SIZE_BYTES = 50 * 1024
 CONFIG_AUTHOR_PRIORITY = ["sujato", "patton", "brahmali", "kelly"]
 CONFIG_PRIMARY_BOOKS = [
     "dn", "mn", "sn", "an", 
-    "sa", "ma", "ea", "da",
     "kp", "dhp", "ud", "iti", "snp", "thag", "thig"
 ]
 DEBUG_PROCESS_LIMIT = 0
