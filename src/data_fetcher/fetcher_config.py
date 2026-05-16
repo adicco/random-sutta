@@ -21,14 +21,19 @@ class BilaraConfig:
     BRANCH_NAME: str = "main"
     FETCH_MAPPING: Dict[str, str] = {
         "sc_bilara_data/root/pli/ms": "root/pli/ms",
+        "sc_bilara_data/root/lzh": "root/lzh",
         "sc_bilara_data/html/pli/ms": "html/pli/ms",
         "sc_bilara_data/html/pli/vri/vinaya": "html/pli/ms/vinaya",
+        "sc_bilara_data/html/lzh/sct": "html/lzh/sct",
         "sc_bilara_data/comment/en": "comment/en",
         "sc_bilara_data/variant/pli/ms": "variant/pli/ms",
+        "sc_bilara_data/variant/lzh/sct/sutta": "variant/lzh/sct/sutta",
         "sc_bilara_data/reference/pli/ms": "reference/pli/ms",
+        "sc_bilara_data/reference/lzh": "reference/lzh",
         "sc_bilara_data/translation/en/brahmali": "translation/en/brahmali",
         "sc_bilara_data/translation/en/kelly": "translation/en/kelly",
         "sc_bilara_data/translation/en/sujato/sutta": "translation/en/sujato/sutta",
+        "sc_bilara_data/translation/en/patton/sutta": "translation/en/patton/sutta",
         "structure/tree": "tree",
         "structure/child_range.json": "child_range.json",
     }
