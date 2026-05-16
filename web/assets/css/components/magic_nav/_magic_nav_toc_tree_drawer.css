@@ -62,11 +62,26 @@
   text-overflow: ellipsis;
 }
 
-.bookmark-id {
+.bookmark-id, .read-id {
   font-size: 0.8rem;
   color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.id-acronym {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.id-original {
+  font-style: italic;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: none;
 }
 
 .bookmark-del-btn {

@@ -89,9 +89,11 @@ export const BookmarkManager = {
         // Get info from header
         const acronymEl = document.getElementById("nav-main-title");
         const titleEl = document.getElementById("nav-sub-title");
+        const originalEl = document.getElementById("nav-original-title");
         
         const acronym = acronymEl ? acronymEl.textContent.trim() : currentId.toUpperCase();
         const title = titleEl ? titleEl.textContent.trim() : "";
+        const original = originalEl ? originalEl.textContent.trim() : "";
 
         const bookmarks = this.getBookmarks();
         const index = bookmarks.findIndex(b => b.id === currentId);
@@ -107,12 +109,14 @@ export const BookmarkManager = {
                 existingDeleted.deleted = false;
                 existingDeleted.acronym = acronym;
                 existingDeleted.title = title;
+                existingDeleted.original = original;
                 existingDeleted.timestamp = Date.now();
             } else {
                 bookmarks.push({ 
                     id: currentId, 
                     acronym: acronym, 
-                    title: title, 
+                    title: title,
+                    original: original,
                     timestamp: Date.now() 
                 });
             }
@@ -157,11 +161,15 @@ export const BookmarkManager = {
         this.listContainer.innerHTML = bookmarks.map(b => {
             const displayAcronym = b.acronym || b.id.toUpperCase();
             const displayTitle = b.title || "";
+            const displayOriginal = b.original || "";
 
             return `
                 <div class="bookmark-item" data-id="${b.id}">
                     <div class="bookmark-info">
-                        <div class="bookmark-id">${displayAcronym}</div>
+                        <div class="bookmark-id">
+                            <span class="id-acronym">${displayAcronym}</span>
+                            ${displayOriginal ? `<span class="id-original">${displayOriginal}</span>` : ''}
+                        </div>
                         ${displayTitle ? `<div class="bookmark-title">${displayTitle}</div>` : ''}
                     </div>
                     <button class="bookmark-del-btn" title="Remove">✕</button>

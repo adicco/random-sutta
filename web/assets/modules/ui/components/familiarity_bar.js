@@ -34,14 +34,16 @@ export const FamiliarityBar = {
                     e.stopPropagation();
                     const level = parseInt(btn.getAttribute('data-level'), 10);
                     
-                    // Lấy Acronym và Title từ header để lưu vào history
+                    // Lấy Acronym, Title và Original Title từ header để lưu vào history
                     const acronymEl = document.getElementById("nav-main-title");
                     const titleEl = document.getElementById("nav-sub-title");
+                    const originalEl = document.getElementById("nav-original-title");
                     
                     const acronym = acronymEl ? acronymEl.textContent.trim() : uid.toUpperCase();
                     const title = titleEl ? titleEl.textContent.trim() : "";
+                    const original = originalEl ? originalEl.textContent.trim() : "";
 
-                    ReadManager.setFamiliarity(uid, level, acronym, title);
+                    ReadManager.setFamiliarity(uid, level, acronym, title, false, original);
                     this.updateUIState(uid, level);
                 };
             });

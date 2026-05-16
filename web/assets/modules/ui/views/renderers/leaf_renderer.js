@@ -76,14 +76,19 @@ function postProcessHtml(htmlString) {
 function getDisplayInfo(uid, metaEntry) {
     let main = uid.toUpperCase();
     let sub = "";
+    let original = "";
     const match = uid.match(/^([a-z]+)(\d.*)$/i);
     if (match) main = `${match[1].toUpperCase()} ${match[2]}`;
 
     if (metaEntry) {
         main = metaEntry.acronym || main;
-        sub = metaEntry.translated_title || metaEntry.original_title || "";
+        sub = metaEntry.translated_title || "";
+        original = metaEntry.original_title || "";
+        
+        // If sub is empty, fallback to original as sub title if desired
+        if (!sub && original) sub = original;
     }
-    return { main, sub };
+    return { main, sub, original };
 }
 
 export const LeafRenderer = {

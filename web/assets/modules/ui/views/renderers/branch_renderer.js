@@ -100,7 +100,8 @@ export const BranchRenderer = {
 
         const displayInfo = {
             main: meta.acronym || data.uid.toUpperCase(),
-            sub: meta.translated_title || ""
+            sub: meta.translated_title || "",
+            original: meta.original_title || ""
         };
 
         return {

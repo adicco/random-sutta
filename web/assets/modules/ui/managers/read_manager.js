@@ -114,7 +114,7 @@ export const ReadManager = {
         return this.WEIGHTS[level] !== undefined ? this.WEIGHTS[level] : 1.0;
     },
 
-    setFamiliarity(id, level, acronym, title, skipRender = false) {
+    setFamiliarity(id, level, acronym, title, skipRender = false, original = "") {
         const history = this.getHistory();
         
         if (level === 0) {
@@ -132,6 +132,7 @@ export const ReadManager = {
                 date: dateStr,
                 acronym: acronym || (history[id] ? history[id].acronym : id.toUpperCase()),
                 title: title || (history[id] ? history[id].title : ""),
+                original: original || (history[id] ? history[id].original : ""),
                 timestamp: Date.now(),
                 deleted: false
             };
@@ -198,11 +199,15 @@ export const ReadManager = {
             
             html += items.map(b => {
                 const displayTitle = b.title || "";
+                const displayOriginal = b.original || "";
                 return `
-                    <div class="read-item fam-level-${b.level}" data-id="${b.id}" data-level="${b.level}" data-acronym="${b.acronym}" data-title="${displayTitle.replace(/"/g, '&quot;')}">
+                    <div class="read-item fam-level-${b.level}" data-id="${b.id}" data-level="${b.level}" data-acronym="${b.acronym}" data-title="${displayTitle.replace(/"/g, '&quot;')}" data-original="${displayOriginal.replace(/"/g, '&quot;')}">
                         <div class="read-indicator"></div>
                         <div class="read-info">
-                            <div class="read-id">${b.acronym}</div>
+                            <div class="read-id">
+                                <span class="id-acronym">${b.acronym}</span>
+                                ${displayOriginal ? `<span class="id-original">${displayOriginal}</span>` : ''}
+                            </div>
                             ${displayTitle ? `<div class="read-title">${displayTitle}</div>` : ''}
                         </div>
                         <div class="read-actions">
@@ -222,6 +227,7 @@ export const ReadManager = {
             const currentLevel = parseInt(item.getAttribute("data-level"), 10);
             const acronym = item.getAttribute("data-acronym");
             const title = item.getAttribute("data-title");
+            const original = item.getAttribute("data-original");
 
             // Swipe logic
             let startX = 0;
@@ -258,7 +264,7 @@ export const ReadManager = {
                     }
 
                     if (newLevel !== latestLevel) {
-                        this.setFamiliarity(id, newLevel, acronym, title, true); // skipRender = true
+                        this.setFamiliarity(id, newLevel, acronym, title, true, original); // skipRender = true
                         this._updateItemDOM(item, newLevel);
                         if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(id, newLevel);
                     }
@@ -278,7 +284,7 @@ export const ReadManager = {
                     if (decBtn && latestLevel > 0) newLevel--;
                     
                     if (newLevel !== latestLevel) {
-                        this.setFamiliarity(id, newLevel, acronym, title, true); // skipRender = true
+                        this.setFamiliarity(id, newLevel, acronym, title, true, original); // skipRender = true
                         this._updateItemDOM(item, newLevel);
                         
                         const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${id}"]`);

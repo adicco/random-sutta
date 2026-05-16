@@ -4,6 +4,7 @@ export const HeaderView = {
         const navHeader = document.getElementById("nav-header");
         const navMainTitle = document.getElementById("nav-main-title");
         const navSubTitle = document.getElementById("nav-sub-title");
+        const navOriginalTitle = document.getElementById("nav-original-title");
         const titleText = document.getElementById("nav-title-text");
         const searchContainer = document.getElementById("nav-search-container");
         const statusDiv = document.getElementById("status");
@@ -11,6 +12,7 @@ export const HeaderView = {
         // 1. Update Titles
         if (navMainTitle) navMainTitle.textContent = displayInfo.main;
         if (navSubTitle) navSubTitle.textContent = displayInfo.sub;
+        if (navOriginalTitle) navOriginalTitle.textContent = displayInfo.original || "";
 
         // 2. Reset Search Mode State
         titleText?.classList.remove("hidden");

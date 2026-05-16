@@ -96,6 +96,22 @@
   color: var(--text-light);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* Re-using shared styles if possible, but defining here for safety as it is a separate file */
+.read-id .id-acronym {
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.read-id .id-original {
+  font-style: italic;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: none;
 }
 
 /* Familiarity Adjust Actions */
