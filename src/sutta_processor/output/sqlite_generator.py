@@ -150,10 +150,12 @@ class SqliteGenerator:
         if book_id in ['lzh-dk', 'sag', 'sg', 'sab']: 
             return "lzh_abhidhamma"
         
-        # Lzh Vinaya
-        lzh_vinaya_prefixes = ('lzh-dg', 'lzh-mg', 'lzh-mi', 'lzh-sarv', 'lzh-mu', 'lzh-ka')
-        if book_id.startswith(lzh_vinaya_prefixes):
-            return "lzh_vinaya"
+        # Lzh Vinaya Shards (Split by School to avoid >100MB DB sizes)
+        if book_id.startswith('lzh-dg'): return "lzh_vinaya_dg"      # Dharmaguptaka
+        if book_id.startswith('lzh-mg'): return "lzh_vinaya_mg"      # Mahāsāṃghika
+        if book_id.startswith('lzh-sarv'): return "lzh_vinaya_sarv"  # Sarvāstivāda
+        if book_id.startswith(('lzh-mi', 'lzh-mu', 'lzh-ka')): 
+            return "lzh_vinaya_other" # Mahīśāsaka, Mūlasarvāstivāda, Kāśyapīya
             
         # Lzh Minor
         if book_id.startswith('lzh-') or book_id in ['t210', 't211', 't212', 't213']: 
