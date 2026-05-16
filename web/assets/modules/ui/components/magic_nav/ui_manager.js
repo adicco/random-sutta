@@ -12,7 +12,10 @@ export const UIManager = {
             tocContent: document.getElementById("magic-toc-content"),
             bookmarksContent: document.getElementById("magic-bookmarks-content"),
             backdrop: document.getElementById("magic-backdrop"),
+            resizeHandle: document.getElementById("magic-toc-resize-handle"),
         };
+
+        this._loadSavedDimensions();
 
         if (this.elements.wrapper) {
             this.elements.wrapper.addEventListener("click", (e) => {
@@ -41,7 +44,106 @@ export const UIManager = {
             this.elements.backdrop.addEventListener("click", () => this.closeAll());
         }
 
+        if (this.elements.resizeHandle) {
+            this._enableResize(this.elements.drawer, this.elements.resizeHandle);
+        }
+
         return this.elements;
+    },
+
+    _loadSavedDimensions() {
+        const { drawer } = this.elements;
+        if (!drawer) return;
+        
+        try {
+            const saved = localStorage.getItem("magic_drawer_size");
+            if (saved) {
+                const { width, height } = JSON.parse(saved);
+                if (width) drawer.style.width = width;
+                if (height) {
+                    drawer.style.height = height;
+                    drawer.style.maxHeight = "95vh"; // Allow more space if manually resized
+                }
+            }
+        } catch (e) {
+            console.warn("Failed to load drawer dimensions", e);
+        }
+    },
+
+    _enableResize(drawer, handle) {
+        let isResizing = false;
+        let startX, startY, startWidth, startHeight;
+
+        const startResize = (clientX, clientY) => {
+            isResizing = true;
+            startX = clientX;
+            startY = clientY;
+            startWidth = drawer.offsetWidth;
+            startHeight = drawer.offsetHeight;
+            
+            drawer.style.transition = "none"; // Disable transition during resize
+            document.body.style.cursor = "nwse-resize";
+            document.body.style.userSelect = "none";
+        };
+
+        const doResize = (clientX, clientY) => {
+            if (!isResizing) return;
+            
+            const newWidth = startWidth + (clientX - startX);
+            const newHeight = startHeight + (clientY - startY);
+            
+            // Constrain width
+            const maxWidth = window.innerWidth - 30;
+            const finalWidth = Math.min(Math.max(280, newWidth), maxWidth);
+            drawer.style.width = `${finalWidth}px`;
+            drawer.style.maxWidth = "none"; // Override CSS max-width
+            
+            // Constrain height
+            const maxHeight = window.innerHeight - 70;
+            const finalHeight = Math.min(Math.max(200, newHeight), maxHeight);
+            drawer.style.height = `${finalHeight}px`;
+            drawer.style.maxHeight = "none"; // Override CSS max-height
+        };
+
+        const stopResize = () => {
+            if (!isResizing) return;
+            isResizing = false;
+            drawer.style.transition = "";
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+            
+            // Save to localStorage
+            const size = {
+                width: drawer.style.width,
+                height: drawer.style.height
+            };
+            localStorage.setItem("magic_drawer_size", JSON.stringify(size));
+        };
+
+        // Mouse events
+        handle.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            startResize(e.clientX, e.clientY);
+        });
+
+        window.addEventListener("mousemove", (e) => doResize(e.clientX, e.clientY));
+        window.addEventListener("mouseup", stopResize);
+
+        // Touch events
+        handle.addEventListener("touchstart", (e) => {
+            if (e.touches.length > 0) {
+                startResize(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        window.addEventListener("touchmove", (e) => {
+            if (isResizing && e.touches.length > 0) {
+                doResize(e.touches[0].clientX, e.touches[0].clientY);
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener("touchend", stopResize);
     },
 
     // [NEW] Strict Scroll Isolation Helper
