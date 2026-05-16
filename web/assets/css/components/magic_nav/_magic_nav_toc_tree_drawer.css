@@ -143,14 +143,16 @@
 
 @media (min-width: 768px) {
   #magic-toc-drawer {
-    width: 520px; /* Tăng từ 450px */
+    width: 60vw;
+    max-width: 800px;
     max-height: 80vh;
   }
 }
 
 @media (min-width: 1024px) {
   #magic-toc-drawer {
-    width: 650px; /* Thêm độ rộng cho màn hình lớn/máy tính bảng landscape */
+    width: 45vw; /* Trên màn hình rất rộng, 60% có thể hơi quá, 45% là vừa đẹp */
+    max-width: 900px;
   }
 }
 
