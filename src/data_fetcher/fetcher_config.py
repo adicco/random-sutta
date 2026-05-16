@@ -36,6 +36,14 @@ class BilaraConfig:
         "root": ["xplayground"], 
     }
 
+class HtmlTextConfig:
+    DATA_ROOT: Path = FetcherConfig.DATA_DIR / "html_text"
+    FETCH_MAPPING: Dict[str, str] = {
+        "html_text/lzh": "lzh",
+        "html_text/zh": "zh",
+        "html_text/vi": "vi",
+    }
+
 class ApiConfig:
     DATA_JSON_DIR: Path = FetcherConfig.DATA_DIR / "json"
     API_TEMPLATE: str = "https://suttacentral.net/api/suttaplex/{}"
