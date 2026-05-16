@@ -4,6 +4,7 @@ from typing import TypedDict, Dict, Optional, Any
 class SuttaMeta(TypedDict):
     uid: str
     type: str  # 'leaf' | 'branch' | 'subleaf' | 'alias'
+    root_lang: Optional[str] # [NEW] 'pi' | 'lzh' | etc.
     acronym: str
     translated_title: str
     original_title: str

@@ -49,6 +49,7 @@ class SqliteGenerator:
                     uid TEXT PRIMARY KEY,
                     book_id TEXT,
                     type TEXT,
+                    root_lang TEXT,
                     acronym TEXT,
                     translated_title TEXT,
                     original_title TEXT,
@@ -206,12 +207,12 @@ class SqliteGenerator:
                 children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                 cursor.execute("""
                     INSERT OR REPLACE INTO metadata (
-                        uid, book_id, type, acronym, translated_title, original_title,
+                        uid, book_id, type, root_lang, acronym, translated_title, original_title,
                         blurb, author_uid, parent_uid, target_uid, children,
                         hash_id, extract_id, nav_prev, nav_next, child_range, search_priority
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    uid, book_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
+                    uid, book_id, m.get("type"), m.get("root_lang"), m.get("acronym"), m.get("translated_title"),
                     m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
                     m.get("parent_uid"), m.get("target_uid"), children_json,
                     m.get("hash_id"), m.get("extract_id"), nav.get("prev"), nav.get("next"),
@@ -279,12 +280,12 @@ class SqliteGenerator:
                 children_json = json.dumps(children_map.get(uid, []), ensure_ascii=False)
                 cursor.execute("""
                     INSERT INTO metadata (
-                        uid, book_id, type, acronym, translated_title, original_title,
+                        uid, book_id, type, root_lang, acronym, translated_title, original_title,
                         blurb, author_uid, parent_uid, target_uid, children,
                         hash_id, extract_id, nav_prev, nav_next, child_range, search_priority
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(uid) DO UPDATE SET
-                        type=excluded.type, acronym=excluded.acronym,
+                        type=excluded.type, root_lang=excluded.root_lang, acronym=excluded.acronym,
                         translated_title=excluded.translated_title, original_title=excluded.original_title,
                         blurb=excluded.blurb, author_uid=excluded.author_uid,
                         parent_uid=excluded.parent_uid, target_uid=excluded.target_uid,
@@ -294,7 +295,7 @@ class SqliteGenerator:
                         child_range=excluded.child_range,
                         search_priority=excluded.search_priority
                 """, (
-                    uid, b_id, m.get("type"), m.get("acronym"), m.get("translated_title"),
+                    uid, b_id, m.get("type"), m.get("root_lang"), m.get("acronym"), m.get("translated_title"),
                     m.get("original_title"), m.get("blurb"), m.get("author_uid") or m.get("best_author_uid"),
                     m.get("parent_uid"), m.get("target_uid"), children_json,
                     m.get("hash_id"), m.get("extract_id"), nav.get("prev"), nav.get("next"),

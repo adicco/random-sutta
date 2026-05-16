@@ -16,6 +16,7 @@ def ensure_meta_entry(
     
     entry = {
         "type": info.get("type", type_default),
+        "root_lang": info.get("root_lang"), # [NEW]
         "translated_title": info.get("translated_title", ""),
         "original_title": info.get("original_title", ""),
         "blurb": info.get("blurb"),

@@ -70,6 +70,7 @@ def _load_super_metadata(valid_keys: Set[str]) -> Dict[str, Any]:
                 merged_meta[uid] = {
                     "uid": uid,
                     "type": item.get("type", "group"),
+                    "root_lang": item.get("root_lang"), # [NEW]
                     "acronym": item.get("acronym", ""),
                     "translated_title": item.get("translated_title", ""),
                     "original_title": item.get("original_title", ""),
@@ -92,6 +93,7 @@ def _load_super_metadata(valid_keys: Set[str]) -> Dict[str, Any]:
                     merged_meta[uid] = {
                         "uid": uid,
                         "type": item.get("type", "branch"),
+                        "root_lang": item.get("root_lang"), # [NEW]
                         "acronym": item.get("acronym", ""),
                         "translated_title": item.get("translated_title", ""),
                         "original_title": item.get("original_title", ""),

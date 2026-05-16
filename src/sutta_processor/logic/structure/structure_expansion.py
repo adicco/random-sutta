@@ -44,11 +44,14 @@ def expand_structure_with_subleaves(
                         generated_acc.append((sc_id, m_type, target_ref, extra_ref))
 
                     # --- Logic tạo Meta cũ ---
+                    api_info = meta_map.get(sc_id, {})
+                    
                     if sc_data["type"] == "alias":
                         target = sc_data.get("target_uid") or sc_data.get("extract_id") or sc_data.get("parent_uid")
                         entry = { 
                             "type": "alias", 
                             "target_uid": target, 
+                            "root_lang": api_info.get("root_lang")
                         }
                         if sc_data.get("hash_id"):
                             entry["hash_id"] = sc_data.get("hash_id")
@@ -56,10 +59,10 @@ def expand_structure_with_subleaves(
                         target_meta_dict[sc_id] = entry
                     
                     else:
-                        api_info = meta_map.get(sc_id, {})
                         entry = {
                             "type": sc_data["type"],
-                            "parent_uid": sc_data["parent_uid"]
+                            "parent_uid": sc_data["parent_uid"],
+                            "root_lang": api_info.get("root_lang")
                         }
                         if sc_data.get("acronym"):
                              entry["acronym"] = sc_data["acronym"]

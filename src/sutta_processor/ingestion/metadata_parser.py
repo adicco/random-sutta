@@ -62,6 +62,7 @@ def load_names_map() -> Dict[str, SuttaMeta]:
                 entry: SuttaMeta = {
                     "uid": uid,
                     "type": item.get("type", "leaf"),
+                    "root_lang": item.get("root_lang"), # [NEW]
                     "acronym": item.get("acronym", "") or "", # [FIX] Default empty string
                     "translated_title": (item.get("translated_title") or "").strip(),
                     "original_title": (item.get("original_title") or "").strip(),
