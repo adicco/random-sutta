@@ -117,17 +117,17 @@
 /* Familiarity Adjust Actions */
 .read-actions {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   margin-left: 12px;
-  opacity: 0;
+  opacity: 0.3; /* Subtle base visibility */
   transition: opacity 0.2s ease;
   flex-shrink: 0;
 }
 
-/* Always show on mobile, show on hover on desktop */
-@media (hover: none) and (pointer: coarse) {
+/* Always show more clearly on touch devices */
+@media (hover: none) {
   .read-actions {
-    opacity: 0.8;
+    opacity: 0.7;
   }
 }
 
@@ -138,10 +138,10 @@
 .fam-adjust-btn {
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--text-muted);
-  width: 28px;
-  height: 28px;
+  width: 32px; /* Increased from 28px */
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -149,13 +149,11 @@
   transition: all 0.2s ease;
   padding: 0;
   user-select: none;
-  opacity: 0.6;
 }
 
 .fam-adjust-btn:hover {
   background-color: var(--bg-hover);
   color: var(--primary-color);
-  opacity: 1;
 }
 
 .fam-adjust-btn:active {
