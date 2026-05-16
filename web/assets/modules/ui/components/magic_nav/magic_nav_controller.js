@@ -10,6 +10,7 @@ import { ReadManager } from 'ui/managers/read_manager.js';
 export const MagicNav = {
     _closeTimer: null,
     _currentTocLevel: 1, // Default expansion level
+    _lastTocLevel: 1,    // Memory for toggle-all
 
     init() {
         const els = UIManager.init();
@@ -49,20 +50,25 @@ export const MagicNav = {
                 this.closeAll();
             } else if (action === 'toc-level-plus') {
                 this._currentTocLevel++;
+                this._lastTocLevel = this._currentTocLevel; // Reset toggle memory
                 this.collapseToLevel(this._currentTocLevel);
             } else if (action === 'toc-level-minus') {
                 this._currentTocLevel = Math.max(0, this._currentTocLevel - 1);
+                this._lastTocLevel = this._currentTocLevel; // Reset toggle memory
                 this.collapseToLevel(this._currentTocLevel);
             } else if (action === 'toc-toggle-all') {
                 const tocContent = document.getElementById("magic-toc-content");
                 const anyOpen = tocContent?.querySelector('.toc-node-wrapper:not(.collapsed)');
+                
                 if (anyOpen) {
+                    // Collapse all and remember current level
+                    this._lastTocLevel = this._currentTocLevel;
                     this._currentTocLevel = 0;
-                    this.collapseToLevel(0);
                 } else {
-                    this._currentTocLevel = 10; // Large enough to open all
-                    this.collapseToLevel(10);
+                    // Restore last level or expand to a large number
+                    this._currentTocLevel = Math.max(1, this._lastTocLevel);
                 }
+                this.collapseToLevel(this._currentTocLevel);
             }
         });
     },
@@ -74,17 +80,35 @@ export const MagicNav = {
         const nodes = tocContent.querySelectorAll('.toc-node-wrapper');
         nodes.forEach(node => {
             const level = parseInt(node.getAttribute('data-level') || '0');
-            // If node level is >= maxLevelIndex, collapse it.
-            // E.g., maxLevelIndex = 1 means level 0 is open, level 1+ collapsed.
             if (level >= maxLevelIndex) {
                 node.classList.add('collapsed');
             } else {
                 node.classList.remove('collapsed');
             }
         });
+
+        this._updateToggleIconState();
         
         // Ensure current active node and its parents are NOT collapsed
         this._expandActiveNodeChain();
+    },
+
+    _updateToggleIconState() {
+        const toggleBtn = document.querySelector('[data-action="toc-toggle-all"]');
+        if (!toggleBtn) return;
+
+        const tocContent = document.getElementById("magic-toc-content");
+        const anyOpen = tocContent?.querySelector('.toc-node-wrapper:not(.collapsed)');
+
+        if (anyOpen) {
+            toggleBtn.classList.remove('state-expand');
+            toggleBtn.classList.add('state-collapse');
+            toggleBtn.title = "Collapse All";
+        } else {
+            toggleBtn.classList.remove('state-collapse');
+            toggleBtn.classList.add('state-expand');
+            toggleBtn.title = "Expand All";
+        }
     },
 
     _expandActiveNodeChain() {
