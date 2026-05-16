@@ -46,8 +46,40 @@ export const MagicNav = {
             } else if (action === 'load' && id) {
                 window.loadSutta(id, true, 0, { transition: false });
                 this.closeAll();
+            } else if (action === 'collapse-l2') {
+                this.collapseToLevel(1); // Level index starts at 0, so Level 2 is index 1
             }
         });
+    },
+
+    collapseToLevel(maxLevelIndex) {
+        const tocContent = document.getElementById("magic-toc-content");
+        if (!tocContent) return;
+
+        const nodes = tocContent.querySelectorAll('.toc-node-wrapper');
+        nodes.forEach(node => {
+            const level = parseInt(node.getAttribute('data-level') || '0');
+            if (level >= maxLevelIndex) {
+                node.classList.add('collapsed');
+            } else {
+                node.classList.remove('collapsed');
+            }
+        });
+        
+        // Ensure current active node and its parents are NOT collapsed
+        this._expandActiveNodeChain();
+    },
+
+    _expandActiveNodeChain() {
+        const tocContent = document.getElementById("magic-toc-content");
+        const activeItem = tocContent?.querySelector(".toc-item.active") || tocContent?.querySelector(".toc-header-row.active");
+        if (activeItem) {
+            let parent = activeItem.closest('.toc-node-wrapper');
+            while (parent) {
+                parent.classList.remove('collapsed');
+                parent = parent.parentElement.closest('.toc-node-wrapper');
+            }
+        }
     },
 
     toggleTOC() { UIManager.toggleTOC(); },

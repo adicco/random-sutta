@@ -72,7 +72,7 @@ export const TocRenderer = {
             
             const presentationClass = type === 'leaf' ? 'toc-leaf-presentation' : '';
             const paddingLeft = 15 + (level * 16);
-            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked} ${famClass}" data-toc-id="${id}" ${dataAction} style="padding-left: ${paddingLeft}px">
+            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked} ${famClass}" data-toc-id="${id}" data-level="${level}" ${dataAction} style="padding-left: ${paddingLeft}px">
                         ${generateInnerContent(id, type)}
                     </div>`;
         };
@@ -109,7 +109,7 @@ export const TocRenderer = {
             // [UPDATED] Add tooltip to toc-header-row
             const tooltip = getTooltip(id);
 
-            return `<div class="toc-node-wrapper ${collapsedClass}" data-toc-id="${id}">
+            return `<div class="toc-node-wrapper ${collapsedClass}" data-toc-id="${id}" data-level="${currentLevel}">
                         <div class="toc-header-row ${rowActiveClass} ${isBookmarked} ${famClass}" title="${tooltip}">
                             <div class="${headerClasses}" ${headerAction} style="padding-left: ${paddingLeft}px">
                                 ${generateInnerContent(id, type)}
