@@ -8,7 +8,6 @@ import { BookmarkManager } from 'ui/managers/bookmark_manager.js';
 import { ReadManager } from 'ui/managers/read_manager.js';
 
 export const MagicNav = {
-    _closeTimer: null,
     _currentTocLevel: 1, // Default expansion level
 
     init() {
@@ -20,18 +19,6 @@ export const MagicNav = {
             UIManager.toggleTOC();
         });
         els.backdrop.addEventListener("click", () => UIManager.closeAll());
-        
-        els.bar.addEventListener("mouseleave", () => {
-            if (UIManager.isBreadcrumbExpanded()) {
-                this._closeTimer = setTimeout(() => UIManager.closeAll(), AppConfig.MAGIC_NAV_COOLDOWN); 
-            }
-        });
-        els.bar.addEventListener("mouseenter", () => {
-            if (this._closeTimer) {
-                clearTimeout(this._closeTimer);
-                this._closeTimer = null;
-            }
-        });
 
         // [NEW] Event Delegation for TOC Actions
         els.drawer.addEventListener("click", (e) => {
