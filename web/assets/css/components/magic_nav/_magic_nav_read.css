@@ -99,12 +99,15 @@
   display: flex;
   align-items: baseline;
   gap: 8px;
+  min-width: 0; /* Allow container to shrink */
 }
 
 /* Re-using shared styles if possible, but defining here for safety as it is a separate file */
 .read-id .id-acronym {
   font-weight: 700;
   color: var(--text-main);
+  white-space: nowrap; /* Prevent wrap */
+  flex-shrink: 0; /* Acronym must stay fully visible */
 }
 
 .read-id .id-original {
@@ -112,6 +115,11 @@
   font-size: 0.75rem;
   color: var(--text-muted);
   text-transform: none;
+  white-space: nowrap; /* Single line */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ... */
+  flex: 1; /* Take remaining space */
+  min-width: 0; /* Allow truncation */
 }
 
 /* Familiarity Adjust Actions */
