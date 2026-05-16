@@ -140,6 +140,7 @@ class SqliteGenerator:
     def _get_category(self, book_id: str) -> str:
         """Xác định shard dựa trên book_id."""
         if book_id in ['dn', 'mn', 'sn', 'an']: return "major"
+        if book_id in ['sa', 'ma', 'da', 'ea'] or book_id.startswith('lzh-'): return "lzh"
         if book_id.startswith('pli-tv-'): return "vinaya"
         if book_id in ['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana']: return "abhidhamma"
         return "minor" # Khuddaka and others

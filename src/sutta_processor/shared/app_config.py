@@ -9,7 +9,32 @@ _ASSETS_BASE = _WEB_BASE / "assets"
 
 # --- 1. RAW INPUTS (Source of Truth) ---
 RAW_BILARA_DIR = _DATA_BASE / "bilara"
-RAW_BILARA_TEXT_DIR = RAW_BILARA_DIR / "root/pli/ms"
+BILARA_MORE_DIR = _DATA_BASE / "bilara_more"
+
+# [UPDATED] Hỗ trợ quét đa nguồn
+RAW_ROOT_DIRS = [
+    RAW_BILARA_DIR / "root/pli/ms",
+    BILARA_MORE_DIR / "root/lzh",
+    RAW_BILARA_DIR / "root/lzh/sct"
+]
+RAW_HTML_DIRS = [
+    RAW_BILARA_DIR / "html/pli/ms",
+    BILARA_MORE_DIR / "html/lzh",
+    RAW_BILARA_DIR / "html/lzh/sct"
+]
+RAW_TRANS_DIRS = [
+    RAW_BILARA_DIR / "translation/en"
+]
+RAW_VARIANT_DIRS = [
+    RAW_BILARA_DIR / "variant/pli/ms",
+    RAW_BILARA_DIR / "variant/lzh/sct"
+]
+RAW_REFERENCE_DIRS = [
+    RAW_BILARA_DIR / "reference/pli/ms",
+    BILARA_MORE_DIR / "reference/lzh",
+    RAW_BILARA_DIR / "reference/lzh"
+]
+
 RAW_API_JSON_DIR = _DATA_BASE / "json"
 RAW_SUPER_META_DIR = RAW_API_JSON_DIR / "super"
 RAW_SUPER_TREE_FILE = RAW_BILARA_DIR / "tree" / "super-tree.json"
@@ -31,9 +56,10 @@ DEV_MIRROR_DB_DIR = _DATA_BASE / "db_mirror"
 
 # --- 5. LOGIC CONFIGURATION ---
 DB_CHUNK_SIZE_BYTES = 50 * 1024 
-CONFIG_AUTHOR_PRIORITY = ["sujato", "brahmali", "kelly"]
+CONFIG_AUTHOR_PRIORITY = ["sujato", "patton", "brahmali", "kelly"]
 CONFIG_PRIMARY_BOOKS = [
     "dn", "mn", "sn", "an", 
+    "sa", "ma", "ea", "da",
     "kp", "dhp", "ud", "iti", "snp", "thag", "thig"
 ]
 DEBUG_PROCESS_LIMIT = 0

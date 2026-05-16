@@ -5,7 +5,14 @@ from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional
 
 # [UPDATED]
-from ..shared.app_config import RAW_BILARA_DIR, RAW_BILARA_TEXT_DIR
+from ..shared.app_config import (
+    RAW_BILARA_DIR, 
+    RAW_ROOT_DIRS, 
+    RAW_HTML_DIRS, 
+    RAW_TRANS_DIRS, 
+    RAW_VARIANT_DIRS, 
+    RAW_REFERENCE_DIRS
+)
 
 logger = logging.getLogger("SuttaProcessor.Ingestion.Crawler")
 
@@ -17,7 +24,9 @@ EXTRA_BOOKS = {
 def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], Dict[str, Path], Dict[str, Path], Dict[str, Path], Dict[str, Path]]:
     """
     Scans the raw data directories ONCE to build lookup maps for all file types.
-    Returns: (root_index, trans_index, html_index, comment_index, variant_index, reference_index)
+    Strategy: The lists in config are ordered [bilara_more, suttacentral_bilara]. 
+    If a file exists in multiple paths, the latter one will overwrite the former, 
+    prioritizing SuttaCentral's official data over our custom conversion.
     """
     logger.info("⚡ Indexing ALL raw files (Root, Trans, HTML, Comment, Variant, Reference)...")
     
@@ -29,36 +38,34 @@ def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], 
     reference_index = {}
 
     # 1. Index Root Files
-    if RAW_BILARA_TEXT_DIR.exists():
-        for file_path in RAW_BILARA_TEXT_DIR.rglob("*_root-*.json"):
-            if file_path.is_file():
-                sutta_id = file_path.name.split("_")[0]
-                root_index[sutta_id] = file_path
+    for d in RAW_ROOT_DIRS:
+        if d.exists():
+            for file_path in d.rglob("*_root-*.json"):
+                if file_path.is_file():
+                    sutta_id = file_path.name.split("_")[0]
+                    root_index[sutta_id] = file_path
 
     # 2. Index Translation Files
-    trans_dir = RAW_BILARA_DIR / "translation" / "en"
-    if trans_dir.exists():
-        for file_path in trans_dir.rglob("*_translation-en-*.json"):
-            if file_path.is_file():
-                # Filename format: {sutta_id}_translation-en-{author_uid}.json
-                parts = file_path.name.replace(".json", "").split("_")
-                if len(parts) >= 2:
-                    sutta_id = parts[0]
-                    # suffix is translation-en-{author_uid}
-                    suffix_parts = parts[1].split("-")
-                    if len(suffix_parts) >= 3:
-                        author_uid = suffix_parts[2]
-                        
-                        if sutta_id not in trans_index: trans_index[sutta_id] = {}
-                        trans_index[sutta_id][author_uid] = file_path
+    for d in RAW_TRANS_DIRS:
+        if d.exists():
+            for file_path in d.rglob("*_translation-*.json"):
+                if file_path.is_file():
+                    parts = file_path.name.replace(".json", "").split("_")
+                    if len(parts) >= 2:
+                        sutta_id = parts[0]
+                        suffix_parts = parts[1].split("-")
+                        if len(suffix_parts) >= 3:
+                            author_uid = suffix_parts[2]
+                            if sutta_id not in trans_index: trans_index[sutta_id] = {}
+                            trans_index[sutta_id][author_uid] = file_path
 
     # 3. Index HTML Files
-    html_dir = RAW_BILARA_DIR / "html"
-    if html_dir.exists():
-        for file_path in html_dir.rglob("*_html.json"):
-             if file_path.is_file():
-                sutta_id = file_path.name.split("_")[0]
-                html_index[sutta_id] = file_path
+    for d in RAW_HTML_DIRS:
+        if d.exists():
+            for file_path in d.rglob("*_html.json"):
+                 if file_path.is_file():
+                    sutta_id = file_path.name.split("_")[0]
+                    html_index[sutta_id] = file_path
 
     # 4. Index Comment Files
     comment_dir = RAW_BILARA_DIR / "comment"
@@ -69,20 +76,20 @@ def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], 
                 comment_index[sutta_id] = file_path
 
     # 5. Index Variant Files
-    variant_dir = RAW_BILARA_DIR / "variant"
-    if variant_dir.exists():
-        for file_path in variant_dir.rglob("*_variant-*.json"):
-            if file_path.is_file():
-                sutta_id = file_path.name.split("_")[0]
-                variant_index[sutta_id] = file_path
+    for d in RAW_VARIANT_DIRS:
+        if d.exists():
+            for file_path in d.rglob("*_variant-*.json"):
+                if file_path.is_file():
+                    sutta_id = file_path.name.split("_")[0]
+                    variant_index[sutta_id] = file_path
 
     # 6. Index Reference Files
-    reference_dir = RAW_BILARA_DIR / "reference"
-    if reference_dir.exists():
-        for file_path in reference_dir.rglob("*_reference.json"):
-            if file_path.is_file():
-                sutta_id = file_path.name.split("_")[0]
-                reference_index[sutta_id] = file_path
+    for d in RAW_REFERENCE_DIRS:
+        if d.exists():
+            for file_path in d.rglob("*_reference.json"):
+                if file_path.is_file():
+                    sutta_id = file_path.name.split("_")[0]
+                    reference_index[sutta_id] = file_path
 
     return root_index, trans_index, html_index, comment_index, variant_index, reference_index
 
