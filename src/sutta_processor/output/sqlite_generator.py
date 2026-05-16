@@ -139,11 +139,28 @@ class SqliteGenerator:
 
     def _get_category(self, book_id: str) -> str:
         """Xác định shard dựa trên book_id."""
+        # Pali Shards
         if book_id in ['dn', 'mn', 'sn', 'an']: return "major"
-        if book_id in ['sa', 'ma', 'da', 'ea'] or book_id.startswith('lzh-'): return "lzh"
         if book_id.startswith('pli-tv-'): return "vinaya"
         if book_id in ['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana']: return "abhidhamma"
-        return "minor" # Khuddaka and others
+        
+        # Lzh Shards
+        if book_id in ['sa', 'ma', 'da', 'ea', 'sa-2', 'sa-3', 'sa-ot', 'ma-ot', 'da-ot', 'ea-2', 'ea-ot']: 
+            return "lzh_major"
+        if book_id in ['lzh-dk', 'sag', 'sg', 'sab']: 
+            return "lzh_abhidhamma"
+        
+        # Lzh Vinaya
+        lzh_vinaya_prefixes = ('lzh-dg', 'lzh-mg', 'lzh-mi', 'lzh-sarv', 'lzh-mu', 'lzh-ka')
+        if book_id.startswith(lzh_vinaya_prefixes):
+            return "lzh_vinaya"
+            
+        # Lzh Minor
+        if book_id.startswith('lzh-') or book_id in ['t210', 't211', 't212', 't213']: 
+            return "lzh_minor"
+            
+        # Pali Minor (Khuddaka and others)
+        return "minor"
 
     def insert_book(self, book_obj: Dict[str, Any]):
         book_id = book_obj.get("id")
