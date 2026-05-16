@@ -339,22 +339,24 @@
   border-bottom: none;
 }
 .toc-item.subleaf .toc-subleaf-label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--text-light);
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .toc-subleaf-acronym {
   font-weight: 700;
+  font-size: 0.7rem;
   flex-shrink: 0;
 }
 .toc-subleaf-title {
   font-style: italic;
   font-weight: normal;
+  font-size: 0.75rem;
   color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
