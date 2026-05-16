@@ -49,7 +49,12 @@ export const TocRenderer = {
                     </div>
                 `;
             } else if (type === 'subleaf') {
-                return `<div class="toc-subleaf-label" title="${title}">${acronym} ${getBookmarkIcon()}</div>`;
+                return `
+                    <div class="toc-subleaf-label" title="${title}">
+                        <div class="toc-row-main">${acronym} ${getBookmarkIcon()}</div>
+                        ${title ? `<div class="toc-row-sub">${title}</div>` : ''}
+                    </div>
+                `;
             } else {
                 const branchLabel = meta.translated_title || meta.original_title || meta.acronym || id.toUpperCase();
                 return `<div class="toc-branch-label">${branchLabel} ${getBookmarkIcon()}</div>`;
