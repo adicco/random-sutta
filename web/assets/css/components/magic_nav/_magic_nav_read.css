@@ -125,8 +125,9 @@
 /* Familiarity Adjust Actions */
 .read-actions {
   display: flex;
-  gap: 8px;
-  margin-left: 12px;
+  flex-direction: column; /* Xếp theo chiều dọc */
+  gap: 4px; /* Giảm gap để gọn hơn */
+  margin-left: 10px;
   opacity: 0.3; /* Subtle base visibility */
   transition: opacity 0.2s ease;
   flex-shrink: 0;
@@ -148,8 +149,8 @@
   border: none;
   border-radius: 6px;
   color: var(--text-muted);
-  width: 32px; /* Increased from 28px */
-  height: 32px;
+  width: 32px; 
+  height: 28px; /* Giảm nhẹ chiều cao nút để tổng thể không quá cao */
   display: flex;
   align-items: center;
   justify-content: center;
