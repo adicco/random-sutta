@@ -184,11 +184,8 @@ export const ReadManager = {
         let html = "";
         for (const date of sortedDates) {
             const items = grouped[date];
-            // Sort items within a date by level (highest first), then acronym
-            items.sort((a, b) => {
-                if (b.level !== a.level) return b.level - a.level;
-                return a.acronym.localeCompare(b.acronym);
-            });
+            // Sort items within a date by timestamp descending (most recent first)
+            items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
             // Format date for display
             const displayDate = new Date(date).toLocaleDateString(undefined, { 
