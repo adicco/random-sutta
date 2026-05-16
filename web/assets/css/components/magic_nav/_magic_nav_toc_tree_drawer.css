@@ -150,21 +150,27 @@
   border-top: 1px solid var(--border-light);
   background-color: var(--bg-card);
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   flex-shrink: 0;
+}
+
+.toc-footer-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .toc-footer-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   background-color: var(--bg-body);
   border: 1px solid var(--border-light);
   border-radius: 6px;
   color: var(--text-main);
-  font-size: 0.8rem;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }

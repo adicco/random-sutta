@@ -59,10 +59,17 @@
         <div id="read-list"></div>
       </div>
       <div id="magic-toc-footer">
-        <button id="btn-toc-collapse-to-l2" class="toc-footer-btn" data-action="collapse-l2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
-          Collapse to Level 2
-        </button>
+        <div class="toc-footer-group">
+          <button class="toc-footer-btn" data-action="toc-level-minus" title="Collapse one level">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+          <button class="toc-footer-btn" data-action="toc-toggle-all" title="Toggle Expand/Collapse All">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+          </button>
+          <button class="toc-footer-btn" data-action="toc-level-plus" title="Expand one level">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
       </div>
     </div>
     <div id="magic-backdrop" class="hidden"></div>

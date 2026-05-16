@@ -9,6 +9,7 @@ import { ReadManager } from 'ui/managers/read_manager.js';
 
 export const MagicNav = {
     _closeTimer: null,
+    _currentTocLevel: 1, // Default expansion level
 
     init() {
         const els = UIManager.init();
@@ -46,8 +47,22 @@ export const MagicNav = {
             } else if (action === 'load' && id) {
                 window.loadSutta(id, true, 0, { transition: false });
                 this.closeAll();
-            } else if (action === 'collapse-l2') {
-                this.collapseToLevel(1); // Level index starts at 0, so Level 2 is index 1
+            } else if (action === 'toc-level-plus') {
+                this._currentTocLevel++;
+                this.collapseToLevel(this._currentTocLevel);
+            } else if (action === 'toc-level-minus') {
+                this._currentTocLevel = Math.max(0, this._currentTocLevel - 1);
+                this.collapseToLevel(this._currentTocLevel);
+            } else if (action === 'toc-toggle-all') {
+                const tocContent = document.getElementById("magic-toc-content");
+                const anyOpen = tocContent?.querySelector('.toc-node-wrapper:not(.collapsed)');
+                if (anyOpen) {
+                    this._currentTocLevel = 0;
+                    this.collapseToLevel(0);
+                } else {
+                    this._currentTocLevel = 10; // Large enough to open all
+                    this.collapseToLevel(10);
+                }
             }
         });
     },
@@ -59,6 +74,8 @@ export const MagicNav = {
         const nodes = tocContent.querySelectorAll('.toc-node-wrapper');
         nodes.forEach(node => {
             const level = parseInt(node.getAttribute('data-level') || '0');
+            // If node level is >= maxLevelIndex, collapse it.
+            // E.g., maxLevelIndex = 1 means level 0 is open, level 1+ collapsed.
             if (level >= maxLevelIndex) {
                 node.classList.add('collapsed');
             } else {
@@ -183,6 +200,9 @@ export const MagicNav = {
         const tocHtml = TocRenderer.render(localTree, currentUid, finalMeta, 0, bookmarkedSet, historyMap);
         UIManager.updateContent(bcHtml, tocHtml);
         UIManager.setHidden(!fullPath);
+
+        // [NEW] Re-apply current level after rendering
+        this.collapseToLevel(this._currentTocLevel);
     }
 };
 
