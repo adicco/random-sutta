@@ -125,8 +125,11 @@ export function setupTableOfHeadings() {
 
         // 2. Render & Display (Sử dụng DomRenderer)
         if (scanResult.mode === 'none') {
-            els.wrapper.classList.add("hidden");
-            els.menu.classList.remove("toh-mode-paragraphs"); // Ensure class is removed if no items
+            // [FIXED] Không ẩn wrapper vì nó chứa nút Bookmark. 
+            // Ta chỉ làm sạch list và cập nhật header mặc định.
+            els.wrapper.classList.remove("hidden"); 
+            els.header.textContent = "Sutta Tools"; 
+            els.menu.classList.remove("toh-mode-paragraphs");
         } else {
             DomRenderer.updateHeader(scanResult.mode, els.header);
             

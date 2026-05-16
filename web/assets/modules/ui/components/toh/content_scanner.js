@@ -41,7 +41,7 @@ export const ContentScanner = {
             }
         });
 
-        if (validItems.length > 2) {
+        if (validItems.length >= 1) {
             return { mode: 'paragraphs', items: validItems };
         }
 
