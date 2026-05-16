@@ -51,8 +51,8 @@ export const TocRenderer = {
             } else if (type === 'subleaf') {
                 return `
                     <div class="toc-subleaf-label" title="${title}">
-                        <div class="toc-row-main">${acronym} ${getBookmarkIcon()}</div>
-                        ${title ? `<div class="toc-row-sub">${title}</div>` : ''}
+                        <span class="toc-subleaf-acronym">${acronym}${getBookmarkIcon()}</span>
+                        ${title ? `<span class="toc-subleaf-title">${title}</span>` : ''}
                     </div>
                 `;
             } else {

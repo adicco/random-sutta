@@ -95,6 +95,7 @@
   top: calc(55px + env(safe-area-inset-top, 0px));
   left: 15px;
   width: 320px;
+  max-width: calc(100vw - 30px);
   max-height: 70vh;
   background-color: var(--bg-card);
   border-radius: 8px;
@@ -109,6 +110,13 @@
   transform: translateY(-10px);
   pointer-events: none;
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+@media (min-width: 768px) {
+  #magic-toc-drawer {
+    width: 450px;
+    max-height: 80vh;
+  }
 }
 
 #magic-toc-drawer.open {
@@ -333,10 +341,34 @@
 .toc-item.subleaf .toc-subleaf-label {
   font-size: 0.85rem;
   color: var(--text-light);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toc-subleaf-acronym {
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.toc-subleaf-title {
+  font-style: italic;
+  font-weight: normal;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .toc-item.subleaf.active .toc-subleaf-label {
   color: var(--primary-color);
   font-weight: 600;
+}
+.toc-item.subleaf.active .toc-subleaf-acronym {
+  color: var(--primary-color);
+}
+.toc-item.subleaf.active .toc-subleaf-title {
+  color: var(--primary-color);
+  opacity: 0.8;
 }
 /* Subleaf active bar: Mỏng hơn, nhẹ hơn */
 .toc-item.subleaf.active::before {
