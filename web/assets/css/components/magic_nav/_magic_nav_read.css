@@ -136,33 +136,30 @@
 }
 
 .fam-adjust-btn {
-  background: var(--bg-hover);
+  background: transparent;
   border: none;
-  border-radius: 50%;
-  color: var(--text-light);
-  width: 30px;
-  height: 30px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 1.4rem;
-  font-weight: 400;
   transition: all 0.2s ease;
-  line-height: 0;
   padding: 0;
-  padding-bottom: 2px; /* Visual adjustment for font baseline */
   user-select: none;
+  opacity: 0.6;
 }
 
 .fam-adjust-btn:hover {
-  background-color: var(--primary-color);
-  color: white;
-  transform: scale(1.1);
+  background-color: var(--bg-hover);
+  color: var(--primary-color);
+  opacity: 1;
 }
 
 .fam-adjust-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.9);
 }
 
 
