@@ -53,21 +53,42 @@ class ApiConfig:
     DATA_JSON_DIR: Path = FetcherConfig.DATA_DIR / "json"
     API_TEMPLATE: str = "https://suttacentral.net/api/suttaplex/{}"
     DISCOVERY_RULES: List[DiscoveryRule] = [
-        {"path": "sutta", "category": "sutta", "exclude": {"kn"}},
-        {"path": "sutta/kn", "category": "sutta/kn", "exclude": set()},
-        {"path": "vinaya", "category": "vinaya", "exclude": set()},
-        {"path": "abhidhamma", "category": "abhidhamma", "exclude": set()}
+        {"path": "sutta", "category": "pli/sutta", "exclude": {"kn"}},
+        {"path": "sutta/kn", "category": "pli/sutta/kn", "exclude": set()},
+        {"path": "vinaya", "category": "pli/vinaya", "exclude": set()},
+        {"path": "abhidhamma", "category": "pli/abhidhamma", "exclude": set()},
+        {"path": "lzh", "category": "lzh/sutta", "exclude": set()}, # Sẽ được fetch vào lzh/sutta
     ]
     EXTRA_UIDS: Dict[str, str] = {
-        "pli-tv-bi-pm": "vinaya",
-        "pli-tv-bu-pm": "vinaya"
+        # Pli Extras
+        "pli-tv-bi-pm": "pli/vinaya",
+        "pli-tv-bu-pm": "pli/vinaya",
+        # Lzh Sutta
+        "da": "lzh/sutta", "da-ot": "lzh/sutta", "ea": "lzh/sutta", 
+        "ea-2": "lzh/sutta", "ea-ot": "lzh/sutta", "lzh-art": "lzh/sutta", 
+        "lzh-dharani": "lzh/sutta", "lzh-dhp": "lzh/sutta", "lzh-nbs": "lzh/sutta", 
+        "lzh-ssnp": "lzh/sutta", "ma": "lzh/sutta", "ma-ot": "lzh/sutta", 
+        "sa": "lzh/sutta", "sa-2": "lzh/sutta", "sa-3": "lzh/sutta", "sa-ot": "lzh/sutta",
+        # Lzh Vinaya
+        "lzh-dg-bi-vb": "lzh/vinaya", "lzh-dg-bu-vb": "lzh/vinaya", "lzh-dg-kd": "lzh/vinaya", 
+        "lzh-mg-asc": "lzh/vinaya", "lzh-mg-bi-pn": "lzh/vinaya", "lzh-mg-bi-vb": "lzh/vinaya", 
+        "lzh-mg-bu-pn": "lzh/vinaya", "lzh-mg-bu-vb": "lzh/vinaya", "lzh-mi-bi-vb": "lzh/vinaya", 
+        "lzh-mi-bu-vb": "lzh/vinaya", "lzh-mi-kd": "lzh/vinaya", "lzh-sarv-ba": "lzh/vinaya", 
+        "lzh-sarv-bi-vb": "lzh/vinaya", "lzh-sarv-bu-vb": "lzh/vinaya", "lzh-sarv-kd": "lzh/vinaya", 
+        "lzh-sarv-upp": "lzh/vinaya", "lzh-sarv-ve": "lzh/vinaya", "lzh-sarv-vi-misc": "lzh/vinaya", 
+        "lzh-dg-bi-pm": "lzh/vinaya", "lzh-dg-bu-pm-2": "lzh/vinaya", "lzh-dg-bu-pm": "lzh/vinaya", 
+        "lzh-dg-ve1": "lzh/vinaya", "lzh-dg-vs1": "lzh/vinaya", "lzh-ka-bu-pm": "lzh/vinaya", 
+        "lzh-mg-bi-pm": "lzh/vinaya", "lzh-mg-bu-pm": "lzh/vinaya", "lzh-mi-bi-pm": "lzh/vinaya", 
+        "lzh-mi-bu-pm": "lzh/vinaya", "lzh-mi-vs1": "lzh/vinaya", "lzh-mu-bi-pm": "lzh/vinaya", 
+        "lzh-mu-bu-pm": "lzh/vinaya", "lzh-sarv-bi-pm": "lzh/vinaya", "lzh-sarv-bu-pm-2": "lzh/vinaya", 
+        "lzh-sarv-bu-pm": "lzh/vinaya",
     }
     SUPER_TARGET_CATS: List[str] = ["sutta", "vinaya", "abhidhamma"]
     LARGE_BOOKS: Set[str] = {"dn", "mn", "sn", "an", "vinaya"}
     SYSTEM_IGNORE: Set[str] = {'xplayground', '__pycache__', '.git', '.DS_Store'}
     PRIORITY_ORDER: List[Tuple[str, str]] = [
-        ("sutta", "super"), ("dn", "sutta"), ("mn", "sutta"), 
-        ("sn", "sutta"), ("an", "sutta"), ("dhp", "sutta/kn"),
+        ("sutta", "super"), ("dn", "pli/sutta"), ("mn", "pli/sutta"), 
+        ("sn", "pli/sutta"), ("an", "pli/sutta"), ("dhp", "pli/sutta/kn"),
         ("vinaya", "super"), ("abhidhamma", "super"),
     ]
     TIMEOUT_DEFAULT: int = 60
