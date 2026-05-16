@@ -31,6 +31,23 @@ export const MagicNav = {
                 this._closeTimer = null;
             }
         });
+
+        // [NEW] Event Delegation for TOC Actions
+        els.drawer.addEventListener("click", (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
+
+            const action = target.getAttribute('data-action');
+            const id = target.closest('[data-toc-id]')?.getAttribute('data-toc-id');
+
+            if (action === 'toggle') {
+                e.stopPropagation();
+                this.toggleNode(target);
+            } else if (action === 'load' && id) {
+                window.loadSutta(id, true, 0, { transition: false });
+                this.closeAll();
+            }
+        });
     },
 
     toggleTOC() { UIManager.toggleTOC(); },

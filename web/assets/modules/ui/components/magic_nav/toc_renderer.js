@@ -15,7 +15,7 @@ export const TocRenderer = {
     render(node, currentUid, metaMap, level = 0, bookmarkedSet = new Set(), historyMap = {}) {
         let html = ``;
         const getToggleIcon = () => `
-            <span class="toc-toggle-icon" onclick="event.stopPropagation(); MagicNav.toggleNode(this)">
+            <span class="toc-toggle-icon" data-action="toggle">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </span>`;
 
@@ -61,8 +61,6 @@ export const TocRenderer = {
             }
         };
 
-        const getLoadAction = (id) => `onclick="window.loadSutta('${id}', true, 0, { transition: false }); MagicNav.closeAll()"`;
-        
         const createItem = (id) => {
             const meta = metaMap[id] || {};
             const type = meta.type || (level === 0 ? 'leaf' : 'subleaf');
@@ -70,11 +68,11 @@ export const TocRenderer = {
             const isBookmarked = bookmarkedSet.has(id) ? "bookmarked" : "";
             const famLevel = historyMap[id] ? historyMap[id].level : 0;
             const famClass = famLevel > 0 ? `fam-level-${famLevel}` : "";
-            const action = isActive ? "" : getLoadAction(id);
+            const dataAction = isActive ? "" : 'data-action="load"';
             
             const presentationClass = type === 'leaf' ? 'toc-leaf-presentation' : '';
             const paddingLeft = 15 + (level * 16);
-            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked} ${famClass}" data-toc-id="${id}" ${action} style="padding-left: ${paddingLeft}px">
+            return `<div class="toc-item ${type} ${presentationClass} ${isActive} ${isBookmarked} ${famClass}" data-toc-id="${id}" ${dataAction} style="padding-left: ${paddingLeft}px">
                         ${generateInnerContent(id, type)}
                     </div>`;
         };
@@ -92,9 +90,9 @@ export const TocRenderer = {
             
             let headerAction = "";
             if (isClickable && !isActive) {
-                headerAction = getLoadAction(id);
+                headerAction = 'data-action="load"';
             } else if (!isClickable) {
-                headerAction = `onclick="MagicNav.toggleNode(this)"`;
+                headerAction = 'data-action="toggle"';
             }
 
             let isCollapsed = false;
