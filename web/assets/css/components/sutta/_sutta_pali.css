@@ -11,11 +11,38 @@
   margin-bottom: 2px;
 }
 
-h1.sutta-title .root {
+/* [UPDATED] Pali in Headings (Bilingual Mode) */
+/* Standardize as a subdued subtitle for all heading levels */
+h1 .root,
+h2 .root,
+h3 .root,
+h4 .root,
+h5 .root,
+h6 .root,
+.sutta-title .root,
+.division .root,
+.suttainfo .root {
   display: block;
-  font-size: 0.85em;
+  font-size: 0.85em; /* Slightly smaller than English title */
   color: var(--text-pali);
-  font-weight: normal;
+  font-weight: 400;
+  font-style: normal; /* No italics in headings to reduce "sharpness" */
+  line-height: 1.4;
+  margin-bottom: 0.2rem;
+}
+
+/* Ensure Promoted (Single Language) Pali in headings uses full size/color */
+h1 .root.promoted,
+h2 .root.promoted,
+h3 .root.promoted,
+h4 .root.promoted,
+h5 .root.promoted,
+h6 .root.promoted,
+.sutta-title .root.promoted {
+  display: inline;
+  font-size: 1em;
+  color: inherit;
+  font-weight: inherit;
 }
 
 /* --- 2. VERSE / GATHA (Mostly Pali) --- */
