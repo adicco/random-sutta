@@ -19,7 +19,12 @@
 /* Components */
 @import "css/components/_landing.css";
 @import "css/components/_buttons.css";
-@import "css/components/_sutta_text.css";
+
+/* Sutta Text Modules */
+@import "css/components/sutta/_sutta_base.css";
+@import "css/components/sutta/_sutta_pali.css";
+@import "css/components/sutta/_sutta_lzh.css";
+
 @import "css/components/_navigation.css";
 @import "css/components/_cards.css";
 @import "css/components/popup/popup_main.css";

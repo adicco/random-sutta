@@ -1,0 +1,70 @@
+/* Path: web/assets/css/components/sutta/_sutta_pali.css */
+
+/* --- 1. PALI TYPOGRAPHY --- */
+
+.pli {
+  font-family: var(--font-sutta);
+  color: var(--text-pali);
+  font-style: italic;
+  font-size: 0.95em;
+  display: block;
+  margin-bottom: 2px;
+}
+
+h1.sutta-title .pli {
+  display: block;
+  font-size: 0.85em;
+  color: var(--text-pali);
+  font-weight: normal;
+}
+
+/* --- 2. VERSE / GATHA (Mostly Pali) --- */
+
+.gatha {
+  margin: 1.5rem 0; 
+  padding-left: 10%; 
+  font-family: var(--font-sutta);
+  line-height: 1.5;
+  color: var(--text-main);
+  max-width: 100%;
+  display: block;
+}
+
+.gatha p {
+    margin-bottom: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.gatha-row {
+    display: grid;
+    grid-template-columns: minmax(auto, auto) minmax(auto, auto);
+    column-gap: 2rem;
+    width: fit-content;
+    margin-bottom: 0.1rem;
+}
+
+.gatha .segment,
+.gatha .segment .pli {
+    display: block; 
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.gatha br {
+    display: none !important;
+}
+
+@media (max-width: 600px) {
+    .gatha {
+        padding-left: 1rem;
+    }
+    .gatha-row {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        row-gap: 0.2rem;
+    }
+}

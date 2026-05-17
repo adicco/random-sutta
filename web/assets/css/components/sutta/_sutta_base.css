@@ -1,0 +1,276 @@
+/* Path: web/assets/css/components/sutta/_sutta_base.css */
+
+/* --- 1. SHARED CONTAINERS --- */
+
+/* Main wrapper for sutta content */
+.sutta-text-view {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Reset list style inside the text view */
+.sutta-text-view ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Hide metadata lists in the header if they exist */
+.sutta-text-view header ul {
+  display: none;
+}
+
+/* --- 2. COMMON METADATA & HEADINGS --- */
+
+/* Sutta Information (Translator, Version, etc.) */
+.suttainfo {
+  font-size: 0.75rem; 
+  color: var(--text-muted);
+  font-style: normal;
+  margin: 1.2rem 0;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  text-align: left; 
+  padding-left: 2em; 
+  line-height: 1.2;
+}
+
+.suttainfo .segment {
+  display: inline;
+}
+
+/* Scribe / Author Info */
+.scribe, .author {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: block;
+  text-align: center;
+  margin: 0.3rem 0;
+}
+
+/* Division & Mirror Headings */
+.division {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  text-align: center;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.mirror-row {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+h1.mirror-row {
+  font-size: 1.8rem;
+  margin-top: 1rem;
+}
+
+h1.sutta-title {
+  text-align: center;
+  color: var(--text-main);
+  margin-bottom: 30px;
+  line-height: 1.3;
+}
+
+@media (max-width: 600px) {
+  h1.sutta-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* Common overrides for root text (pali/lzh) inside headings */
+h1.sutta-title .pli.promoted,
+h2 .pli.promoted,
+h3 .pli.promoted,
+h4 .pli.promoted,
+h5 .pli.promoted,
+h6 .pli.promoted {
+  font-size: 1em;
+  color: inherit;
+  font-weight: inherit;
+  font-style: normal;
+  font-family: inherit;
+}
+
+/* --- 3. CORE TYPOGRAPHY --- */
+
+.evam {
+  font-variant: small-caps;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+p {
+  margin-bottom: 1.2em;
+}
+
+.segment {
+  display: block;
+  margin-bottom: 2px;
+  touch-action: manipulation;
+  cursor: text;
+  position: relative;
+}
+
+/* Anchor for references (PTS, MS, etc.) */
+.anchor-ref {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Default styling for translation and promoted root text */
+.eng,
+.pli.promoted {
+  font-family: var(--font-main);
+  color: var(--text-main);
+  font-weight: 450;
+  font-style: normal;
+  line-height: 1.5;
+  margin-top: 0;
+  display: inline;
+}
+
+/* --- 4. VIEW MODE TOGGLES --- */
+body.view-mode-root-only .eng { display: none !important; }
+body.view-mode-trans-only .pli { display: none !important; }
+
+/* --- 5. DECORATIONS & UTILITIES --- */
+
+/* End Markers */
+.endsutta,
+.endsegment,
+.endvagga,
+.endsection { 
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--text-light);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.endsutta *,
+.endsegment *,
+.endvagga * {
+  text-align: center;
+  display: block; 
+}
+
+/* Highlighting */
+.highlight,
+.highlight-container {
+  border-left: 4px solid var(--primary-color);
+  padding-left: calc(1rem - 4px);
+  margin-left: -1rem; 
+  background-color: var(--highlight-color-background); 
+  border-radius: 0 4px 4px 0;
+  transition: none !important;
+}
+
+/* Comment Markers */
+.comment-marker {
+  color: var(--primary-color);
+  font-weight: bold;
+  vertical-align: super;
+  font-size: 0.75em;
+  padding: 10px 8px;
+  margin: 0 -4px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 10;
+}
+
+.comment-marker:hover {
+  color: var(--primary-hover);
+}
+
+/* --- 6. FOOTER & EXTRAS --- */
+
+.sutta-context-footer {
+  margin-top: 60px;
+  padding-top: 20px;
+  border-top: 1px none var(--border-light);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+  text-align: right;
+}
+
+.ctx-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-style: italic;
+  margin-bottom: 8px;
+  opacity: 0.8;
+}
+
+.ctx-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ctx-link:hover {
+  transform: translateX(-5px);
+  opacity: 0.9;
+}
+
+.ctx-acronym {
+  font-family: var(--font-main);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+.ctx-title {
+  font-family: var(--font-sutta);
+  font-size: 0.75rem;
+  color: var(--text-main);
+  margin-top: 2px;
+}
+
+/* Leaf Blurb */
+.leaf-blurb {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 10px auto 15px;
+  max-width: var(--container-width, 800px);
+  padding: 0 40px;
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  font-style: italic;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .leaf-blurb {
+    font-size: 0.9rem;
+    padding: 0 35px;
+    margin: 8px auto 12px;
+  }
+}

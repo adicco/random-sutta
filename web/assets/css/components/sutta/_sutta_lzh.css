@@ -1,0 +1,72 @@
+/* Path: web/assets/css/components/sutta/_sutta_lzh.css */
+
+/* --- 1. LZH TYPOGRAPHY --- */
+
+.pli.lang-lzh {
+  font-family: "Source Han Serif", "Noto Serif CJK TC", serif !important;
+  font-size: 1.15em; 
+  line-height: 1.6;
+  font-style: normal !important;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.pli.lang-lzh.promoted {
+  font-family: "Source Han Serif", "Noto Serif CJK TC", serif !important;
+  font-weight: 500;
+  font-size: 1.15em;
+  display: block; /* Preserve block behavior for Chinese flow */
+}
+
+/* Override/Reset for LZH in special containers to avoid double font-sizing */
+h1 .pli.lang-lzh,
+h2 .pli.lang-lzh,
+h3 .pli.lang-lzh,
+h4 .pli.lang-lzh,
+h5 .pli.lang-lzh,
+h6 .pli.lang-lzh,
+.mirror-row .pli.lang-lzh,
+.sutta-title .pli.lang-lzh,
+.division .pli.lang-lzh,
+.xu .pli.lang-lzh,
+.suttainfo .pli.lang-lzh {
+  font-size: 1em;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+/* --- 2. LZH SPECIFIC COMPONENTS --- */
+
+/* Preface (序) - Common in LZH suttas */
+.xu {
+  margin: 1.5rem 0.5rem;
+  padding: 1rem 1.5rem;
+  background-color: var(--highlight-color-background);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem; 
+  border-left: 3px solid var(--primary-color);
+  line-height: 1.7;
+  text-align: justify;
+  color: var(--text-muted);
+}
+
+.xu h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 0.2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-weight: 800;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+.xu p {
+    margin-bottom: 0.8rem;
+    text-indent: 2em;
+}
+
+/* Taisho Reference Marker */
+.taisho-ref {
+  display: none;
+}
