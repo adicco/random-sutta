@@ -164,7 +164,7 @@ export function setupTableOfHeadings() {
         Object.values(parallelsData).forEach(list => list.forEach(uid => targetUids.add(uid)));
         
         // Fetch metadata for titles
-        const metadata = await SuttaRepository.getMetadata([...targetUids]);
+        const metadata = await SuttaRepository.fetchMetaList([...targetUids]);
 
         // Render sections in order
         const RELATION_ORDER = ["parallels", "resembles", "mentions", "retells"];
