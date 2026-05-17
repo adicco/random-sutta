@@ -108,6 +108,6 @@ class DpdConfig:
     ASSET_NAME: str = "dpd.db.tar.bz2"
 
 class ParallelsConfig:
-    URL: str = "https://raw.githubusercontent.com/suttacentral/sc-data/master/relationship/parallels.json"
+    URL: str = "https://raw.githubusercontent.com/suttacentral/sc-data/main/relationship/new_parallels.json"
     DEST_DIR: Path = FetcherConfig.DATA_DIR / "json" / "sc-data"
     DEST_FILE: Path = DEST_DIR / "parallels.json"
