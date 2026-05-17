@@ -264,8 +264,8 @@ body.view-mode-root-only .comment-marker {
   font-weight: bold;
   vertical-align: super;
   font-size: 0.8em;
-  padding: 0 1px;
-  margin-left: 0;
+  padding: 0;
+  margin-left: -0.1em; /* Pull closer to the preceding word */
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;
@@ -273,7 +273,7 @@ body.view-mode-root-only .comment-marker {
   position: relative;
   z-index: 10;
   display: inline-block;
-  white-space: nowrap;
+  white-space: nowrap; /* Prevent marker itself from breaking (though it's just one char) */
   line-height: 0;
 }
 

@@ -47,11 +47,10 @@ export const ContentCompiler = {
             
             if (eng) {
                 segmentHtml += `<span class="trans lang-en" lang="en">${eng}</span>`;
-            }
-            
-            if (comm) {
-                const safeComm = comm.replace(/"/g, '&quot;');
-                segmentHtml += `<span class="comment-marker" title="View note" data-comment="${safeComm}">*</span>`;
+                if (comm) {
+                    const safeComm = comm.replace(/"/g, '&quot;');
+                    segmentHtml += `<span class="comment-marker" title="View note" data-comment="${safeComm}">*</span>`;
+                }
             }
             
             segmentHtml += `</span>`; 
