@@ -110,7 +110,7 @@ h6 .pli.promoted {
 }
 
 p {
-  margin-bottom: 1.5rem; /* Standard paragraph spacing */
+  margin-bottom: 1.2rem; /* Tightened paragraph spacing */
   line-height: 1.7;
 }
 
@@ -121,6 +121,14 @@ p {
   cursor: text;
   position: relative;
   overflow-wrap: anywhere; /* Allows better breaking around markers */
+}
+
+/* Fix title display in single language modes - prevent gaps and line breaks */
+h1.sutta-title .segment,
+h2 .segment,
+h3 .segment {
+  display: inline-block !important;
+  margin-bottom: 0 !important;
 }
 
 /* Anchor for references (PTS, MS, etc.) */
@@ -152,14 +160,14 @@ body.view-mode-trans-only .segment,
 article.single-language .segment {
   display: inline;
   margin-bottom: 0;
-  margin-right: 0.25em; /* Reduced space between segments for continuous flow */
+  margin-right: 0.25em; 
 }
 
 /* Adjust paragraph spacing in single language modes */
 body.view-mode-root-only p,
 body.view-mode-trans-only p,
 article.single-language p {
-  margin-bottom: 1.8rem; /* Slightly larger spacing between paragraphs to emphasize flow */
+  margin-bottom: 1.5rem; /* Tightened from 1.8rem */
 }
 
 /* EXCEPTION: Keep Verses (Gatha) as block even in single language mode */
@@ -174,7 +182,14 @@ body.view-mode-trans-only .eng,
 body.view-mode-trans-only .pli.promoted,
 article.single-language .pli.promoted {
   display: inline !important;
-  font-size: 1.05rem; /* Slightly larger for dedicated reading modes */
+  font-size: 1.05rem; 
+}
+
+/* Root Only Mode Refinement: Formal Typography */
+body.view-mode-root-only .pli {
+  font-style: normal !important;
+  color: var(--text-main) !important;
+  font-weight: 450;
 }
 
 /* Visibility Toggles */
@@ -228,8 +243,8 @@ body.view-mode-root-only .comment-marker {
   font-weight: bold;
   vertical-align: super;
   font-size: 0.8em;
-  padding: 0 2px;
-  margin-left: 1px;
+  padding: 0 1px;
+  margin-left: 0;
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;

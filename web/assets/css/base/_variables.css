@@ -21,6 +21,9 @@
   font-display: swap;
 }
 
+/* Noto Serif (Google Fonts CDN - Fallback provided in variable) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
 :root {
   /* =========================================
      1. PRIMITIVE PALETTE (Nguyên liệu thô)
@@ -144,7 +147,7 @@
   /* Fonts & Spacing */
   --font-main: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto",
     "Helvetica Neue", sans-serif;
-  --font-sutta: "Noto Sans", "Segoe UI", sans-serif;
+  --font-sutta: "Noto Serif", "Georgia", "Times New Roman", serif;
 
   --container-width: 800px;
   --radius-md: 8px;
