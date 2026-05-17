@@ -120,6 +120,7 @@
     /* Allow Pali words to break if too long */
     overflow-wrap: break-word;
     word-break: break-word;
+    text-align: left;
 }
 
 /* --- GRAMMAR TOGGLE BTN --- */
