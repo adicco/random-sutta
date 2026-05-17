@@ -214,10 +214,18 @@ body.view-mode-root-only .root {
 }
 
 /* Visibility Toggles */
-body.view-mode-root-only .trans { display: none !important; }
+body.view-mode-root-only .trans,
+body.view-mode-root-only .segment.no-root,
+body.view-mode-root-only .no-root-content { 
+  display: none !important; 
+}
 
 /* Hide Root if it's NOT promoted and we are in Trans Only mode */
-body.view-mode-trans-only .root:not(.promoted) { display: none !important; }
+body.view-mode-trans-only .root:not(.promoted),
+body.view-mode-trans-only .segment.no-trans,
+body.view-mode-trans-only .no-trans-content { 
+  display: none !important; 
+}
 
 /* [NEW] Comment markers are for translations; hide in Root Only */
 body.view-mode-root-only .comment-marker {

@@ -53,22 +53,34 @@ function postProcessHtml(htmlString) {
             root.classList.add('promoted');
         }
 
-        // Logic B: Clean Redundant Headings (Giữ nguyên logic cũ)
-        // Ẩn Root trong Heading nếu nó trùng khớp hoàn toàn với dịch
+        // Logic B: Clean Redundant Headings
         if (root && trans) {
             const parentHeading = seg.closest('h1, h2, h3, h4, h5, h6, .sutta-title');
             if (parentHeading) {
                 const rootText = root.textContent.trim();
                 const transText = trans.textContent.trim();
-                // So sánh nội dung (chấp nhận giống nhau về số hoặc text)
                 if (rootText === transText && rootText.length > 0) {
                     root.classList.add('hidden');
                 }
             }
         }
+
+        // Logic C: Tag segment itself
+        if (!root || root.textContent.trim().length === 0) seg.classList.add('no-root');
+        if (!trans || trans.textContent.trim().length === 0) seg.classList.add('no-trans');
     });
 
-    // 3. [NEW] Nếu là trang đơn ngữ (không có dịch), gắn class vào article để CSS trigger paragraph flow
+    // 3. Tag parent blocks (p, h1-h6, etc.) to hide them if they become empty in single language modes
+    const blocks = wrapper.querySelectorAll('p, h1, h2, h3, h4, h5, h6, blockquote, .sutta-title, .mirror-row');
+    blocks.forEach(block => {
+        const hasRoot = Array.from(block.querySelectorAll('.root')).some(el => el.textContent.trim().length > 0);
+        const hasTrans = Array.from(block.querySelectorAll('.trans')).some(el => el.textContent.trim().length > 0);
+        
+        if (!hasRoot) block.classList.add('no-root-content');
+        if (!hasTrans) block.classList.add('no-trans-content');
+    });
+
+    // 4. [NEW] Nếu là trang đơn ngữ (không có dịch), gắn class vào article để CSS trigger paragraph flow
     const article = wrapper.querySelector('article');
     if (article && !isTranslatedPage) {
         article.classList.add('single-language');
