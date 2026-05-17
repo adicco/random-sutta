@@ -5,6 +5,20 @@ const logger = getLogger("ResizeHandler");
 
 export const ResizeHandler = {
     /**
+     * Generates a device-specific key suffix based on screen dimensions and type.
+     */
+    getDeviceSuffix() {
+        const sw = screen.width;
+        const sh = screen.height;
+        const isTouch = window.matchMedia("(pointer: coarse)").matches;
+        // Device "Fingerprint": sorted dimensions ensure consistency across rotations,
+        // while the 'L'/'P' flag handles orientation-specific layout preferences.
+        const dim = [sw, sh].sort((a, b) => a - b).join('x');
+        const isLandscape = window.innerWidth > window.innerHeight;
+        return `_${dim}_${isLandscape ? 'L' : 'P'}${isTouch ? '_T' : ''}`;
+    },
+
+    /**
      * Attaches vertical resizing logic to a popup element via a handle.
      * @param {HTMLElement} popup - The popup container to resize (height/bottom changes).
      * @param {HTMLElement} handle - The draggable handle (usually at the top edge).
@@ -31,25 +45,34 @@ export const ResizeHandler = {
         let startY = 0;
         let startHeight = 0;
 
+        // [NEW] Use Device-Specific Storage Key
+        const deviceStorageKey = storageKey ? `${storageKey}${this.getDeviceSuffix()}` : null;
+
         // 1. Initialize height from storage
-        if (storageKey) {
-            const savedHeight = localStorage.getItem(storageKey);
+        if (deviceStorageKey) {
+            const savedHeight = localStorage.getItem(deviceStorageKey);
             if (savedHeight) {
                 const h = parseInt(savedHeight);
                 // Apply safety limits to saved height
                 const vhLimit = (window.innerHeight * maxHeightVh) / 100;
                 
-                // [FIX] Handle maxHeightPx if it's a function or number
+                // Handle maxHeightPx if it's a function or number
                 const currentMaxPx = (typeof maxHeightPx === 'function') 
                     ? maxHeightPx() 
                     : (maxHeightPx || vhLimit);
 
                 const finalMax = Math.min(vhLimit, currentMaxPx);
-                const safeH = Math.max(minHeight, Math.min(h, finalMax));
                 
-                popup.style.height = `${safeH}px`;
-                if (cssVar) document.documentElement.style.setProperty(cssVar, `${safeH}px`);
-                if (onResize) onResize(safeH);
+                // If saved height is invalid for CURRENT screen (e.g. too large), discard it
+                if (h > finalMax + 50 || h < minHeight - 20) {
+                    logger.info("Init", "Saved height is incompatible with current screen, using default.");
+                    // Optional: popup remains at CSS default
+                } else {
+                    const safeH = Math.max(minHeight, Math.min(h, finalMax));
+                    popup.style.height = `${safeH}px`;
+                    if (cssVar) document.documentElement.style.setProperty(cssVar, `${safeH}px`);
+                    if (onResize) onResize(safeH);
+                }
             }
         }
 
@@ -104,8 +127,8 @@ export const ResizeHandler = {
             popup.style.transition = '';
             document.body.classList.remove('is-resizing');
 
-            if (storageKey) {
-                localStorage.setItem(storageKey, popup.style.height);
+            if (deviceStorageKey) {
+                localStorage.setItem(deviceStorageKey, popup.style.height);
             }
         };
 

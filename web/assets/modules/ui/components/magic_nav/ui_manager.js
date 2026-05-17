@@ -51,18 +51,42 @@ export const UIManager = {
         return this.elements;
     },
 
+    _getDeviceSuffix() {
+        const sw = screen.width;
+        const sh = screen.height;
+        const isTouch = window.matchMedia("(pointer: coarse)").matches;
+        // Device Fingerprint: sorted dimensions + orientation flag + touch flag
+        const dim = [sw, sh].sort((a, b) => a - b).join('x');
+        const isLandscape = window.innerWidth > window.innerHeight;
+        return `_${dim}_${isLandscape ? 'L' : 'P'}${isTouch ? '_T' : ''}`;
+    },
+
     _loadSavedDimensions() {
         const { drawer } = this.elements;
         if (!drawer) return;
         
         try {
-            const saved = localStorage.getItem("magic_drawer_size");
+            const key = `magic_drawer_size${this._getDeviceSuffix()}`;
+            const saved = localStorage.getItem(key);
             if (saved) {
                 const { width, height } = JSON.parse(saved);
-                if (width) drawer.style.width = width;
+                
+                // Validate width
+                if (width) {
+                    const wVal = parseInt(width);
+                    if (wVal < window.innerWidth - 20) {
+                        drawer.style.width = width;
+                    }
+                }
+                
+                // Validate height
                 if (height) {
-                    drawer.style.height = height;
-                    drawer.style.maxHeight = "95vh"; // Allow more space if manually resized
+                    const hVal = parseInt(height);
+                    const maxHeight = window.innerHeight - 70;
+                    if (hVal < maxHeight + 50) {
+                        drawer.style.height = height;
+                        drawer.style.maxHeight = "95vh"; 
+                    }
                 }
             }
         } catch (e) {
@@ -112,12 +136,13 @@ export const UIManager = {
             document.body.style.cursor = "";
             document.body.style.userSelect = "";
             
-            // Save to localStorage
+            // Save to localStorage with device suffix
             const size = {
                 width: drawer.style.width,
                 height: drawer.style.height
             };
-            localStorage.setItem("magic_drawer_size", JSON.stringify(size));
+            const key = `magic_drawer_size${this._getDeviceSuffix()}`;
+            localStorage.setItem(key, JSON.stringify(size));
         };
 
         // Mouse events
