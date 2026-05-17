@@ -1,6 +1,7 @@
 // Path: web/assets/modules/ui/components/toh/toh_parallels.js
 import { SuttaRepository } from 'data/sutta_repository.js';
 import { getLogger } from 'utils/logger.js';
+import { Scroller } from 'ui/common/scroller.js';
 
 const logger = getLogger("TOH_Parallels");
 
@@ -95,11 +96,10 @@ export const TohParallels = {
             segmentKeys.forEach(segKey => {
                 const segLabel = segKey.split('#')[1] || segKey;
                 const elementPrefix = segKey.replace('#', ':'); // Match HTML segment ID format (e.g. dn1:1.6.3)
-                const scrollLogic = `const el = document.getElementById('${elementPrefix}') || document.querySelector('[id^=\\'${elementPrefix}.\\']'); if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});`;
                 
                 html += `
                     <li class="toh-item toh-segment-group">
-                        <div class="toh-segment-header" onclick="${scrollLogic}" title="Jump to segment">Seg ${segLabel}</div>
+                        <div class="toh-segment-header" data-prefix="${elementPrefix}" title="Jump to segment">Seg ${segLabel}</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                 `;
                 
@@ -118,5 +118,21 @@ export const TohParallels = {
         }
 
         listElement.innerHTML = html;
+
+        // Bind segment click events for jumping and highlighting
+        listElement.querySelectorAll('.toh-segment-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const prefix = header.dataset.prefix;
+                // Escape colons and periods for querySelector
+                const escapedPrefix = prefix.replace(/:/g, '\\:').replace(/\./g, '\\.');
+                // Find exact match or first child node starting with prefix.
+                const el = document.getElementById(prefix) || document.querySelector(`[id^='${escapedPrefix}.']`);
+                if (el) {
+                    Scroller.jumpTo(el.id);
+                    Scroller.highlightElement(el.id, true);
+                }
+            });
+        });
     }
 };
