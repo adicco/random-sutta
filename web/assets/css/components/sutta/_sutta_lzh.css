@@ -16,7 +16,7 @@
 .root.lang-lzh.promoted,
 body.view-mode-root-only .root.lang-lzh {
   font-weight: 500;
-  font-size: 1.3rem !important; /* Balanced visual weight for single-language LZH */
+  font-size: 1.2rem !important; /* Reduced from 1.3rem for better balance */
   line-height: 1.55 !important; /* Unified line-height for reading rhythm */
   color: var(--text-main) !important;
 }
@@ -43,17 +43,25 @@ h6 .root.lang-lzh,
 }
 
 /* Reset for PROMOTED (Single Language) mode in headings */
+/* Added explicit block elements to ensure specificity over bilingual rules */
 h1 .root.lang-lzh.promoted,
 h2 .root.lang-lzh.promoted,
 h3 .root.lang-lzh.promoted,
 h4 .root.lang-lzh.promoted,
 h5 .root.lang-lzh.promoted,
 h6 .root.lang-lzh.promoted,
-.sutta-title .root.lang-lzh.promoted {
+.sutta-title .root.lang-lzh.promoted,
+body.view-mode-root-only h1 .root.lang-lzh,
+body.view-mode-root-only h2 .root.lang-lzh,
+body.view-mode-root-only h3 .root.lang-lzh,
+body.view-mode-root-only h4 .root.lang-lzh,
+body.view-mode-root-only h5 .root.lang-lzh,
+body.view-mode-root-only h6 .root.lang-lzh,
+body.view-mode-root-only .sutta-title .root.lang-lzh {
   display: inline;
-  color: inherit;
-  font-weight: inherit;
-  font-size: 1em;
+  color: inherit !important;
+  font-weight: inherit !important;
+  font-size: inherit !important; /* Will inherit from H1-H6 size */
 }
 
 /* --- 2. LZH SPECIFIC COMPONENTS --- */
