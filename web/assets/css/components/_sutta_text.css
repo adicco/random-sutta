@@ -54,21 +54,31 @@
 
 /* Sutta Information (Translator, Version) */
 .suttainfo {
-  font-size: 0.75rem; /* Reduced from 0.8rem */
+  font-size: 0.75rem; 
   color: var(--text-muted);
   font-style: normal;
   margin: 1.2rem 0;
-  padding: 0.8rem 0;
+  padding: 0.8rem 1rem;
   border-top: 1px solid var(--border-light);
   border-bottom: 1px solid var(--border-light);
-  text-align: center;
-  line-height: 1.5;
+  text-align: left; /* Changed from center to left */
+  padding-left: 2em; /* Indentation for info */
+  line-height: 1.4;
+}
+
+.suttainfo br {
+    display: none; /* Hide BR to tighten vertical space in info block */
+}
+
+.suttainfo .segment {
+    display: inline-block;
+    margin-right: 1.5em; /* Space between segments on same line */
 }
 
 /* Verse / Poetry */
 .gatha {
-  margin: 1.5rem 0; /* Align block to the left */
-  padding-left: 10%; /* Traditional indentation */
+  margin: 1.5rem 0; 
+  padding-left: 10%; 
   font-family: var(--font-sutta);
   line-height: 1.5;
   color: var(--text-main);
@@ -88,7 +98,7 @@
 .gatha-row {
     display: grid;
     grid-template-columns: minmax(auto, 18rem) minmax(auto, 18rem); 
-    column-gap: 1rem; /* Reduced gap to be more like SC */
+    column-gap: 0.6rem; /* Even smaller gap between halves */
     width: fit-content;
     margin-bottom: 0.1rem;
 }
