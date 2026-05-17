@@ -74,17 +74,14 @@ class SqliteGenerator:
             # Parallels
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS parallels (
-                    src_uid TEXT NOT NULL,
-                    target_uid TEXT NOT NULL,
-                    relation_type TEXT NOT NULL,
-                    PRIMARY KEY (src_uid, target_uid, relation_type)
+                    src_uid TEXT PRIMARY KEY,
+                    relations TEXT NOT NULL
                 )
             """)
             
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_book_id ON metadata(book_id)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_metadata_search_priority ON metadata(search_priority)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_random_pools_book_id ON random_pools(book_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_parallels_src_uid ON parallels(src_uid)")
             
             # FTS5 for metadata
             cursor.execute("""
@@ -320,19 +317,24 @@ class SqliteGenerator:
             conn.execute("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)", (key, json.dumps(value, ensure_ascii=False)))
             conn.commit()
 
-    def insert_parallels(self, parallels_list: List[Tuple[str, str, str]]):
-        """Insert a batch of parallel links into the core database."""
-        if not parallels_list:
+    def insert_parallels(self, parallels_dict: Dict[str, Dict[str, List[str]]]):
+        """Insert grouped parallel links into the core database as JSON."""
+        if not parallels_dict:
             return
+            
+        insert_data = [
+            (uid, json.dumps(rels, ensure_ascii=False)) 
+            for uid, rels in parallels_dict.items()
+        ]
             
         with self._get_core_connection() as conn:
             cursor = conn.cursor()
             cursor.executemany(
-                "INSERT OR IGNORE INTO parallels (src_uid, target_uid, relation_type) VALUES (?, ?, ?)",
-                parallels_list
+                "INSERT OR REPLACE INTO parallels (src_uid, relations) VALUES (?, ?)",
+                insert_data
             )
             conn.commit()
-        logger.info(f"   🔗 [SQLite] Inserted {len(parallels_list)} parallel links.")
+        logger.info(f"   🔗 [SQLite] Inserted {len(insert_data)} grouped parallel records.")
 
     def _build_parent_map(self, node: Any, current_parent: Optional[str] = None, parent_map: Optional[Dict[str, str]] = None) -> Dict[str, str]:
         """Extracts parent mappings based on the tree hierarchy."""
