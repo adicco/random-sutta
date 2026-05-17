@@ -94,11 +94,12 @@ export const TohParallels = {
             
             segmentKeys.forEach(segKey => {
                 const segLabel = segKey.split('#')[1] || segKey;
-                const elementId = segKey.replace('#', ':'); // Match HTML segment ID format (e.g. dn1:1.6.3)
+                const elementPrefix = segKey.replace('#', ':'); // Match HTML segment ID format (e.g. dn1:1.6.3)
+                const scrollLogic = `const el = document.getElementById('${elementPrefix}') || document.querySelector('[id^=\\'${elementPrefix}.\\']'); if(el) el.scrollIntoView({behavior: 'smooth', block: 'center'});`;
                 
                 html += `
                     <li class="toh-item toh-segment-group">
-                        <div class="toh-segment-header" onclick="document.getElementById('${elementId}')?.scrollIntoView({behavior: 'smooth', block: 'center'})" title="Jump to segment">Seg ${segLabel}</div>
+                        <div class="toh-segment-header" onclick="${scrollLogic}" title="Jump to segment">Seg ${segLabel}</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                 `;
                 

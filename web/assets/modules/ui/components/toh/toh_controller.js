@@ -41,6 +41,9 @@ export function setupTableOfHeadings() {
             els.contentParallels.classList.remove("hidden");
             els.contentHeadings.classList.add("hidden");
         }
+        try {
+            localStorage.setItem('toh_active_tab', tabName);
+        } catch (e) {}
     };
 
     if (els.tabHeadings && els.tabParallels) {
