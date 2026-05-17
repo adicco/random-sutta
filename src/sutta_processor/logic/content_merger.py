@@ -119,29 +119,42 @@ def extract_bilara_meta(path: Optional[Path], default_type: str) -> Tuple[str, s
         return default_type, "unknown", "unknown"
     
     parts = path.parts
-    try:
-        # Expected structure: .../bilara/{type}/{lang}/{author}/...
-        if "bilara" in parts:
+    # 1. Bilara More Strategy (Custom legacy conversion)
+    if "bilara_more" in parts:
+        try:
+            idx = parts.index("bilara_more")
+            c_type = parts[idx+1]
+            lang = parts[idx+2]
+            return c_type, lang, "legacy"
+        except (ValueError, IndexError):
+            pass
+
+    # 2. Official Bilara Strategy: .../bilara/{type}/{lang}/{author}/...
+    if "bilara" in parts:
+        try:
             idx = parts.index("bilara")
             c_type = parts[idx+1]
             lang = parts[idx+2]
             author = parts[idx+3]
             return c_type, lang, author
-    except (ValueError, IndexError):
-        pass
+        except (ValueError, IndexError):
+            pass
 
-    # Fallback to filename parsing: {uid}_{type}-{lang}-{author}.json
+    # 3. Filename Fallback: {uid}_{type}-{lang}-{author}.json
     name = path.stem
     if "_" in name:
-        meta_part = name.split("_")[1]
-        if meta_part == "html":
-            return "html", "pli", "ms"
-        if "-" in meta_part:
-            p = meta_part.split("-")
-            if len(p) >= 3:
-                return p[0], p[1], p[2]
+        parts_name = name.split("_")
+        if len(parts_name) >= 2:
+            meta_part = parts_name[1]
+            if "-" in meta_part:
+                p = meta_part.split("-")
+                if len(p) >= 3:
+                    return p[0], p[1], p[2]
+            if meta_part == "html":
+                # For safety, if we reach here, we check the extension/folder
+                return "html", "unknown", "unknown"
     
-    return default_type, "pli", "ms"
+    return default_type, "unknown", "unknown"
 
 def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]) -> Tuple[str, str, Optional[Dict[str, Any]], List[MissingItem]]:
     sutta_id, root_path, trans_path, html_path, comment_path, variant_path, reference_path, author_uid = args
