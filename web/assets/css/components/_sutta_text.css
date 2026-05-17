@@ -25,31 +25,31 @@
 
 /* Preface (序) */
 .xu {
-  margin: 2rem 0.5rem;
-  padding: 1.5rem 2rem;
+  margin: 1.5rem 0.5rem;
+  padding: 1rem 1.5rem;
   background-color: var(--highlight-color-background);
   border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  border-left: 4px solid var(--primary-color);
-  line-height: 1.8;
-  text-align: justify; /* Preface text usually looks better justified */
+  font-size: 0.85rem; 
+  border-left: 3px solid var(--primary-color);
+  line-height: 1.7;
+  text-align: justify;
   color: var(--text-muted);
 }
 
 .xu h1 {
   text-align: center;
-  font-size: 1.3rem; 
-  margin-top: 0.5rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.1rem; 
+  margin-top: 0.2rem;
+  margin-bottom: 1rem;
   color: var(--primary-color);
   font-weight: 800;
   border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.8rem;
+  padding-bottom: 0.5rem;
 }
 
 .xu p {
-    margin-bottom: 1rem;
-    text-indent: 2em; /* Indentation for traditional preface paragraphs */
+    margin-bottom: 0.8rem;
+    text-indent: 2em;
 }
 
 /* Sutta Information (Translator, Version) */
@@ -67,24 +67,58 @@
 
 /* Verse / Poetry */
 .gatha {
-  margin: 1.5rem auto;
+  margin: 2rem auto;
   font-family: var(--font-sutta);
-  line-height: 1.6;
+  line-height: 1.5;
   color: var(--text-main);
-  text-align: left; /* Keep text left-aligned */
-  display: table;   /* Centers the block itself while shrinking width to fit content */
-  max-width: 90%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
 }
 
 .gatha p {
-    margin-bottom: 0.2rem; /* Tighten space between paragraphs in gatha */
-    display: block;
+    margin-bottom: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-/* [FIX] Avoid extra vertical space in gatha lines */
+/* [NEW] The row-wrapper for each gatha line */
+.gatha-row {
+    display: grid;
+    grid-template-columns: minmax(auto, 15rem) minmax(auto, 15rem); /* Stable 2-column split with max width */
+    column-gap: 2rem; 
+    width: fit-content;
+    margin-bottom: 0.2rem;
+}
+
+/* [FIX] Avoid extra space in gatha segments */
 .gatha .segment {
-    display: inline; 
+    display: block; 
     margin-bottom: 0;
+    white-space: nowrap;
+    text-align: left;
+}
+
+/* Ensure right column text aligns left to its start point */
+.gatha .segment:nth-child(even) {
+    text-align: left;
+}
+
+/* Mobile: Collapse to 1 column */
+@media (max-width: 600px) {
+    .gatha-row {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+        row-gap: 0.2rem;
+        text-align: center;
+    }
+    .gatha .segment {
+        white-space: normal;
+        text-align: center;
+    }
 }
 
 /* Scribe / Author info */
