@@ -123,35 +123,15 @@ export const TohParallels = {
         listElement.querySelectorAll('.toh-segment-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const prefix = header.dataset.prefix; // e.g., "dn1:7"
+                const prefix = header.dataset.prefix; // e.g., "dn1:1.7.1"
                 
                 // 1. Prepare search patterns
-                const parts = prefix.split(':');
-                const suttaPart = parts[0];
-                const numPart = parts[1];
+                // Escape colons and periods for querySelector
+                const escapedPrefix = prefix.replace(/:/g, '\\:').replace(/\./g, '\\.');
                 
-                let targets = [];
-                let exactMatch = document.getElementById(prefix);
-                
-                if (exactMatch) {
-                    targets.push(exactMatch);
-                    // Also get children if any
-                    const escapedPrefix = prefix.replace(/:/g, '\\:').replace(/\./g, '\\.');
-                    const children = document.querySelectorAll(`[id^='${escapedPrefix}.']`);
-                    targets.push(...children);
-                } else {
-                    // Fuzzy match for legacy IDs (e.g., dn1:7 matching dn1:1.7.1)
-                    // We look for elements starting with suttaPart: and containing .numPart. or :numPart.
-                    const escapedSutta = suttaPart.replace(/:/g, '\\:').replace(/\. /g, '\\.');
-                    const allSuttaSegments = document.querySelectorAll(`[id^='${escapedSutta}:']`);
-                    
-                    const numPattern = new RegExp(`[:.]${numPart}(\\.|$)`);
-                    allSuttaSegments.forEach(el => {
-                        if (numPattern.test(el.id)) {
-                            targets.push(el);
-                        }
-                    });
-                }
+                // Find all elements that are exactly this ID OR start with this ID followed by a dot
+                // This covers both single segments and groups/prefixes.
+                const targets = document.querySelectorAll(`#${escapedPrefix}, [id^='${escapedPrefix}.']`);
 
                 // 2. Clear previous highlights
                 document.querySelectorAll('.highlight, .highlight-container').forEach(el => {
@@ -164,24 +144,26 @@ export const TohParallels = {
 
                 // 3. Execute Jump and Highlight
                 if (targets.length > 0) {
-                    // Sort targets by ID to jump to the first one
-                    targets.sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true, sensitivity: 'base'}));
+                    // Convert to Array and sort by ID numeric value if possible
+                    const targetArray = Array.from(targets).sort((a, b) => 
+                        a.id.localeCompare(b.id, undefined, {numeric: true, sensitivity: 'base'})
+                    );
                     
-                    const firstEl = targets[0];
+                    const firstEl = targetArray[0];
                     Scroller.jumpTo(firstEl.id);
                     
-                    targets.forEach(el => {
+                    targetArray.forEach(el => {
                         const highlightClass = el.classList.contains('segment') ? 'highlight' : 'highlight-container';
                         el.classList.add(highlightClass);
                         
                         const timerId = setTimeout(() => {
                             el.classList.remove(highlightClass);
                             delete el.dataset.highlightTimer;
-                        }, 3000);
+                        }, 3500);
                         el.dataset.highlightTimer = timerId;
                     });
                 } else {
-                    logger.warn(`Could not find segments for prefix: ${prefix}`);
+                    logger.warn(`Could not find segments for: ${prefix}`);
                 }
             });
         });
