@@ -266,7 +266,7 @@ article.single-language .segment.highlight {
   margin-left: 0;
   padding: 0.1em 0; /* Vertical padding only to avoid horizontal shifting */
   border-left: none; /* Removed to prevent text shift and per user request */
-  background-color: rgba(var(--primary-rgb), 0.22); /* Slightly more contrast since border is gone */
+  background-color: rgba(var(--primary-rgb), 0.15); /* Subtled from 0.22 for better balance */
   border-radius: 2px;
   /* Keep background continuity across line wraps */
   box-decoration-break: clone;
@@ -281,7 +281,7 @@ article.single-language .segment.highlight {
 [data-theme="dark"] body.view-mode-root-only .segment.highlight,
 [data-theme="dark"] body.view-mode-trans-only .segment.highlight,
 [data-theme="dark"] article.single-language .segment.highlight {
-    background-color: rgba(255, 255, 255, 0.25); /* High contrast for Dark Mode */
+    background-color: rgba(255, 255, 255, 0.18); /* Subtled from 0.25 for better balance */
 }
 
 /* Comment Markers */
