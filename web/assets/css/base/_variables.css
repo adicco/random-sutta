@@ -38,6 +38,15 @@
   font-display: swap;
 }
 
+/* GenRyuMin for LZH (Hán văn) - Optimized Subset for APK/Native */
+@font-face {
+  font-family: "GenRyuMin";
+  src: url("../../fonts/GenRyuMin-LZH.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* =========================================
      1. PRIMITIVE PALETTE (Nguyên liệu thô)

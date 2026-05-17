@@ -3,8 +3,8 @@
 /* --- 1. LZH TYPOGRAPHY --- */
 
 .root.lang-lzh {
-  /* Use a professional CJK Serif stack */
-  font-family: "Source Han Serif SC", "Source Han Serif TC", "Noto Serif CJK TC", "Songti SC", serif !important;
+  /* Use GenRyuMin for Native/APK, fallback to professional CJK Serif stack for Web */
+  font-family: "GenRyuMin", "Source Han Serif SC", "Source Han Serif TC", "Noto Serif CJK TC", "Songti SC", serif !important;
   font-size: 1.15em; 
   line-height: 1.5;
   font-style: normal !important;
