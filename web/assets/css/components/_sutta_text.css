@@ -67,14 +67,13 @@
 
 /* Verse / Poetry */
 .gatha {
-  margin: 2rem auto;
+  margin: 1.5rem 0; /* Align block to the left */
+  padding-left: 10%; /* Traditional indentation */
   font-family: var(--font-sutta);
   line-height: 1.5;
   color: var(--text-main);
   max-width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center; 
+  display: block;
 }
 
 .gatha p {
@@ -82,21 +81,16 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
 }
 
 /* [NEW] The row-wrapper for each gatha line */
 .gatha-row {
     display: grid;
-    grid-template-columns: minmax(auto, 18rem) minmax(auto, 18rem); /* Slightly wider for longer verses */
-    column-gap: 2rem; 
+    grid-template-columns: auto auto; /* Shrink to fit text */
+    column-gap: 1.5rem; /* Significantly reduced gap */
     width: fit-content;
-    margin-bottom: 0.1rem; /* Tightest possible space */
-}
-
-/* [FIX] Completely remove BR from gatha flow to avoid extra gaps */
-.gatha br {
-    display: none !important;
+    margin-bottom: 0.1rem;
 }
 
 /* [FIX] Avoid extra space in gatha segments */
@@ -105,6 +99,18 @@
     margin-bottom: 0;
     white-space: nowrap;
     text-align: left;
+}
+
+/* Mobile: Indentation adjustment */
+@media (max-width: 600px) {
+    .gatha {
+        padding-left: 1rem;
+    }
+    .gatha-row {
+        grid-template-columns: 1fr; /* Stack on small screens */
+        column-gap: 0;
+        row-gap: 0.2rem;
+    }
 }
 
 /* [NEW] LZH Typography - Apply to ALL lzh, even if not promoted */
