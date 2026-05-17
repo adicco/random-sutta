@@ -272,12 +272,10 @@ export function setupTableOfHeadings() {
             
             return `
                 <li class="toh-item">
-                    <div class="toh-item-wrapper" style="padding-top: 2px; padding-bottom: 2px;">
-                        <div class="toh-header-row" onclick="window.router.navigate('/sutta/${target}');" style="padding-left: 15px; min-height: 24px;">
-                            <span class="toh-prefix" style="color: var(--primary-color); flex-shrink: 0; min-width: 45px;">${acronym}${segmentSuffix}</span>
-                            <span class="toh-main-text" style="font-weight: 500; font-size: 0.9em; padding-top: 0; padding-bottom: 0;">${title}</span>
-                        </div>
-                    </div>
+                    <a class="toh-parallel-link" onclick="window.loadSutta('${target}'); return false;">
+                        <span class="toh-parallel-acronym">${acronym}${segmentSuffix}</span>
+                        <span class="toh-parallel-title">${title}</span>
+                    </a>
                 </li>
             `;
         };
@@ -319,17 +317,17 @@ export function setupTableOfHeadings() {
             
             segmentKeys.forEach(segKey => {
                 const segLabel = segKey.split('#')[1] || segKey;
+                const elementId = segKey.replace('#', ':'); // Match HTML segment ID format (e.g. dn1:1.6.3)
+                
                 html += `
-                    <li class="toh-item" style="margin-top: 10px; padding-left: 10px; border-left: 2px solid var(--border-light);">
-                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Segment ${segLabel}</div>
+                    <li class="toh-item toh-segment-group">
+                        <div class="toh-segment-header" onclick="document.getElementById('${elementId}')?.scrollIntoView({behavior: 'smooth', block: 'center'})" title="Jump to segment">Seg ${segLabel}</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                 `;
                 
                 RELATION_ORDER.forEach(relType => {
                     if (parallelsData[segKey][relType] && parallelsData[segKey][relType].length > 0) {
-                         // Minimal indicator for type at segment level
-                         const typeInitial = relType.charAt(0).toUpperCase();
-                         html += `<div style="font-size: 0.7em; color: var(--text-light); text-transform: uppercase; margin-left: 15px; margin-top: 4px;">${relType}</div>`;
+                         html += `<div class="toh-parallel-type-label">${relType}</div>`;
                          parallelsData[segKey][relType].forEach(target => {
                             html += createLinkHtml(target);
                         });

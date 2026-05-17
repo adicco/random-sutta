@@ -343,3 +343,64 @@
   opacity: 0.8;
   color: var(--primary-color);
 }
+
+/* --- 11. PARALLELS TAB STYLES --- */
+.toh-parallel-link {
+  display: flex;
+  align-items: flex-start;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+  min-height: 24px;
+  text-decoration: none;
+}
+
+.toh-parallel-link:hover {
+  background-color: var(--bg-hover);
+}
+
+.toh-parallel-acronym {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.85em;
+  flex-shrink: 0;
+  min-width: 50px;
+  margin-right: 8px;
+}
+
+.toh-parallel-title {
+  color: var(--text-main);
+  font-weight: 500;
+  font-size: 0.9em;
+  line-height: 1.4;
+  flex: 1;
+}
+
+.toh-segment-header {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.toh-segment-header:hover {
+  color: var(--primary-color);
+}
+
+.toh-segment-group {
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 2px solid var(--border-light);
+}
+
+.toh-parallel-type-label {
+  font-size: 0.7em;
+  color: var(--text-light);
+  text-transform: uppercase;
+  margin-left: 8px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
