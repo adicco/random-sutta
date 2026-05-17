@@ -21,6 +21,87 @@
   display: none;
 }
 
+/* --- LEGACY SUTTACENTRAL CLASSES --- */
+
+/* Preface (序) */
+.xu {
+  margin: 1.5rem 0.5rem;
+  padding: 1.2rem 1.5rem;
+  background-color: var(--highlight-color-background);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem; /* Reduced base font size */
+  border-left: 3px solid var(--primary-color);
+  line-height: 1.7;
+}
+
+.xu h1 {
+  text-align: center;
+  font-size: 1.15rem; /* Drastically reduced to match body context */
+  margin-bottom: 1.2rem;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+/* Sutta Information (Translator, Version) */
+.suttainfo {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: normal;
+  margin: 1.2rem 0;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Verse / Poetry */
+.gatha {
+  margin: 1.5rem auto;
+  font-family: var(--font-sutta);
+  line-height: 2;
+  color: var(--text-main);
+  text-align: center; /* Center all verses */
+  max-width: 90%;
+}
+
+.gatha p {
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Scribe / Author info */
+.scribe, .author {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: block;
+  text-align: center;
+  margin: 0.3rem 0;
+}
+
+/* Division & Mirror Headings */
+.division {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  text-align: center;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.mirror-row {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+h1.mirror-row {
+  font-size: 1.8rem;
+  margin-top: 1rem;
+}
+
 /* --- TYPOGRAPHY (Global for Sutta Text) --- */
 
 h1.sutta-title {
@@ -99,7 +180,7 @@ body.view-mode-trans-only .pli { display: none !important; }
 /* [NEW] LZH Typography */
 .pli.lang-lzh {
   font-family: "Source Han Serif", "Noto Serif CJK TC", serif;
-  font-size: 1.15em;
+  font-size: 1.15em; /* Changed to em to respect container sizing */
   line-height: 1.6;
   font-style: normal !important;
   color: var(--text-main);
@@ -108,6 +189,23 @@ body.view-mode-trans-only .pli { display: none !important; }
 
 .pli.lang-lzh.promoted {
   font-weight: 500;
+}
+
+/* Override/Reset cho LZH trong các container đặc biệt để tránh nhân đôi font-size */
+h1 .pli.lang-lzh,
+h2 .pli.lang-lzh,
+h3 .pli.lang-lzh,
+h4 .pli.lang-lzh,
+h5 .pli.lang-lzh,
+h6 .pli.lang-lzh,
+.mirror-row .pli.lang-lzh,
+.sutta-title .pli.lang-lzh,
+.division .pli.lang-lzh,
+.xu .pli.lang-lzh,
+.suttainfo .pli.lang-lzh {
+  font-size: 1em;
+  font-weight: inherit;
+  line-height: inherit;
 }
 
 /* Taisho Reference Marker (Hidden by default as requested) */
