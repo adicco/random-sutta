@@ -14,6 +14,7 @@ from .shared.app_config import (
 from .ingestion.metadata_parser import load_names_map
 from .ingestion.file_crawler import generate_book_tasks
 from .ingestion.fix_loader import load_fix_map
+from .ingestion.parallels_parser import parse_parallels
 
 # Logic Imports
 from .logic.content_merger import process_worker, init_worker
@@ -197,6 +198,12 @@ class BuildManager:
             from .optimizer.config import PRIMARY_BOOKS_LIST
             self.sqlite_gen.insert_config("primary_books", PRIMARY_BOOKS_LIST)
             self.sqlite_gen.insert_config("sub_books_map", self.group_structure)
+
+            # Insert Parallels
+            parallels_file = PROJECT_ROOT / "data" / "json" / "sc-data" / "parallels.json"
+            if parallels_file.exists():
+                parallels_data = parse_parallels(parallels_file)
+                self.sqlite_gen.insert_parallels(parallels_data)
 
             self.sqlite_gen.finalize()
 

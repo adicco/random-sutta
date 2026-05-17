@@ -4,6 +4,7 @@ import sys
 import logging
 from src.logging_config import setup_logging
 from .api import run_api_fetch
+from .api.parallels import run_parallels_fetch
 from .bilara import run_bilara_sync
 from .dpd import run_dpd_fetch
 
@@ -32,10 +33,16 @@ def run_cli() -> None:
         help="Fetch/Update Digital Pali Dictionary (DPD)"
     )
 
+    parser.add_argument(
+        "-p", "--parallels",
+        action="store_true",
+        help="Fetch Parallels data from SuttaCentral"
+    )
+
     args = parser.parse_args()
 
     # Nếu không có flag nào, hiển thị help
-    if not (args.api or args.sutta or args.dpd):
+    if not (args.api or args.sutta or args.dpd or args.parallels):
         parser.print_help()
         sys.exit(0)
 
@@ -52,7 +59,13 @@ def run_cli() -> None:
             run_bilara_sync()
             print("-" * 50)
 
-        # 3. Fetch API (Metadata) - Cần content trước để discovery
+        # 3. Fetch Parallels
+        if args.parallels:
+            logger.info("🔹 TRIGGERED: Parallels Fetch")
+            run_parallels_fetch()
+            print("-" * 50)
+
+        # 4. Fetch API (Metadata) - Cần content trước để discovery
         if args.api:
             logger.info("🔹 TRIGGERED: Metadata API Fetch")
             run_api_fetch()
