@@ -2,7 +2,7 @@
 
 export const ContentCompiler = {
     // --- 1. RENDER TEXT CONTENT (LEAF) ---
-    compile: function (contentMap, rootUid) {
+    compile: function (contentMap, rootUid, options = { showRoot: true, showTrans: true }) {
         if (!contentMap) return "";
         
         const sortedKeys = Object.keys(contentMap).sort((a, b) => {
@@ -13,7 +13,7 @@ export const ContentCompiler = {
         
         sortedKeys.forEach(segmentId => {
             const seg = contentMap[segmentId];
-            const { pli, eng, html: htmlDecor, comm, reference } = seg;
+            const { pli, eng, html: htmlDecor, comm, reference, root_lang } = seg;
 
             let openTag = "";
             let closeTag = "";
@@ -28,16 +28,26 @@ export const ContentCompiler = {
 
             let segmentHtml = `<span id="${segmentId}" class="segment">`;
             
-            // [NEW] Add reference anchors for deep linking (PTS, MS, etc.)
+            // [UPDATED] Reference presentation: hidden anchors + optional visual marker
             if (reference) {
                 const refs = reference.split(',').map(r => r.trim()).filter(r => r);
                 refs.forEach(ref => {
+                    // Hidden anchor for deep linking
                     segmentHtml += `<a id="${ref}" class="anchor-ref"></a>`;
+                    // Visual marker (hidden by default via CSS as per request)
+                    segmentHtml += `<span class="taisho-ref" data-ref="${ref}"></span>`;
                 });
             }
 
-            if (pli) segmentHtml += `<span class="pli" lang="pi">${pli}</span>`;
-            if (eng) segmentHtml += `<span class="eng" lang="en">${eng}</span>`;
+            // [UPDATED] Respect showRoot/showTrans options via CSS (Body Classes)
+            const rLang = root_lang || "pi";
+            if (pli) {
+                segmentHtml += `<span class="pli lang-${rLang}" lang="${rLang}">${pli}</span>`;
+            }
+            
+            if (eng) {
+                segmentHtml += `<span class="eng" lang="en">${eng}</span>`;
+            }
             
             if (comm) {
                 const safeComm = comm.replace(/"/g, '&quot;');

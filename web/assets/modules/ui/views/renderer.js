@@ -48,7 +48,8 @@ export async function renderSutta(suttaId, data, options = {}) {
     // [FIX LOGIC] Phân loại dựa trên Meta Type thay vì chỉ dựa vào sự tồn tại của Content
     // Nếu có content -> Chắc chắn render Leaf
     else if (data.content) {
-        renderResult = LeafRenderer.render(data);
+        const displayOptions = window.AppSettings?.getDisplayOptions() || { showRoot: true, showTrans: true };
+        renderResult = LeafRenderer.render(data, displayOptions);
         isLeaf = true;
     } 
     // Nếu Meta nói là 'branch' hoặc 'super_book' -> Render Branch

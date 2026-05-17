@@ -1,5 +1,6 @@
 // Path: web/assets/modules/core/app.js
 import { AppRouter } from "core/app_router.js";
+import { AppSettings } from "core/app_settings.js";
 import { SuttaController } from "core/sutta_controller.js";
 import { SuttaDB } from "data/sutta_db.js";
 import { SuttaService } from "services/index.js";
@@ -17,6 +18,7 @@ import {
   ReadManager,
   SyncUIManager,
   TooltipManager,
+  DisplaySettingsManager,
 } from "ui/managers/index.js";
 import { ViewManager } from "ui/managers/view_manager.js";
 import { ScrollManager } from "ui/managers/scroll_manager.js";
@@ -44,6 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.triggerRandomSutta = (options = {}) => SuttaController.loadRandomSutta(true, options);
 
   // Initialize UI Managers
+  AppSettings.init();
   DrawerManager.init();
   ThemeManager.init();
   FontSizeManager.init();
@@ -52,6 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   ReadManager.init();
   SyncUIManager.init();
   TooltipManager.init();
+  DisplaySettingsManager.init();
   ScrollManager.init();
 
   // Initialize Components

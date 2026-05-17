@@ -17,9 +17,21 @@ export const SuttaRepository = {
     _getCategory(bookId) {
         if (!bookId) return "minor";
         const b = bookId.toLowerCase();
+
+        // Pali Shards
         if (['dn', 'mn', 'sn', 'an'].includes(b)) return "major";
         if (b.startsWith('pli-tv-')) return "vinaya";
         if (['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana'].includes(b)) return "abhidhamma";
+
+        // Lzh Shards
+        if (['sa', 'ma', 'da', 'ea', 'sa-2', 'sa-3', 'sa-ot', 'ma-ot', 'da-ot', 'ea-2', 'ea-ot'].includes(b)) return "lzh_major";
+        if (['lzh-dk', 'sag', 'sg', 'sab'].includes(b)) return "lzh_abhidhamma";
+        if (b.startsWith('lzh-dg')) return "lzh_vinaya_dg";
+        if (b.startsWith('lzh-mg')) return "lzh_vinaya_mg";
+        if (b.startsWith('lzh-sarv')) return "lzh_vinaya_sarv";
+        if (b.startsWith('lzh-mi') || b.startsWith('lzh-mu') || b.startsWith('lzh-ka')) return "lzh_vinaya_other";
+        if (b.startsWith('lzh-') || ['t210', 't211', 't212', 't213'].includes(b)) return "lzh_minor";
+
         return "minor";
     },
 
@@ -97,6 +109,7 @@ export const SuttaRepository = {
         for (const r of metaResults) {
             meta[r.uid] = {
                 type: r.type,
+                root_lang: r.root_lang,
                 acronym: r.acronym,
                 translated_title: r.translated_title,
                 original_title: r.original_title,
@@ -180,6 +193,7 @@ export const SuttaRepository = {
 
             if (type === 'root') {
                 contentMap[segId].pli = row.content;
+                contentMap[segId].root_lang = row.lang;
             } else if (type === 'html') {
                 contentMap[segId].html = row.content;
             } else if (type === 'comment') {
@@ -219,6 +233,7 @@ export const SuttaRepository = {
         for (const r of metaResults) {
             results[r.uid] = {
                 type: r.type,
+                root_lang: r.root_lang,
                 acronym: r.acronym,
                 translated_title: r.translated_title,
                 original_title: r.original_title,
@@ -253,7 +268,7 @@ export const SuttaRepository = {
         }
 
         // 3. Nạp tất cả Shard nội dung đồng thời để Safari cache lại qua SW
-        const shards = ['major', 'minor', 'vinaya', 'abhidhamma'];
+        const shards = ['major', 'minor', 'vinaya', 'abhidhamma', 'lzh_major', 'lzh_abhidhamma', 'lzh_vinaya_dg', 'lzh_vinaya_mg', 'lzh_vinaya_sarv', 'lzh_vinaya_other', 'lzh_minor'];
         let shardCount = 0;
         
         logger.info("DownloadAll", "Fetching all content shards for offline use...");
@@ -261,12 +276,12 @@ export const SuttaRepository = {
         // [OFFLINE FIX] Load sequentially and prefetch without keeping connection open to prevent iOS out-of-memory crashes
         for (const category of shards) {
              await SuttaDB.prefetchShard(category, (loaded, total) => {
-                 const base = (shardCount + 1) * 20;
+                 const base = (shardCount + 1) * 8; // Adjust based on total shards
                  if (onProgress) onProgress(base, 100);
              });
-             // Không gọi SuttaDB.closeShard(category) ở đây vì prefetchShard không lưu vào RAM
              shardCount++;
         }
 
         logger.info("DownloadAll", "✅ All shards cached for offline.");
-    }};
+    }
+};

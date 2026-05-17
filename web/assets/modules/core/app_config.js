@@ -74,6 +74,7 @@ export const AppConfig = {
         "sutta_sepia_dark",
         "tts_rate",
         "tts_voice_uri",
-        "tts_auto_next"
+        "tts_auto_next",
+        "sutta_display_settings"
     ]
 };

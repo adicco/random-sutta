@@ -92,9 +92,9 @@ function getDisplayInfo(uid, metaEntry) {
 }
 
 export const LeafRenderer = {
-    render(data) {
+    render(data, options = { showRoot: true, showTrans: true }) {
         // 1. Compile nội dung thô
-        let htmlContent = ContentCompiler.compile(data.content, data.uid);
+        let htmlContent = ContentCompiler.compile(data.content, data.uid, options);
 
         // 2. [UPDATED] Xử lý hậu kỳ (Clean Heading & Promote Pali)
         htmlContent = postProcessHtml(htmlContent);

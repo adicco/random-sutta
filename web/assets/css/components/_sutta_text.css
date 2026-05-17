@@ -83,6 +83,10 @@ p {
   pointer-events: none;
 }
 
+/* --- VIEW MODE TOGGLES --- */
+body.view-mode-root-only .eng { display: none !important; }
+body.view-mode-trans-only .pli { display: none !important; }
+
 .pli {
   font-family: var(--font-sutta);
   color: var(--text-pali);
@@ -90,6 +94,25 @@ p {
   font-size: 0.95em;
   display: block;
   margin-bottom: 2px;
+}
+
+/* [NEW] LZH Typography */
+.pli.lang-lzh {
+  font-family: "Source Han Serif", "Noto Serif CJK TC", serif;
+  font-size: 1.15em;
+  line-height: 1.6;
+  font-style: normal !important;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.pli.lang-lzh.promoted {
+  font-weight: 500;
+}
+
+/* Taisho Reference Marker (Hidden by default as requested) */
+.taisho-ref {
+  display: none;
 }
 
 /* SINGLE SOURCE OF TRUTH */
