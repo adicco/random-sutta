@@ -3,19 +3,25 @@
 /* --- 1. LZH TYPOGRAPHY --- */
 
 .pli.lang-lzh {
-  font-family: "Source Han Serif", "Noto Serif CJK TC", serif !important;
+  /* Use a professional CJK Serif stack */
+  font-family: "Source Han Serif SC", "Source Han Serif TC", "Noto Serif CJK TC", "Songti SC", serif !important;
   font-size: 1.15em; 
   line-height: 1.6;
   font-style: normal !important;
-  color: var(--text-main);
+  /* Distinct color for LZH in bilingual mode (Deep Ink/Teal mix for separation) */
+  color: var(--primitive-brown-700); 
   margin-bottom: 4px;
 }
 
 .pli.lang-lzh.promoted {
-  font-family: "Source Han Serif", "Noto Serif CJK TC", serif !important;
   font-weight: 500;
-  font-size: 1.15em;
-  /* Removed display: block to support paragraph flow */
+  font-size: 1.25em;
+  color: var(--text-main) !important;
+}
+
+/* Ensure LZH in Root-Only mode uses the main text color */
+body.view-mode-root-only .pli.lang-lzh {
+  color: var(--text-main) !important;
 }
 
 /* Override/Reset for LZH in special containers to avoid double font-sizing */
