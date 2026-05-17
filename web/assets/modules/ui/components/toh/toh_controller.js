@@ -2,7 +2,7 @@
 import { ContentScanner } from './content_scanner.js';
 import { DomRenderer } from './dom_renderer.js';
 import { SuttaRepository } from 'data/sutta_repository.js';
-import { getLogger } from 'core/logger.js';
+import { getLogger } from 'utils/logger.js';
 
 const logger = getLogger("TOH");
 
