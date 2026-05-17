@@ -25,21 +25,31 @@
 
 /* Preface (序) */
 .xu {
-  margin: 1.5rem 0.5rem;
-  padding: 1.2rem 1.5rem;
+  margin: 2rem 0.5rem;
+  padding: 1.5rem 2rem;
   background-color: var(--highlight-color-background);
   border-radius: var(--radius-md);
-  font-size: 0.85rem; /* Further reduced from 0.9rem */
-  border-left: 3px solid var(--primary-color);
-  line-height: 1.7;
+  font-size: 0.9rem;
+  border-left: 4px solid var(--primary-color);
+  line-height: 1.8;
+  text-align: justify; /* Preface text usually looks better justified */
+  color: var(--text-muted);
 }
 
 .xu h1 {
   text-align: center;
-  font-size: 1.1rem; /* Matched to body-like context */
-  margin-bottom: 1.2rem;
+  font-size: 1.3rem; 
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
   color: var(--primary-color);
-  font-weight: 700;
+  font-weight: 800;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.8rem;
+}
+
+.xu p {
+    margin-bottom: 1rem;
+    text-indent: 2em; /* Indentation for traditional preface paragraphs */
 }
 
 /* Sutta Information (Translator, Version) */
