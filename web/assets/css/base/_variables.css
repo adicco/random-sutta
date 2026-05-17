@@ -21,38 +21,19 @@
   font-display: swap;
 }
 
-/* Literata Regular */
+/* Literata Variable Font (Weights 200-900, Optical Size 7-72) */
 @font-face {
   font-family: "Literata";
-  src: url("../../fonts/Literata-Regular.woff2") format("woff2");
-  font-weight: 400;
+  src: url("../../fonts/Literata-VF.woff2") format("woff2");
+  font-weight: 200 900;
   font-style: normal;
   font-display: swap;
 }
 
-/* Literata Italic */
 @font-face {
   font-family: "Literata";
-  src: url("../../fonts/Literata-Italic.woff2") format("woff2");
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-/* Literata Bold */
-@font-face {
-  font-family: "Literata";
-  src: url("../../fonts/Literata-Bold.woff2") format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Literata Bold Italic */
-@font-face {
-  font-family: "Literata";
-  src: url("../../fonts/Literata-BoldItalic.woff2") format("woff2");
-  font-weight: 700;
+  src: url("../../fonts/Literata-Italic-VF.woff2") format("woff2");
+  font-weight: 200 900;
   font-style: italic;
   font-display: swap;
 }
