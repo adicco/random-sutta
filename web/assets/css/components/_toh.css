@@ -136,7 +136,8 @@
 }
 
 /* --- 3. LIST & ITEM LAYOUT --- */
-#toh-list {
+#toh-list,
+#parallels-list {
   list-style: none;
   padding: 0;
   margin: 0;
@@ -353,11 +354,12 @@
   border-radius: 4px;
   transition: background-color 0.1s ease;
   min-height: 24px;
-  text-decoration: none;
+  text-decoration: none !important;
 }
 
 .toh-parallel-link:hover {
   background-color: var(--bg-hover);
+  text-decoration: none !important;
 }
 
 .toh-parallel-acronym {
