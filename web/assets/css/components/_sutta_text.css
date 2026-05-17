@@ -37,14 +37,14 @@
 }
 
 .xu h1 {
-  text-align: center;
-  font-size: 1.1rem; 
-  margin-top: 0.2rem;
-  margin-bottom: 1rem;
-  color: var(--primary-color);
-  font-weight: 800;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 0.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 0.2rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+    font-weight: 800;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
 }
 
 .xu p {
@@ -61,18 +61,13 @@
   padding: 0.8rem 1rem;
   border-top: 1px solid var(--border-light);
   border-bottom: 1px solid var(--border-light);
-  text-align: left; /* Changed from center to left */
-  padding-left: 2em; /* Indentation for info */
-  line-height: 1.4;
-}
-
-.suttainfo br {
-    display: none; /* Hide BR to tighten vertical space in info block */
+  text-align: left; 
+  padding-left: 2em; 
+  line-height: 1.2; /* Tight vertical spacing */
 }
 
 .suttainfo .segment {
-    display: inline-block;
-    margin-right: 1.5em; /* Space between segments on same line */
+    display: inline;
 }
 
 /* Verse / Poetry */
@@ -97,8 +92,8 @@
 /* [NEW] The row-wrapper for each gatha line */
 .gatha-row {
     display: grid;
-    grid-template-columns: minmax(auto, 18rem) minmax(auto, 18rem); 
-    column-gap: 0.6rem; /* Even smaller gap between halves */
+    grid-template-columns: minmax(auto, auto) minmax(auto, auto);
+    column-gap: 2rem;
     width: fit-content;
     margin-bottom: 0.1rem;
 }
