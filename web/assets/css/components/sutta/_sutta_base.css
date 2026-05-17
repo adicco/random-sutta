@@ -189,6 +189,7 @@ body.view-mode-trans-only .trans,
 body.view-mode-trans-only .root.promoted,
 article.single-language .root.promoted {
   display: inline !important;
+  font-size: 1.05rem !important; /* Unified size for single-language reading */
 }
 
 /* Ensure headings in single language modes stay centered and properly sized */
@@ -202,7 +203,7 @@ h1.sutta-title, h2, h3, h4, h5, h6 {
 body.view-mode-root-only .root {
   font-style: normal !important;
   color: var(--text-main) !important;
-  font-weight: 450;
+  font-weight: 400; /* Standard weight to match translation */
 }
 
 /* Visibility Toggles */

@@ -16,7 +16,7 @@
 .root.lang-lzh.promoted,
 body.view-mode-root-only .root.lang-lzh {
   font-weight: 500;
-  font-size: 1.2em; /* Balanced size for single-language LZH */
+  font-size: 1.3rem !important; /* Balanced visual weight for single-language LZH */
   color: var(--text-main) !important;
 }
 
