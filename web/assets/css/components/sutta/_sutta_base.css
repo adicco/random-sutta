@@ -191,14 +191,6 @@ article.single-language .root.promoted {
   display: inline !important;
 }
 
-/* Apply reading font-size ONLY to body text (inside p), not headings */
-body.view-mode-root-only p .root,
-body.view-mode-trans-only p .trans,
-body.view-mode-trans-only p .root.promoted,
-article.single-language p .root.promoted {
-  font-size: 1.05rem; 
-}
-
 /* Ensure headings in single language modes stay centered and properly sized */
 h1.sutta-title, h2, h3, h4, h5, h6 {
   display: block;
