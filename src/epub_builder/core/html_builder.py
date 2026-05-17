@@ -85,15 +85,19 @@ class HtmlBuilder:
 
         content = ""
         if pli:
-            pli_text = pli
+            pli_text = pli.rstrip()
+            trailing = pli[len(pli_text):]
             if not eng and footnote_idx > 0:
                 pli_text += f'<sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
+            pli_text += trailing
             content += f'<p class="root">{pli_text}</p>'
 
         if eng:
-            eng_text = eng
+            eng_text = eng.rstrip()
+            trailing = eng[len(eng_text):]
             if footnote_idx > 0:
                 eng_text += f'<sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
+            eng_text += trailing
             
             if self.eng_only:
                 content += f'<span class="trans">{eng_text}</span>'

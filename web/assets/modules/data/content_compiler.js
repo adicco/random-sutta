@@ -41,18 +41,27 @@ export const ContentCompiler = {
 
             // [UPDATED] Respect showRoot/showTrans options via CSS (Body Classes)
             const rLang = root_lang || "pi";
+            let trailingSpace = "";
+
             if (pli) {
-                segmentHtml += `<span class="root lang-${rLang}" lang="${rLang}">${pli}</span>`;
+                const trimmed = pli.replace(/\s+$/, '');
+                trailingSpace = pli.substring(trimmed.length);
+                segmentHtml += `<span class="root lang-${rLang}" lang="${rLang}">${trimmed}</span>`;
             }
             
             if (eng) {
-                segmentHtml += `<span class="trans lang-en" lang="en">${eng}</span>`;
-                if (comm) {
-                    const safeComm = comm.replace(/"/g, '&quot;');
-                    segmentHtml += `<span class="comment-marker" title="View note" data-comment="${safeComm}">*</span>`;
-                }
+                segmentHtml += trailingSpace;
+                const trimmed = eng.replace(/\s+$/, '');
+                trailingSpace = eng.substring(trimmed.length);
+                segmentHtml += `<span class="trans lang-en" lang="en">${trimmed}</span>`;
             }
             
+            if (comm) {
+                const safeComm = comm.replace(/"/g, '&quot;');
+                segmentHtml += `<span class="comment-marker" title="View note" data-comment="${safeComm}">*</span>`;
+            }
+            
+            segmentHtml += trailingSpace;
             segmentHtml += `</span>`; 
             html += `${openTag}${segmentHtml}${closeTag}`;
         });
