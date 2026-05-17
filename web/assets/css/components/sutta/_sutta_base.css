@@ -111,7 +111,7 @@ h6 .root.promoted {
 
 p {
   margin-bottom: 1rem; /* Default tighter paragraph spacing */
-  line-height: 1.7;
+  line-height: 1.55;
 }
 
 .segment {
@@ -147,7 +147,7 @@ h3 .segment {
   color: var(--text-main);
   font-weight: 400;
   font-style: normal;
-  line-height: 1.7;
+  line-height: 1.55;
   margin-top: 0;
   display: inline;
 }

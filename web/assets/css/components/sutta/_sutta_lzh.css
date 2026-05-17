@@ -6,7 +6,7 @@
   /* Use a professional CJK Serif stack */
   font-family: "Source Han Serif SC", "Source Han Serif TC", "Noto Serif CJK TC", "Songti SC", serif !important;
   font-size: 1.15em; 
-  line-height: 1.6;
+  line-height: 1.5;
   font-style: normal !important;
   /* Distinct color for LZH in bilingual mode (Dynamic variable for theme support) */
   color: var(--text-lzh); 
@@ -69,7 +69,7 @@ h6 .root.lang-lzh.promoted,
   border-radius: var(--radius-md);
   font-size: 0.85rem; 
   border-left: 3px solid var(--primary-color);
-  line-height: 1.7;
+  line-height: 1.55;
   text-align: justify;
   color: var(--text-muted);
 }
