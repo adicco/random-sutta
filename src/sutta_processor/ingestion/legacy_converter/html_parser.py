@@ -29,14 +29,27 @@ class LegacyHtmlParser:
         # [NEW] GLOBAL REFERENCE EXTRACTION
         # Collect all refs and map them to their parent block's unique ID/position
         # To avoid visible refs in templates, we MUST remove them globally first.
-        all_refs = article.find_all('a', class_='ref t')
+        def is_ref_tag(tag):
+            if tag.name != 'a': return False
+            classes = tag.get('class', [])
+            return any(c.startswith('ref') for c in classes)
+
+        all_refs = article.find_all(is_ref_tag)
         ref_mapping = {} # Store refs grouped by the block they were in
         for ref_tag in all_refs:
             ref_id = ref_tag.get('id')
-            if ref_id:
-                clean_id = re.sub(r'^t0*', '', ref_id)
-                val = f"t{taisho_no}.{clean_id}"
+            classes = ref_tag.get('class', [])
+            
+            val = None
+            if 't' in classes:
+                if ref_id:
+                    clean_id = re.sub(r'^t0*', '', ref_id)
+                    val = f"t{taisho_no}.{clean_id}"
+            else:
+                # Other refs like vns, vgns, inda-bh, etc.
+                val = ref_id
                 
+            if val:
                 # Find nearest block parent (h1, p, etc.)
                 parent_block = ref_tag.find_parent(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li'])
                 if parent_block:
@@ -45,7 +58,8 @@ class LegacyHtmlParser:
                         parent_block['data-ref-ptr'] = f"b-{id(parent_block)}"
                     ptr = parent_block['data-ref-ptr']
                     if ptr not in ref_mapping: ref_mapping[ptr] = []
-                    ref_mapping[ptr].append(val)
+                    if val not in ref_mapping[ptr]:
+                        ref_mapping[ptr].append(val)
             
             ref_tag.decompose() # Remove from DOM globally
 
@@ -90,6 +104,7 @@ class LegacyHtmlParser:
                 
                 block.clear()
                 
+                first_seg_in_block = True
                 for i, part in enumerate(text_parts):
                     clean_part = part.strip()
                     if clean_part:
@@ -101,8 +116,9 @@ class LegacyHtmlParser:
                             sid = f"{uid}:{idx}.{s_idx}" if not is_meta else f"{uid}:0.{idx}"
                             root_dict[sid] = sentence
                             
-                            if idx == start_idx and s_idx == 1 and block_refs:
+                            if first_seg_in_block and block_refs:
                                 ref_dict[sid] = ", ".join(block_refs)
+                                first_seg_in_block = False
                             
                             marker = soup.new_tag('bilara-seg', id=sid)
                             marker.string = "{_}"

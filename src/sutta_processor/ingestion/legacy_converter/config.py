@@ -1,6 +1,7 @@
 # Path: src/sutta_processor/ingestion/legacy_converter/config.py
 from pathlib import Path
 from typing import Dict, Set
+import re
 
 class ConverterConfig:
     PROJECT_ROOT: Path = Path(__file__).parents[4]
@@ -26,9 +27,16 @@ class ConverterConfig:
 
     @staticmethod
     def get_taisho_no(uid: str) -> str:
-        # Lấy prefix (ví dụ: từ sa1 -> sa, từ lzh-dg-bu-pm1 -> lzh-dg-bu-pm)
+        # 1. Check if it's a direct Taisho UID (e.g., t210.31 -> 210)
+        if uid.startswith('t'):
+            match = re.match(r'^t(\d+)', uid)
+            if match:
+                return match.group(1)
+
+        # 2. Check mapping for prefixes (e.g., sa1 -> 99)
         # Thử tìm các từ khóa dài trước
         for key in sorted(ConverterConfig.TAISHO_MAPPING.keys(), key=len, reverse=True):
             if uid.startswith(key):
                 return ConverterConfig.TAISHO_MAPPING[key]
         return "0" # Fallback nếu không tìm thấy
+
