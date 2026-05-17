@@ -87,18 +87,24 @@
 /* [NEW] The row-wrapper for each gatha line */
 .gatha-row {
     display: grid;
-    grid-template-columns: auto auto; /* Shrink to fit text */
-    column-gap: 1.5rem; /* Significantly reduced gap */
+    grid-template-columns: minmax(auto, 18rem) minmax(auto, 18rem); 
+    column-gap: 1rem; /* Reduced gap to be more like SC */
     width: fit-content;
     margin-bottom: 0.1rem;
 }
 
 /* [FIX] Avoid extra space in gatha segments */
-.gatha .segment {
+.gatha .segment,
+.gatha .segment .pli {
     display: block; 
-    margin-bottom: 0;
+    margin-bottom: 0 !important; /* Force remove all vertical margins in gatha */
     white-space: nowrap;
     text-align: left;
+}
+
+/* [FIX] Completely remove BR from gatha flow */
+.gatha br {
+    display: none !important;
 }
 
 /* Mobile: Indentation adjustment */
