@@ -110,13 +110,13 @@ h6 .pli.promoted {
 }
 
 p {
-  margin-bottom: 1.2rem; /* Tightened paragraph spacing */
+  margin-bottom: 1rem; /* Default tighter paragraph spacing */
   line-height: 1.7;
 }
 
 .segment {
   display: block;
-  margin-bottom: 0.8rem; /* Space between segments in bilingual mode */
+  margin-bottom: 0.6rem; /* Slightly tighter segment spacing for bilingual */
   touch-action: manipulation;
   cursor: text;
   position: relative;
@@ -127,7 +127,7 @@ p {
 h1.sutta-title .segment,
 h2 .segment,
 h3 .segment {
-  display: inline-block !important;
+  display: inline !important; /* Changed from inline-block for better flow */
   margin-bottom: 0 !important;
 }
 
@@ -167,7 +167,14 @@ article.single-language .segment {
 body.view-mode-root-only p,
 body.view-mode-trans-only p,
 article.single-language p {
-  margin-bottom: 1.5rem; /* Tightened from 1.8rem */
+  margin-bottom: 1.2rem; /* Reduced from 1.5rem to be more compact */
+}
+
+/* Fix Sutta Title margin for single language modes */
+body.view-mode-root-only h1.sutta-title,
+body.view-mode-trans-only h1.sutta-title,
+article.single-language h1.sutta-title {
+  margin-bottom: 1.5rem !important; /* Reduced from default 30px (~2rem) */
 }
 
 /* EXCEPTION: Keep Verses (Gatha) as block even in single language mode */
