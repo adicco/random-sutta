@@ -5,9 +5,9 @@
 .root {
   font-family: var(--font-sutta);
   color: var(--text-pali);
-  font-weight: 500;
+  font-weight: 400;
   font-style: italic;
-  font-size: 0.95em;
+  font-size: 1em;
   display: block;
   margin-bottom: 2px;
 }
