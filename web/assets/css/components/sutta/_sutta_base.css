@@ -253,9 +253,38 @@ body.view-mode-root-only .comment-marker {
   border-left: 4px solid var(--primary-color);
   padding-left: calc(1rem - 4px);
   margin-left: -1rem; 
-  background-color: var(--highlight-color-background); 
+  background-color: rgba(var(--primary-rgb), 0.08); /* Increased from 0.04 for better visibility */
   border-radius: 0 4px 4px 0;
-  transition: none !important;
+  transition: background-color 0.2s ease;
+}
+
+/* [NEW] Specific highlight style for Inline Segments (Paragraph Flow) */
+body.view-mode-root-only .segment.highlight,
+body.view-mode-trans-only .segment.highlight,
+article.single-language .segment.highlight {
+  display: inline;
+  margin-left: 0;
+  padding-left: 0.25em; /* Closer border to text */
+  padding-right: 0.2em;
+  padding-top: 0.1em;
+  padding-bottom: 0.1em;
+  border-left: 3px solid var(--primary-color);
+  background-color: rgba(var(--primary-rgb), 0.2); /* Even better contrast for inline highlight */
+  border-radius: 4px;
+  /* Ensure the highlight and border follow the line wrap */
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+[data-theme="dark"] .highlight,
+[data-theme="dark"] .highlight-container {
+    background-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] body.view-mode-root-only .segment.highlight,
+[data-theme="dark"] body.view-mode-trans-only .segment.highlight,
+[data-theme="dark"] article.single-language .segment.highlight {
+    background-color: rgba(255, 255, 255, 0.22); /* Better contrast in Dark Mode */
 }
 
 /* Comment Markers */
