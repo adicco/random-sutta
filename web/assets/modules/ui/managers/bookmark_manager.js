@@ -9,6 +9,13 @@ export const BookmarkManager = {
     init() {
         logger.info("Init", "Initializing BookmarkManager...");
 
+        this.btnSave = document.getElementById("btn-save-bookmark");
+        if (!this.btnSave) {
+            logger.error("Init", "btn-save-bookmark NOT FOUND during init!");
+        } else {
+            logger.info("Init", "btn-save-bookmark found, binding onclick");
+        }
+
         // Listen for external sync updates
         window.addEventListener("sync-data-applied", () => {
             logger.info("Sync", "Sync data applied, re-rendering list");
@@ -16,8 +23,6 @@ export const BookmarkManager = {
             const params = new URLSearchParams(window.location.search);
             this.updateButtonState(params.get("q"));
         });
-
-        this.btnSave = document.getElementById("btn-save-bookmark");
         this.listContainer = document.getElementById("bookmarks-list");
         this.tabToc = document.getElementById("tab-magic-toc");
         this.tabBookmarks = document.getElementById("tab-magic-bookmarks");
@@ -76,6 +81,7 @@ export const BookmarkManager = {
     },
 
     toggleCurrentSutta() {
+        logger.info("Toggle", "toggleCurrentSutta triggered");
         const params = new URLSearchParams(window.location.search);
         let currentId = params.get("q");
         if (!currentId) {
