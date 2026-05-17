@@ -84,6 +84,7 @@
   --primitive-brown-600: #744225; /* Hover Dark */
   --primitive-brown-500: #8b4513; /* Primary Brand Color (SaddleBrown - Anchor) */
   --primitive-brown-400: #a0522d; /* Primary Hover (Sienna - Anchor) */
+  --primitive-brown-350: #a68d7a; /* [NEW] Dusty Neutral Brown */
   --primitive-brown-300: #ae7e68; /* [Refined Warm] Button Borders / Accents */
   --primitive-brown-200: #bcaaa4; /* Muted Pali Text (Anchor) */
   --primitive-brown-100: #d7ccc8; /* Lighter borders / Backgrounds (Anchor) */
@@ -216,7 +217,7 @@
   --text-main: var(--primitive-ivory-700);
   --text-muted: var(--primitive-ivory-500);
   --text-light: var(--primitive-ivory-400);
-  --text-pali: var(--primitive-ivory-500); /* Neutral subdued color, removing reddish tint */
+  --text-pali: var(--primitive-brown-350); /* Subdued brown, neutral and pleasant */
   --text-lzh: var(--primitive-brown-warm-500); /* Further subdued for better dark mode balance */
   --text-eng: var(--primitive-ivory-800);
   --text-link: var(--primitive-amber-800); /* Link dùng màu Amber 300 sáng */
