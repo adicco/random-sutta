@@ -17,6 +17,7 @@
 body.view-mode-root-only .root.lang-lzh {
   font-weight: 500;
   font-size: 1.3rem !important; /* Balanced visual weight for single-language LZH */
+  line-height: 1.55 !important; /* Unified line-height for reading rhythm */
   color: var(--text-main) !important;
 }
 

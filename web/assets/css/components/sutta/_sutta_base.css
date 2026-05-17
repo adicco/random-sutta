@@ -190,6 +190,7 @@ body.view-mode-trans-only .root.promoted,
 article.single-language .root.promoted {
   display: inline !important;
   font-size: 1.05rem !important; /* Unified size for single-language reading */
+  line-height: 1.55 !important; /* Unified compact line-height */
 }
 
 /* Ensure headings in single language modes stay centered and properly sized */
