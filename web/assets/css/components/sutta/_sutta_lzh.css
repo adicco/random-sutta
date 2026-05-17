@@ -8,8 +8,8 @@
   font-size: 1.15em; 
   line-height: 1.6;
   font-style: normal !important;
-  /* Distinct color for LZH in bilingual mode (Deep Ink/Teal mix for separation) */
-  color: var(--primitive-brown-700); 
+  /* Distinct color for LZH in bilingual mode (Dynamic variable for theme support) */
+  color: var(--text-lzh); 
   margin-bottom: 4px;
 }
 
