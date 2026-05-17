@@ -135,15 +135,15 @@ export const LookupNavigator = {
 
     _jumpSegment(currentNode, direction, onLookupCallback) {
         let currentWrapper = currentNode.parentElement;
-        if (!currentWrapper.classList.contains('pli')) {
-            const pli = currentWrapper.querySelector('.pli');
+        if (!currentWrapper.classList.contains('root')) {
+            const pli = currentWrapper.querySelector('.root');
             if (pli) currentWrapper = pli; 
-            else currentWrapper = currentWrapper.closest('.pli');
+            else currentWrapper = currentWrapper.closest('.root');
         }
 
         if (!currentWrapper) return;
         
-        const allSegments = Array.from(document.querySelectorAll('#sutta-container .pli'));
+        const allSegments = Array.from(document.querySelectorAll('#sutta-container .root'));
         const currentIdx = allSegments.indexOf(currentWrapper);
         
         if (currentIdx === -1) return;

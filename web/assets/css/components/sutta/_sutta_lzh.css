@@ -2,7 +2,7 @@
 
 /* --- 1. LZH TYPOGRAPHY --- */
 
-.pli.lang-lzh {
+.root.lang-lzh {
   /* Use a professional CJK Serif stack */
   font-family: "Source Han Serif SC", "Source Han Serif TC", "Noto Serif CJK TC", "Songti SC", serif !important;
   font-size: 1.15em; 
@@ -13,29 +13,29 @@
   margin-bottom: 4px;
 }
 
-.pli.lang-lzh.promoted {
+.root.lang-lzh.promoted {
   font-weight: 500;
   font-size: 1.25em;
   color: var(--text-main) !important;
 }
 
 /* Ensure LZH in Root-Only mode uses the main text color */
-body.view-mode-root-only .pli.lang-lzh {
+body.view-mode-root-only .root.lang-lzh {
   color: var(--text-main) !important;
 }
 
 /* Override/Reset for LZH in special containers to avoid double font-sizing */
-h1 .pli.lang-lzh,
-h2 .pli.lang-lzh,
-h3 .pli.lang-lzh,
-h4 .pli.lang-lzh,
-h5 .pli.lang-lzh,
-h6 .pli.lang-lzh,
-.mirror-row .pli.lang-lzh,
-.sutta-title .pli.lang-lzh,
-.division .pli.lang-lzh,
-.xu .pli.lang-lzh,
-.suttainfo .pli.lang-lzh {
+h1 .root.lang-lzh,
+h2 .root.lang-lzh,
+h3 .root.lang-lzh,
+h4 .root.lang-lzh,
+h5 .root.lang-lzh,
+h6 .root.lang-lzh,
+.mirror-row .root.lang-lzh,
+.sutta-title .root.lang-lzh,
+.division .root.lang-lzh,
+.xu .root.lang-lzh,
+.suttainfo .root.lang-lzh {
   font-size: 1em;
   font-weight: inherit;
   line-height: inherit;

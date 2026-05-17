@@ -48,9 +48,9 @@ export const AppConfig = {
                 enabled: true,
                 name: "dpd_mini.db",
                 path: "assets/db/dictionaries/dpd_mini.db.zip",
-                triggerSelectors: [".pli", ".lookup-main-content", ".dpd-deconstruction"] // Active in sutta and internal lookups
+                triggerSelectors: [".root", ".lookup-main-content", ".dpd-deconstruction"] // Active in sutta and internal lookups
             }
-            // Future: "en_vi": { ..., triggerSelectors: [".eng", ".en"] }
+            // Future: "en_vi": { ..., triggerSelectors: [".trans", ".en"] }
         }
     },
 

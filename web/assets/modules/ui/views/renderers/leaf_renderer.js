@@ -33,11 +33,11 @@ function postProcessHtml(htmlString) {
     const segments = wrapper.querySelectorAll('.segment');
 
     // 1. GLOBAL CHECK: Quét xem trang này có chút tiếng Anh nào không?
-    // Chỉ cần tìm thấy MỘT thẻ .eng có nội dung -> Coi như trang này ĐÃ DỊCH (Translation Exists)
+    // Chỉ cần tìm thấy MỘT thẻ .trans có nội dung -> Coi như trang này ĐÃ DỊCH (Translation Exists)
     let isTranslatedPage = false;
     for (const seg of segments) {
-        const eng = seg.querySelector('.eng');
-        if (eng && eng.textContent.trim().length > 0) {
+        const trans = seg.querySelector('.trans');
+        if (trans && trans.textContent.trim().length > 0) {
             isTranslatedPage = true;
             break; // Tìm thấy rồi thì dừng ngay cho nhanh
         }
@@ -45,24 +45,24 @@ function postProcessHtml(htmlString) {
 
     // 2. Process từng segment dựa trên kết quả Global Check
     segments.forEach(seg => {
-        const pli = seg.querySelector('.pli');
-        const eng = seg.querySelector('.eng');
+        const root = seg.querySelector('.root');
+        const trans = seg.querySelector('.trans');
 
-        // Logic A: Promote Pali (Chỉ khi TOÀN BỘ trang không có tiếng Anh)
-        if (!isTranslatedPage && pli) {
-            pli.classList.add('promoted');
+        // Logic A: Promote Root (Chỉ khi TOÀN BỘ trang không có dịch)
+        if (!isTranslatedPage && root) {
+            root.classList.add('promoted');
         }
 
         // Logic B: Clean Redundant Headings (Giữ nguyên logic cũ)
-        // Ẩn Pali trong Heading nếu nó trùng khớp hoàn toàn với tiếng Anh
-        if (pli && eng) {
+        // Ẩn Root trong Heading nếu nó trùng khớp hoàn toàn với dịch
+        if (root && trans) {
             const parentHeading = seg.closest('h1, h2, h3, h4, h5, h6, .sutta-title');
             if (parentHeading) {
-                const pliText = pli.textContent.trim();
-                const engText = eng.textContent.trim();
+                const rootText = root.textContent.trim();
+                const transText = trans.textContent.trim();
                 // So sánh nội dung (chấp nhận giống nhau về số hoặc text)
-                if (pliText === engText && pliText.length > 0) {
-                    pli.classList.add('hidden');
+                if (rootText === transText && rootText.length > 0) {
+                    root.classList.add('hidden');
                 }
             }
         }

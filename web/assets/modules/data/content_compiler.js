@@ -42,11 +42,11 @@ export const ContentCompiler = {
             // [UPDATED] Respect showRoot/showTrans options via CSS (Body Classes)
             const rLang = root_lang || "pi";
             if (pli) {
-                segmentHtml += `<span class="pli lang-${rLang}" lang="${rLang}">${pli}</span>`;
+                segmentHtml += `<span class="root lang-${rLang}" lang="${rLang}">${pli}</span>`;
             }
             
             if (eng) {
-                segmentHtml += `<span class="eng" lang="en">${eng}</span>`;
+                segmentHtml += `<span class="trans lang-en" lang="en">${eng}</span>`;
             }
             
             if (comm) {

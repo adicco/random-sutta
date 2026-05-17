@@ -22,17 +22,17 @@ export function extractParagraphNumber(segmentId) {
 }
 
 /**
- * Lấy nội dung text sạch từ một element (ưu tiên .eng > .pli > textContent).
+ * Lấy nội dung text sạch từ một element (ưu tiên .trans > .root > textContent).
  */
 export function getCleanTextContent(element) {
     let text = element.textContent;
-    const engNode = element.querySelector(".eng");
-    const pliNode = element.querySelector(".pli");
+    const transNode = element.querySelector(".trans");
+    const rootNode = element.querySelector(".root");
 
-    if (engNode && engNode.textContent.trim()) {
-        text = engNode.textContent.trim();
-    } else if (pliNode && pliNode.textContent.trim()) {
-        text = pliNode.textContent.trim();
+    if (transNode && transNode.textContent.trim()) {
+        text = transNode.textContent.trim();
+    } else if (rootNode && rootNode.textContent.trim()) {
+        text = rootNode.textContent.trim();
     }
     
     // Xóa khoảng trắng thừa và xuống dòng

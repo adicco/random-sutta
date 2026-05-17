@@ -88,12 +88,12 @@ h1.sutta-title {
 }
 
 /* Common overrides for root text (pali/lzh) inside headings */
-h1.sutta-title .pli.promoted,
-h2 .pli.promoted,
-h3 .pli.promoted,
-h4 .pli.promoted,
-h5 .pli.promoted,
-h6 .pli.promoted {
+h1.sutta-title .root.promoted,
+h2 .root.promoted,
+h3 .root.promoted,
+h4 .root.promoted,
+h5 .root.promoted,
+h6 .root.promoted {
   font-size: 1em;
   color: inherit;
   font-weight: inherit;
@@ -141,8 +141,8 @@ h3 .segment {
 }
 
 /* Default styling for translation and promoted root text */
-.eng,
-.pli.promoted {
+.trans,
+.root.promoted {
   font-family: var(--font-sutta); /* Use Noto Sans for better readability */
   color: var(--text-main);
   font-weight: 400;
@@ -184,18 +184,18 @@ article.single-language h1.sutta-title {
 }
 
 /* Force inline behavior for the visible language text in reading modes */
-body.view-mode-root-only .pli,
-body.view-mode-trans-only .eng,
-body.view-mode-trans-only .pli.promoted,
-article.single-language .pli.promoted {
+body.view-mode-root-only .root,
+body.view-mode-trans-only .trans,
+body.view-mode-trans-only .root.promoted,
+article.single-language .root.promoted {
   display: inline !important;
 }
 
 /* Apply reading font-size ONLY to body text (inside p), not headings */
-body.view-mode-root-only p .pli,
-body.view-mode-trans-only p .eng,
-body.view-mode-trans-only p .pli.promoted,
-article.single-language p .pli.promoted {
+body.view-mode-root-only p .root,
+body.view-mode-trans-only p .trans,
+body.view-mode-trans-only p .root.promoted,
+article.single-language p .root.promoted {
   font-size: 1.05rem; 
 }
 
@@ -207,17 +207,17 @@ h1.sutta-title, h2, h3, h4, h5, h6 {
 }
 
 /* Root Only Mode Refinement: Formal Typography */
-body.view-mode-root-only .pli {
+body.view-mode-root-only .root {
   font-style: normal !important;
   color: var(--text-main) !important;
   font-weight: 450;
 }
 
 /* Visibility Toggles */
-body.view-mode-root-only .eng { display: none !important; }
+body.view-mode-root-only .trans { display: none !important; }
 
-/* Hide Pali if it's NOT promoted and we are in Trans Only mode */
-body.view-mode-trans-only .pli:not(.promoted) { display: none !important; }
+/* Hide Root if it's NOT promoted and we are in Trans Only mode */
+body.view-mode-trans-only .root:not(.promoted) { display: none !important; }
 
 /* [NEW] Comment markers are for translations; hide in Root Only */
 body.view-mode-root-only .comment-marker {

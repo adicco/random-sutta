@@ -2,7 +2,7 @@
 
 /* --- 1. PALI TYPOGRAPHY --- */
 
-.pli {
+.root {
   font-family: var(--font-sutta);
   color: var(--text-pali);
   font-style: italic;
@@ -11,7 +11,7 @@
   margin-bottom: 2px;
 }
 
-h1.sutta-title .pli {
+h1.sutta-title .root {
   display: block;
   font-size: 0.85em;
   color: var(--text-pali);
@@ -47,7 +47,7 @@ h1.sutta-title .pli {
 }
 
 .gatha .segment,
-.gatha .segment .pli {
+.gatha .segment .root {
     display: block; 
     margin-bottom: 0 !important;
     white-space: nowrap;

@@ -18,10 +18,10 @@ export const TTSDOMParser = {
             // 1. Filter: Chỉ lấy element đang hiển thị (tôn trọng display: none)
             .filter(seg => seg.offsetParent !== null)
             .map(seg => {
-                const engEl = seg.querySelector(".eng");
-                if (!engEl) return null;
+                const transEl = seg.querySelector(".trans");
+                if (!transEl) return null;
                 
-                let text = engEl.textContent.trim();
+                let text = transEl.textContent.trim();
                 // Clean citation references [1], [2]...
                 text = text.replace(/\[\d+\]/g, "");
 

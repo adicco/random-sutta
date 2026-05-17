@@ -88,7 +88,7 @@ class HtmlBuilder:
             pli_text = pli
             if not eng and footnote_idx > 0:
                 pli_text += f'<sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
-            content += f'<p class="pli">{pli_text}</p>'
+            content += f'<p class="root">{pli_text}</p>'
 
         if eng:
             eng_text = eng
@@ -96,9 +96,9 @@ class HtmlBuilder:
                 eng_text += f'<sup class="footnote-ref"><a class="footnote-link" epub:type="noteref" href="#fn_{segment_id}" id="ref_{segment_id}">{footnote_idx}</a></sup>'
             
             if self.eng_only:
-                content += f'<span class="eng">{eng_text}</span>'
+                content += f'<span class="trans">{eng_text}</span>'
             else:
-                content += f'<p class="eng">{eng_text}</p>'
+                content += f'<p class="trans">{eng_text}</p>'
 
         if self.eng_only:
             inner_html = f'<span class="segment" id="{segment_id}">{content}</span>'

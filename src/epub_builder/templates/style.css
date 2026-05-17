@@ -1,7 +1,7 @@
 /* EPUB Style Optimized for E-ink and Dark Mode */
 :root {
     --text-main: #000000;
-    --text-pali: #000000;
+    --text-root: #000000;
     --text-muted: #444444;
     --bg-main: #ffffff;
     --border-color: #000000;
@@ -11,7 +11,7 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --text-main: #ffffff;
-        --text-pali: #ffffff;
+        --text-root: #ffffff;
         --text-muted: #cccccc;
         --bg-main: #121212;
         --border-color: #ffffff;
@@ -106,13 +106,13 @@ span.segment {
     margin: 0;
 }
 
-.pli {
+.root {
     font-style: italic;
-    color: var(--text-pali);
+    color: var(--text-root);
     margin: 0 0 0.3em 0;
 }
 
-.eng {
+.trans {
     margin: 0;
     color: var(--text-main);
 }
@@ -122,7 +122,7 @@ span.segment {
     text-align: center;
 }
 
-.segment h1 .pli, .segment h2 .pli, .segment h3 .pli {
+.segment h1 .root, .segment h2 .root, .segment h3 .root {
     font-style: normal;
     font-weight: bold;
 }
