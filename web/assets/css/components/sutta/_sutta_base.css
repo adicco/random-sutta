@@ -183,14 +183,24 @@ article.single-language h1.sutta-title {
   margin-bottom: 0;
 }
 
-/* Force inline behavior for the visible language text in reading modes */
+/* Force inline behavior and unified sizing ONLY for body text in reading modes */
+body.view-mode-root-only p .root,
+body.view-mode-trans-only p .trans,
+body.view-mode-trans-only p .root.promoted,
+article.single-language p .root.promoted,
+body.view-mode-root-only blockquote .root,
+body.view-mode-trans-only blockquote .trans {
+  display: inline !important;
+  font-size: 1.05rem !important; /* Unified size for reading text */
+  line-height: 1.55 !important; /* Unified compact line-height */
+}
+
+/* Base inline behavior for single-language modes (applies to headings too, but without size override) */
 body.view-mode-root-only .root,
 body.view-mode-trans-only .trans,
 body.view-mode-trans-only .root.promoted,
 article.single-language .root.promoted {
   display: inline !important;
-  font-size: 1.05rem !important; /* Unified size for single-language reading */
-  line-height: 1.55 !important; /* Unified compact line-height */
 }
 
 /* Ensure headings in single language modes stay centered and properly sized */
@@ -198,6 +208,18 @@ h1.sutta-title, h2, h3, h4, h5, h6 {
   display: block;
   text-align: center;
   width: 100%;
+}
+
+/* Headings internal text should inherit heading size, not body size */
+h1 .root, h1 .trans,
+h2 .root, h2 .trans,
+h3 .root, h3 .trans,
+h4 .root, h4 .trans,
+h5 .root, h5 .trans,
+h6 .root, h6 .trans,
+.sutta-title .root, .sutta-title .trans {
+  font-size: inherit !important;
+  line-height: inherit !important;
 }
 
 /* Root Only Mode Refinement: Formal Typography */
