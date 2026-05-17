@@ -3,7 +3,7 @@ export const FontSizeManager = {
     // Config
     MIN_SCALE: 0.8,
     MAX_SCALE: 2.0, // Tăng tối đa 200%
-    STEP: 0.1,
+    STEP: 0.05,
     DEFAULT_SCALE: 1.0,
     STORAGE_KEY: "sutta_font_scale",
 
