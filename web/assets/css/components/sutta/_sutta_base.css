@@ -253,7 +253,7 @@ body.view-mode-root-only .comment-marker {
   border-left: 4px solid var(--primary-color);
   padding-left: calc(1rem - 4px);
   margin-left: -1rem; 
-  background-color: rgba(var(--primary-rgb), 0.08); /* Increased from 0.04 for better visibility */
+  background-color: rgba(var(--primary-rgb), 0.05); /* Soft highlight for bilingual blocks */
   border-radius: 0 4px 4px 0;
   transition: background-color 0.2s ease;
 }
@@ -275,7 +275,7 @@ article.single-language .segment.highlight {
 
 [data-theme="dark"] .highlight,
 [data-theme="dark"] .highlight-container {
-    background-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.08); /* Softer highlight for Dark Mode bilingual */
 }
 
 [data-theme="dark"] body.view-mode-root-only .segment.highlight,
