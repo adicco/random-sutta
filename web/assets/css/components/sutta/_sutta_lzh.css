@@ -5,7 +5,7 @@
 .root.lang-lzh {
   /* Use GenRyuMin for Native/APK, fallback to professional CJK Serif stack for Web */
   font-family: "GenRyuMin", "Source Han Serif SC", "Source Han Serif TC", "Noto Serif CJK TC", "Songti SC", serif !important;
-  font-size: 1.15em; 
+  font-size: calc(1.3em * var(--lzh-scale)); 
   line-height: 1.5;
   font-style: normal !important;
   /* Distinct color for LZH in bilingual mode (Dynamic variable for theme support) */
