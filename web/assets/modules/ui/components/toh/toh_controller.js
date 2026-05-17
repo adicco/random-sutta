@@ -243,9 +243,16 @@ export function setupTableOfHeadings() {
             return;
         }
 
-        // Collect all target UIDs to fetch their titles
+        // Collect all target UIDs (stripping segment IDs) to fetch their titles
         const targetUids = new Set();
-        Object.values(parallelsData).forEach(list => list.forEach(uid => targetUids.add(uid)));
+        Object.values(parallelsData).forEach(segmentData => {
+            Object.values(segmentData).forEach(list => {
+                list.forEach(target => {
+                    const cleanUid = target.split('#')[0];
+                    targetUids.add(cleanUid);
+                });
+            });
+        });
         
         // Fetch metadata for titles
         const metadata = await SuttaRepository.fetchMetaList([...targetUids]);
@@ -254,37 +261,85 @@ export function setupTableOfHeadings() {
         const RELATION_ORDER = ["parallels", "resembles", "mentions", "retells"];
         let html = '';
 
-        RELATION_ORDER.forEach(relType => {
-            if (parallelsData[relType] && parallelsData[relType].length > 0) {
-                // Formatting Title
-                const sectionTitle = relType.charAt(0).toUpperCase() + relType.slice(1);
-                
+        // Helper to format a link
+        const createLinkHtml = (target) => {
+            const cleanUid = target.split('#')[0];
+            const segmentSuffix = target.includes('#') ? `#${target.split('#')[1]}` : '';
+            
+            const meta = metadata[cleanUid];
+            const acronym = meta ? meta.acronym : cleanUid;
+            const title = meta ? (meta.translated_title || meta.original_title || "") : "";
+            
+            return `
+                <li class="toh-item">
+                    <div class="toh-item-wrapper" style="padding-top: 2px; padding-bottom: 2px;">
+                        <div class="toh-header-row" onclick="window.router.navigate('/sutta/${target}');" style="padding-left: 15px; min-height: 24px;">
+                            <span class="toh-prefix" style="color: var(--primary-color); flex-shrink: 0; min-width: 45px;">${acronym}${segmentSuffix}</span>
+                            <span class="toh-main-text" style="font-weight: 500; font-size: 0.9em; padding-top: 0; padding-bottom: 0;">${title}</span>
+                        </div>
+                    </div>
+                </li>
+            `;
+        };
+
+        // 1. Render Sutta-level relations first (key == suttaId)
+        if (parallelsData[suttaId]) {
+            RELATION_ORDER.forEach(relType => {
+                if (parallelsData[suttaId][relType] && parallelsData[suttaId][relType].length > 0) {
+                    const sectionTitle = relType.charAt(0).toUpperCase() + relType.slice(1);
+                    html += `
+                        <li class="toh-item" style="margin-top: 10px;">
+                            <h4 class="toh-group-header">${sectionTitle}</h4>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                    `;
+                    parallelsData[suttaId][relType].forEach(target => {
+                        html += createLinkHtml(target);
+                    });
+                    html += `</ul></li>`;
+                }
+            });
+        }
+
+        // 2. Render Segment-level relations
+        const segmentKeys = Object.keys(parallelsData).filter(k => k !== suttaId);
+        // Sort segment keys (e.g. by order if numeric, otherwise alphabetical)
+        segmentKeys.sort((a, b) => {
+            const aNum = parseFloat(a.split('#')[1]);
+            const bNum = parseFloat(b.split('#')[1]);
+            if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
+            return a.localeCompare(b);
+        });
+
+        if (segmentKeys.length > 0) {
+            html += `
+                <li class="toh-item" style="margin-top: 20px;">
+                    <h4 class="toh-group-header" style="color: var(--primary-color);">By Segment</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+            `;
+            
+            segmentKeys.forEach(segKey => {
+                const segLabel = segKey.split('#')[1] || segKey;
                 html += `
-                    <li class="toh-item" style="margin-top: 10px;">
-                        <h4 class="toh-group-header">${sectionTitle}</h4>
+                    <li class="toh-item" style="margin-top: 10px; padding-left: 10px; border-left: 2px solid var(--border-light);">
+                        <div style="font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Segment ${segLabel}</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                 `;
-
-                parallelsData[relType].forEach(uid => {
-                    const meta = metadata[uid];
-                    const acronym = meta ? meta.acronym : uid;
-                    const title = meta ? (meta.translated_title || meta.original_title || "") : "";
-                    
-                    html += `
-                        <li class="toh-item">
-                            <div class="toh-item-wrapper" style="padding-top: 2px; padding-bottom: 2px;">
-                                <div class="toh-header-row" onclick="window.router.navigate('/sutta/${uid}');" style="padding-left: 15px; min-height: 24px;">
-                                    <span class="toh-prefix" style="color: var(--primary-color); flex-shrink: 0; min-width: 45px;">${acronym}</span>
-                                    <span class="toh-main-text" style="font-weight: 500; font-size: 0.9em; padding-top: 0; padding-bottom: 0;">${title}</span>
-                                </div>
-                            </div>
-                        </li>
-                    `;
+                
+                RELATION_ORDER.forEach(relType => {
+                    if (parallelsData[segKey][relType] && parallelsData[segKey][relType].length > 0) {
+                         // Minimal indicator for type at segment level
+                         const typeInitial = relType.charAt(0).toUpperCase();
+                         html += `<div style="font-size: 0.7em; color: var(--text-light); text-transform: uppercase; margin-left: 15px; margin-top: 4px;">${relType}</div>`;
+                         parallelsData[segKey][relType].forEach(target => {
+                            html += createLinkHtml(target);
+                        });
+                    }
                 });
-
+                
                 html += `</ul></li>`;
-            }
-        });
+            });
+            html += `</ul></li>`;
+        }
 
         els.parallelsList.innerHTML = html;
     }
