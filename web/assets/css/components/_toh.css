@@ -123,6 +123,18 @@
 
 /* Remove toh-header-wrapper styles as they are no longer used */
 
+.toh-group-header {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+
 /* --- 3. LIST & ITEM LAYOUT --- */
 #toh-list {
   list-style: none;
@@ -291,5 +303,43 @@
 
 #toh-menu.toh-mode-paragraphs .toh-header-row.active .toh-main-text {
   font-weight: 700;
+  color: var(--primary-color);
+}
+
+/* --- 10. RESIZE HANDLE --- */
+#toh-menu {
+  position: relative;
+}
+
+#toh-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  cursor: nesw-resize;
+  z-index: 1105;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  color: var(--text-muted);
+  opacity: 0.2;
+  border-bottom-left-radius: 8px;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+#toh-resize-handle::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 0 0 0 4px;
+  margin-left: 6px;
+  margin-bottom: 6px;
+}
+
+#toh-resize-handle:hover {
+  opacity: 0.8;
   color: var(--primary-color);
 }

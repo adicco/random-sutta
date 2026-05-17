@@ -19,10 +19,94 @@ export function setupTableOfHeadings() {
         tabParallels: document.getElementById("tab-toh-parallels"),
         contentHeadings: document.getElementById("toh-content-headings"),
         contentParallels: document.getElementById("toh-content-parallels"),
+        resizeHandle: document.getElementById("toh-resize-handle")
     };
 
     if (!els.wrapper || !els.fab || !els.menu || !els.list || !els.container) {
         return { generate: () => {} };
+    }
+
+    // --- Resize Logic ---
+    const _enableResize = (menu, handle) => {
+        let isResizing = false;
+        let startX, startY, startWidth, startHeight;
+
+        const startResize = (clientX, clientY) => {
+            isResizing = true;
+            startX = clientX;
+            startY = clientY;
+            startWidth = menu.offsetWidth;
+            startHeight = menu.offsetHeight;
+            
+            menu.style.transition = "none";
+            document.body.style.cursor = "nesw-resize";
+            document.body.style.userSelect = "none";
+        };
+
+        const doResize = (clientX, clientY) => {
+            if (!isResizing) return;
+            
+            // Left drag increases width (startX - clientX)
+            const newWidth = startWidth + (startX - clientX);
+            const newHeight = startHeight + (clientY - startY);
+            
+            const maxWidth = window.innerWidth - 40; // 40px padding from edges
+            const finalWidth = Math.min(Math.max(280, newWidth), maxWidth);
+            menu.style.width = `${finalWidth}px`;
+            
+            const maxHeight = window.innerHeight - 80;
+            const finalHeight = Math.min(Math.max(200, newHeight), maxHeight);
+            menu.style.height = `${finalHeight}px`;
+            menu.style.maxHeight = "none"; // Override CSS max-height during resize
+        };
+
+        const stopResize = () => {
+            if (!isResizing) return;
+            isResizing = false;
+            menu.style.transition = "";
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+            
+            // Optional: Save dimensions to localStorage if needed
+        };
+
+        handle.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            startResize(e.clientX, e.clientY);
+            
+            const onMouseMove = (moveEvent) => {
+                doResize(moveEvent.clientX, moveEvent.clientY);
+            };
+            
+            const onMouseUp = () => {
+                stopResize();
+                document.removeEventListener("mousemove", onMouseMove);
+                document.removeEventListener("mouseup", onMouseUp);
+            };
+            
+            document.addEventListener("mousemove", onMouseMove);
+            document.addEventListener("mouseup", onMouseUp);
+        });
+
+        handle.addEventListener("touchstart", (e) => {
+            startResize(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
+        document.addEventListener("touchmove", (e) => {
+            if (isResizing) {
+                // Prevent scrolling while resizing
+                if (e.cancelable) e.preventDefault(); 
+                doResize(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: false });
+
+        document.addEventListener("touchend", () => {
+            stopResize();
+        });
+    };
+
+    if (els.resizeHandle) {
+        _enableResize(els.menu, els.resizeHandle);
     }
 
     // --- Tab Logic ---
@@ -177,9 +261,7 @@ export function setupTableOfHeadings() {
                 
                 html += `
                     <li class="toh-item" style="margin-top: 10px;">
-                        <div class="toh-header-wrapper" style="border-bottom: 1px solid var(--border-light); padding-bottom: 4px; margin-bottom: 6px; padding-left: 15px; padding-right: 15px;">
-                            <h4 class="toh-header" style="margin: 0; font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px;">${sectionTitle}</h4>
-                        </div>
+                        <h4 class="toh-group-header">${sectionTitle}</h4>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                 `;
 
@@ -190,9 +272,11 @@ export function setupTableOfHeadings() {
                     
                     html += `
                         <li class="toh-item">
-                            <div class="toh-header-row" onclick="window.router.navigate('/sutta/${uid}');" style="padding-left: 15px;">
-                                <span class="toh-prefix" style="color: var(--primary-color);">${acronym}</span>
-                                <span class="toh-main-text" style="font-weight: 500;">${title}</span>
+                            <div class="toh-item-wrapper" style="padding-top: 2px; padding-bottom: 2px;">
+                                <div class="toh-header-row" onclick="window.router.navigate('/sutta/${uid}');" style="padding-left: 15px; min-height: 24px;">
+                                    <span class="toh-prefix" style="color: var(--primary-color); flex-shrink: 0; min-width: 45px;">${acronym}</span>
+                                    <span class="toh-main-text" style="font-weight: 500; font-size: 0.9em; padding-top: 0; padding-bottom: 0;">${title}</span>
+                                </div>
                             </div>
                         </li>
                     `;
