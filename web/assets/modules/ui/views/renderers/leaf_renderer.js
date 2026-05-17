@@ -49,8 +49,6 @@ function postProcessHtml(htmlString) {
         const eng = seg.querySelector('.eng');
 
         // Logic A: Promote Pali (Chỉ khi TOÀN BỘ trang không có tiếng Anh)
-        // Nếu trang đã dịch (isTranslatedPage = true), ta KHÔNG promote,
-        // để Pali vẫn in nghiêng/mờ, giúp người đọc biết đây là đoạn chưa dịch/bị skip.
         if (!isTranslatedPage && pli) {
             pli.classList.add('promoted');
         }
@@ -69,6 +67,12 @@ function postProcessHtml(htmlString) {
             }
         }
     });
+
+    // 3. [NEW] Nếu là trang đơn ngữ (không có dịch), gắn class vào article để CSS trigger paragraph flow
+    const article = wrapper.querySelector('article');
+    if (article && !isTranslatedPage) {
+        article.classList.add('single-language');
+    }
 
     return wrapper.innerHTML;
 }

@@ -15,7 +15,7 @@
   font-family: "Source Han Serif", "Noto Serif CJK TC", serif !important;
   font-weight: 500;
   font-size: 1.15em;
-  display: block; /* Preserve block behavior for Chinese flow */
+  /* Removed display: block to support paragraph flow */
 }
 
 /* Override/Reset for LZH in special containers to avoid double font-sizing */

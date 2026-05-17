@@ -142,9 +142,50 @@ p {
   display: inline;
 }
 
-/* --- 4. VIEW MODE TOGGLES --- */
+/* --- 4. VIEW MODE TOGGLES (Refined for Paragraph Flow) --- */
+
+/* Default: Bilingual (Stacked) */
+.segment {
+  display: block;
+  margin-bottom: 0.8rem; /* Increased for better bilingual separation */
+  touch-action: manipulation;
+  cursor: text;
+  position: relative;
+}
+
+/* SINGLE LANGUAGE MODES & PAGES: Switch to Paragraph Flow */
+body.view-mode-root-only .segment,
+body.view-mode-trans-only .segment,
+article.single-language .segment {
+  display: inline;
+  margin-bottom: 0;
+  margin-right: 0.35em; /* Space between segments in paragraph flow */
+}
+
+/* EXCEPTION: Keep Verses (Gatha) as block even in single language mode */
+.gatha .segment {
+  display: block !important;
+  margin-bottom: 0;
+}
+
+/* Force inline behavior for the visible language text */
+body.view-mode-root-only .pli,
+body.view-mode-trans-only .eng,
+body.view-mode-trans-only .pli.promoted,
+article.single-language .pli.promoted {
+  display: inline !important;
+}
+
+/* Visibility Toggles */
 body.view-mode-root-only .eng { display: none !important; }
-body.view-mode-trans-only .pli { display: none !important; }
+
+/* Hide Pali if it's NOT promoted and we are in Trans Only mode */
+body.view-mode-trans-only .pli:not(.promoted) { display: none !important; }
+
+/* [NEW] Comment markers are for translations; hide in Root Only */
+body.view-mode-root-only .comment-marker {
+  display: none !important;
+}
 
 /* --- 5. DECORATIONS & UTILITIES --- */
 
