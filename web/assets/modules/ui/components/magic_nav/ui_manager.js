@@ -52,13 +52,16 @@ export const UIManager = {
     },
 
     _getDeviceSuffix() {
-        const sw = screen.width;
-        const sh = screen.height;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
-        // Device Fingerprint: sorted dimensions + orientation flag + touch flag
-        const dim = [sw, sh].sort((a, b) => a - b).join('x');
-        const isLandscape = window.innerWidth > window.innerHeight;
-        return `_${dim}_${isLandscape ? 'L' : 'P'}${isTouch ? '_T' : ''}`;
+        
+        // Bucketed viewport sizing (100px steps)
+        const bucketW = Math.floor(w / 100) * 100;
+        const bucketH = Math.floor(h / 100) * 100;
+        
+        const isLandscape = w > h;
+        return `_v${bucketW}x${bucketH}_${isLandscape ? 'L' : 'P'}${isTouch ? '_T' : ''}`;
     },
 
     _loadSavedDimensions() {

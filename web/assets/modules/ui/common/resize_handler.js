@@ -5,17 +5,21 @@ const logger = getLogger("ResizeHandler");
 
 export const ResizeHandler = {
     /**
-     * Generates a device-specific key suffix based on screen dimensions and type.
+     * Generates a device-specific key suffix based on bucketed viewport dimensions.
+     * Bucketing ensures stability (small resizes don't reset settings) 
+     * while distinguishing between different device classes (Phone vs Tablet vs PC).
      */
     getDeviceSuffix() {
-        const sw = screen.width;
-        const sh = screen.height;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
         const isTouch = window.matchMedia("(pointer: coarse)").matches;
-        // Device "Fingerprint": sorted dimensions ensure consistency across rotations,
-        // while the 'L'/'P' flag handles orientation-specific layout preferences.
-        const dim = [sw, sh].sort((a, b) => a - b).join('x');
-        const isLandscape = window.innerWidth > window.innerHeight;
-        return `_${dim}_${isLandscape ? 'L' : 'P'}${isTouch ? '_T' : ''}`;
+        
+        // Round to nearest 100px to create stable "size buckets"
+        const bucketW = Math.floor(w / 100) * 100;
+        const bucketH = Math.floor(h / 100) * 100;
+        
+        const isLandscape = w > h;
+        return `_v${bucketW}x${bucketH}_${isLandscape ? 'L' : 'P'}${isTouch ? '_T' : ''}`;
     },
 
     /**
