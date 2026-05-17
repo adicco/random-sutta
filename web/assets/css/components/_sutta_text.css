@@ -29,14 +29,14 @@
   padding: 1.2rem 1.5rem;
   background-color: var(--highlight-color-background);
   border-radius: var(--radius-md);
-  font-size: 0.9rem; /* Reduced base font size */
+  font-size: 0.85rem; /* Further reduced from 0.9rem */
   border-left: 3px solid var(--primary-color);
   line-height: 1.7;
 }
 
 .xu h1 {
   text-align: center;
-  font-size: 1.15rem; /* Drastically reduced to match body context */
+  font-size: 1.1rem; /* Matched to body-like context */
   margin-bottom: 1.2rem;
   color: var(--primary-color);
   font-weight: 700;
@@ -44,7 +44,7 @@
 
 /* Sutta Information (Translator, Version) */
 .suttainfo {
-  font-size: 0.8rem;
+  font-size: 0.75rem; /* Reduced from 0.8rem */
   color: var(--text-muted);
   font-style: normal;
   margin: 1.2rem 0;
@@ -59,15 +59,22 @@
 .gatha {
   margin: 1.5rem auto;
   font-family: var(--font-sutta);
-  line-height: 2;
+  line-height: 1.6;
   color: var(--text-main);
-  text-align: center; /* Center all verses */
+  text-align: left; /* Keep text left-aligned */
+  display: table;   /* Centers the block itself while shrinking width to fit content */
   max-width: 90%;
 }
 
 .gatha p {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem; /* Tighten space between paragraphs in gatha */
     display: block;
+}
+
+/* [FIX] Avoid extra vertical space in gatha lines */
+.gatha .segment {
+    display: inline; 
+    margin-bottom: 0;
 }
 
 /* Scribe / Author info */
