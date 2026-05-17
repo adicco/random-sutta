@@ -53,22 +53,65 @@
   box-shadow: var(--shadow-card); /* [FIXED] Dùng biến shadow chuẩn */
   
   padding: 15px;
-  overflow-y: auto;
+  overflow-y: hidden; /* Hide overflow on menu itself, allow on tab-content */
   overscroll-behavior: contain; /* Prevents scroll chaining */
   animation: slideDown 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- TAB HEADER --- */
+.toh-header-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 4px;
+}
+
+.toh-tab {
+  background: none;
+  border: none;
+  font-size: 0.8rem;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.toh-tab:hover {
+  background-color: var(--bg-hover);
+}
+
+.toh-tab.active {
+  color: var(--primary-color);
+  background-color: var(--bg-hover);
+}
+
+.toh-tab-content {
+  flex-grow: 1;
+  overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--border-color) transparent; /* [FIXED] Firefox scrollbar */
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.toh-tab-content.hidden {
+  display: none;
 }
 
 /* Scrollbar styling (Webkit) */
-#toh-menu::-webkit-scrollbar {
+.toh-tab-content::-webkit-scrollbar {
   width: 6px;
 }
-#toh-menu::-webkit-scrollbar-thumb {
+.toh-tab-content::-webkit-scrollbar-thumb {
   background-color: var(--border-color); /* [FIXED] Màu scrollbar theo theme */
   border-radius: 10px;
 }
-#toh-menu::-webkit-scrollbar-thumb:hover {
+.toh-tab-content::-webkit-scrollbar-thumb:hover {
   background-color: var(--text-light);
 }
 
@@ -78,30 +121,7 @@
   }
 }
 
-.toh-header-wrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  border-bottom: 1px solid var(--border-light);
-  padding-bottom: 4px;
-}
-
-.toh-header {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--text-light);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.toh-header-wrapper .icon-trigger {
-  width: 24px;
-  height: 24px;
-}
+/* Remove toh-header-wrapper styles as they are no longer used */
 
 /* --- 3. LIST & ITEM LAYOUT --- */
 #toh-list {

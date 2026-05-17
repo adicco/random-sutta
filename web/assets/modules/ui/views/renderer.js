@@ -117,7 +117,7 @@ export async function renderSutta(suttaId, data, options = {}) {
     // [UPDATED] Generate Table of Headings / Tools for both Leaf and Branch views
     if (data.type !== 'search_results') {
         if (!tohInstance) tohInstance = setupTableOfHeadings();
-        tohInstance.generate();
+        tohInstance.generate(data.uid);
     }
 
     return true;

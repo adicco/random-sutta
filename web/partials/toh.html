@@ -14,12 +14,17 @@
       </button>
 
       <div id="toh-menu" class="hidden">
-        <div class="toh-header-wrapper">
-          <h4 class="toh-header">Headings</h4>
-          <button id="btn-save-bookmark" class="icon-trigger" title="Save Bookmark" style="opacity: 1; padding: 0;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
-          </button>
+        <div class="toh-header-tabs">
+          <button id="tab-toh-headings" class="toh-tab active">Headings</button>
+          <button id="tab-toh-parallels" class="toh-tab">Parallels</button>
         </div>
-        <ul id="toh-list"></ul>
+        
+        <div id="toh-content-headings" class="toh-tab-content">
+          <ul id="toh-list"></ul>
+        </div>
+        
+        <div id="toh-content-parallels" class="toh-tab-content hidden">
+          <ul id="parallels-list"></ul>
+        </div>
       </div>
     </div>

@@ -9,19 +9,15 @@ Giải pháp phân tích từ `suttadb` hoàn toàn đáp ứng được nhu c�
 Việc lưu vào DB dưới dạng Relational Table cho phép truy vấn cực nhanh (chỉ bằng một lệnh `SELECT` dựa trên `src_uid`), phù hợp với kiến trúc "Vertical Sharded Architecture" của dự án hiện tại.
 
 ## 3. Kiến Trúc Cơ Sở Dữ Liệu
-Sẽ bổ sung thêm một bảng `parallels` vào `sutta_core.db`.
+Sẽ bổ sung thêm một bảng `parallels` vào `sutta_core.db`. Thay vì lưu trữ Cartesian Product gây phình to database, ta gom nhóm các UID dưới dạng JSON.
 
 ```sql
 CREATE TABLE IF NOT EXISTS parallels (
-    src_uid TEXT NOT NULL,       -- UID gốc (vd: 'mn1')
-    target_uid TEXT NOT NULL,    -- UID tương đương (vd: 'ma10')
-    relation_type TEXT NOT NULL, -- Loại liên kết: 'parallels', 'resembles', 'mentions', 'retells'
-    PRIMARY KEY (src_uid, target_uid, relation_type)
+    src_uid TEXT PRIMARY KEY,
+    relations TEXT NOT NULL      -- Chuỗi JSON: {"parallels": ["ma10"], "resembles": ["t56"]}
 );
-
-CREATE INDEX IF NOT EXISTS idx_parallels_src ON parallels(src_uid);
 ```
-*Lưu ý:* Lưu liên kết hai chiều. Nếu A parallel với B, ta lưu dòng (A, B, 'parallels') và (B, A, 'parallels'). Điều này giúp frontend chỉ cần filter theo `src_uid`.
+*Lưu ý:* Lưu liên kết hai chiều nhưng gom nhóm theo JSON. Các key trong JSON được sắp xếp theo thứ tự: `parallels`, `resembles`, `mentions`, `retells` để dễ dàng duyệt trên UI. Điều này giúp frontend chỉ cần lấy một dòng duy nhất dựa theo `src_uid` và parse JSON để render.
 
 ## 4. Các Bước Triển Khai (Pipeline Ingestion)
 
@@ -35,15 +31,15 @@ CREATE INDEX IF NOT EXISTS idx_parallels_src ON parallels(src_uid);
 - **Nhiệm vụ:**
   - Viết module `parallels_parser.py` để đọc file `parallels.json`.
   - Phân tách (parse) các ID: loại bỏ dấu `~` (nếu có dấu `~` thì gán type là `resembles`), cắt bỏ phần segment ID (phần sau dấu `#`) để chỉ lấy cấp độ bài kinh (Sutta UID).
-  - Sử dụng thuật toán tổ hợp chập 2 (`itertools.combinations`) để tạo các cặp (A, B) và (B, A) cho các ID trong cùng một mảng.
+  - Sử dụng thuật toán tổ hợp chập 2 (`itertools.combinations`) để tạo các cặp liên kết, sau đó gom nhóm vào một cấu trúc `dict` với các key được sắp xếp: `parallels`, `resembles`, `mentions`, `retells`.
 
 ### Bước 3: Database Generation (Lưu vào SQLite)
 - **Công cụ:** `SqliteGenerator` (`src/sutta_processor/output/sqlite_generator.py`)
 - **Nhiệm vụ:**
   - Bổ sung định nghĩa bảng `parallels` vào `_init_core_db`.
-  - Bổ sung phương thức `insert_parallels(parallels_list)` để chạy `INSERT OR IGNORE` hàng loạt các cặp liên kết này vào `sutta_core.db`.
+  - Bổ sung phương thức `insert_parallels(parallels_dict)` để chạy `INSERT OR REPLACE` JSON string vào `sutta_core.db`.
   - Gọi phương thức này ở cuối tiến trình build trong `BuildManager`.
 
 ## 5. UI/UX (Hỗ trợ Frontend)
-* (Phase sau) Frontend truy vấn: `SELECT target_uid, relation_type FROM parallels WHERE src_uid = 'mn1'`.
-* Sau khi lấy danh sách `target_uid`, có thể JOIN với bảng `metadata` để lấy thêm tiêu đề (`translated_title`, `acronym`) hiển thị cho người dùng lựa chọn.
+* (Phase sau) Frontend truy vấn: `SELECT relations FROM parallels WHERE src_uid = 'mn1'`.
+* Sau khi parse JSON lấy được các `target_uid`, có thể lấy thêm tiêu đề từ bộ nhớ (bằng cách lấy qua class DBQuery) và tạo giao diện tab để render cho người dùng lựa chọn.

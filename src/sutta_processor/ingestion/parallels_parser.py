@@ -74,10 +74,15 @@ def parse_parallels(file_path: Path) -> Dict[str, Dict[str, List[str]]]:
                             sutta_map[base_s][relation_type].add(base_t)
                             sutta_map[base_t][relation_type].add(base_s)
 
-    # Chuyển đổi set thành list để có thể dump ra JSON
+    # Chuyển đổi set thành list để có thể dump ra JSON, đồng thời sắp xếp thứ tự các key
+    RELATION_ORDER = ["parallels", "resembles", "mentions", "retells"]
     final_dict = {}
     for uid, rels in sutta_map.items():
-        final_dict[uid] = {rel_type: sorted(list(targets)) for rel_type, targets in rels.items()}
+        sorted_rels = {}
+        for rel_type in RELATION_ORDER:
+            if rel_type in rels:
+                sorted_rels[rel_type] = sorted(list(rels[rel_type]))
+        final_dict[uid] = sorted_rels
 
     logger.info(f"   🔍 Parsed parallels for {len(final_dict)} unique suttas from {file_path.name}")
     return final_dict

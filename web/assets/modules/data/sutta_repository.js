@@ -251,6 +251,26 @@ export const SuttaRepository = {
         return results;
     },
 
+    /**
+     * Get parallel relationships for a given sutta UID.
+     * @param {string} uid Sutta UID
+     * @returns {Promise<Object|null>} Parallels JSON object or null if not found
+     */
+    async getParallels(uid) {
+        if (!uid) return null;
+        
+        try {
+            const results = await SuttaDB.query("SELECT relations FROM parallels WHERE src_uid = ?", [uid]);
+            if (results && results.length > 0) {
+                return JSON.parse(results[0].relations);
+            }
+            return null;
+        } catch (error) {
+            logger.error('getParallels', `Error fetching parallels for ${uid}`, error);
+            return null;
+        }
+    },
+
     async downloadAll(onProgress) {
         // 1. Nạp Core Database (Metadata, Structure)
         await SuttaDB.init((loaded, total) => {
