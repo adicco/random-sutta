@@ -265,7 +265,7 @@ body.view-mode-root-only .comment-marker {
   vertical-align: super;
   font-size: 0.8em;
   padding: 0;
-  margin-left: -0.1em; /* Pull closer to the preceding word */
+  margin-left: 0.1em; /* Controlled gap from the preceding word */
   cursor: pointer;
   user-select: none;
   -webkit-user-select: none;

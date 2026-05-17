@@ -217,7 +217,7 @@
   --text-muted: var(--primitive-ivory-500);
   --text-light: var(--primitive-ivory-400);
   --text-pali: var(--primitive-brown-300);
-  --text-lzh: var(--primitive-brown-warm-300); /* Lighter warm color for Dark Mode */
+  --text-lzh: var(--primitive-brown-warm-400); /* Darkened from warm-300 for better contrast in Dark Mode */
   --text-eng: var(--primitive-ivory-800);
   --text-link: var(--primitive-amber-800); /* Link dùng màu Amber 300 sáng */
 
