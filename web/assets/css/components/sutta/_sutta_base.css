@@ -183,13 +183,27 @@ article.single-language h1.sutta-title {
   margin-bottom: 0;
 }
 
-/* Force inline behavior for the visible language text */
+/* Force inline behavior for the visible language text in reading modes */
 body.view-mode-root-only .pli,
 body.view-mode-trans-only .eng,
 body.view-mode-trans-only .pli.promoted,
 article.single-language .pli.promoted {
   display: inline !important;
+}
+
+/* Apply reading font-size ONLY to body text (inside p), not headings */
+body.view-mode-root-only p .pli,
+body.view-mode-trans-only p .eng,
+body.view-mode-trans-only p .pli.promoted,
+article.single-language p .pli.promoted {
   font-size: 1.05rem; 
+}
+
+/* Ensure headings in single language modes stay centered and properly sized */
+h1.sutta-title, h2, h3, h4, h5, h6 {
+  display: block;
+  text-align: center;
+  width: 100%;
 }
 
 /* Root Only Mode Refinement: Formal Typography */
