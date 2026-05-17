@@ -24,7 +24,8 @@ body.view-mode-root-only .root.lang-lzh {
   color: var(--text-main) !important;
 }
 
-/* Override/Reset for LZH in special containers to avoid double font-sizing */
+/* [UPDATED] LZH in Headings (Bilingual Mode) */
+/* Higher specificity to override base/pali styles and ensure correct color/weight */
 h1 .root.lang-lzh,
 h2 .root.lang-lzh,
 h3 .root.lang-lzh,
@@ -34,11 +35,28 @@ h6 .root.lang-lzh,
 .mirror-row .root.lang-lzh,
 .sutta-title .root.lang-lzh,
 .division .root.lang-lzh,
-.xu .root.lang-lzh,
 .suttainfo .root.lang-lzh {
-  font-size: 1em;
+  display: block; /* Stacked layout in titles */
+  color: var(--text-lzh);
+  font-weight: 400; /* Normal weight to reduce "brightness" and match Pali style */
+  font-size: 0.95em; /* Slightly larger than Pali (0.85em) for better CJK visibility */
+  line-height: 1.4;
+  margin-bottom: 0.3rem;
+  font-style: normal;
+}
+
+/* Reset for PROMOTED (Single Language) mode in headings */
+h1 .root.lang-lzh.promoted,
+h2 .root.lang-lzh.promoted,
+h3 .root.lang-lzh.promoted,
+h4 .root.lang-lzh.promoted,
+h5 .root.lang-lzh.promoted,
+h6 .root.lang-lzh.promoted,
+.sutta-title .root.lang-lzh.promoted {
+  display: inline;
+  color: inherit;
   font-weight: inherit;
-  line-height: inherit;
+  font-size: 1em;
 }
 
 /* --- 2. LZH SPECIFIC COMPONENTS --- */
