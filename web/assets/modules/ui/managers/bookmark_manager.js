@@ -10,11 +10,6 @@ export const BookmarkManager = {
         logger.info("Init", "Initializing BookmarkManager...");
 
         this.btnSave = document.getElementById("btn-save-bookmark");
-        if (!this.btnSave) {
-            logger.error("Init", "btn-save-bookmark NOT FOUND during init!");
-        } else {
-            logger.info("Init", "btn-save-bookmark found, binding onclick");
-        }
 
         // Listen for external sync updates
         window.addEventListener("sync-data-applied", () => {
@@ -81,7 +76,6 @@ export const BookmarkManager = {
     },
 
     toggleCurrentSutta() {
-        logger.info("Toggle", "toggleCurrentSutta triggered");
         const params = new URLSearchParams(window.location.search);
         let currentId = params.get("q");
         if (!currentId) {
@@ -102,31 +96,39 @@ export const BookmarkManager = {
         const original = originalEl ? originalEl.textContent.trim() : "";
 
         const bookmarks = this.getBookmarks();
-        const index = bookmarks.findIndex(b => b.id === currentId);
+        // Check for an ACTIVE bookmark
+        const activeIndex = bookmarks.findIndex(b => b.id === currentId && !b.deleted);
 
-        if (index > -1) {
-            bookmarks[index].deleted = true;
-            bookmarks[index].timestamp = Date.now();
+        if (activeIndex > -1) {
+            // REMOVE: Soft-delete it
+            bookmarks[activeIndex].deleted = true;
+            bookmarks[activeIndex].timestamp = Date.now();
             logger.info("Toggle", `Removed (soft-delete): ${currentId}`);
             if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, false);
         } else {
-            const existingDeleted = bookmarks.find(b => b.id === currentId && b.deleted);
-            if (existingDeleted) {
-                existingDeleted.deleted = false;
-                existingDeleted.acronym = acronym;
-                existingDeleted.title = title;
-                existingDeleted.original = original;
-                existingDeleted.timestamp = Date.now();
+            // ADD: Check if it exists as deleted, or create new
+            const existingIndex = bookmarks.findIndex(b => b.id === currentId);
+            
+            if (existingIndex > -1) {
+                // Reactivate
+                bookmarks[existingIndex].deleted = false;
+                bookmarks[existingIndex].acronym = acronym;
+                bookmarks[existingIndex].title = title;
+                bookmarks[existingIndex].original = original;
+                bookmarks[existingIndex].timestamp = Date.now();
+                logger.info("Toggle", `Re-activated: ${currentId} (${acronym})`);
             } else {
+                // Create new
                 bookmarks.push({ 
                     id: currentId, 
                     acronym: acronym, 
                     title: title,
                     original: original,
-                    timestamp: Date.now() 
+                    timestamp: Date.now(),
+                    deleted: false
                 });
+                logger.info("Toggle", `Added: ${currentId} (${acronym})`);
             }
-            logger.info("Toggle", `Added: ${currentId} (${acronym})`);
             if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, true);
         }
 
