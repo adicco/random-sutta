@@ -21,37 +21,37 @@
   font-display: swap;
 }
 
-/* Noto Serif Regular */
+/* Literata Regular */
 @font-face {
-  font-family: "Noto Serif";
-  src: url("../../fonts/NotoSerif-Regular.woff2") format("woff2");
+  font-family: "Literata";
+  src: url("../../fonts/Literata-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
-/* Noto Serif Italic */
+/* Literata Italic */
 @font-face {
-  font-family: "Noto Serif";
-  src: url("../../fonts/NotoSerif-Italic.woff2") format("woff2");
+  font-family: "Literata";
+  src: url("../../fonts/Literata-Italic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
 }
 
-/* Noto Serif Bold */
+/* Literata Bold */
 @font-face {
-  font-family: "Noto Serif";
-  src: url("../../fonts/NotoSerif-Bold.woff2") format("woff2");
+  font-family: "Literata";
+  src: url("../../fonts/Literata-Bold.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 
-/* Noto Serif Bold Italic */
+/* Literata Bold Italic */
 @font-face {
-  font-family: "Noto Serif";
-  src: url("../../fonts/NotoSerif-BoldItalic.woff2") format("woff2");
+  font-family: "Literata";
+  src: url("../../fonts/Literata-BoldItalic.woff2") format("woff2");
   font-weight: 700;
   font-style: italic;
   font-display: swap;
@@ -182,7 +182,7 @@
   /* Fonts & Spacing */
   --font-main: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto",
     "Helvetica Neue", sans-serif;
-  --font-sutta: "Noto Serif", "Georgia", "Times New Roman", serif;
+  --font-sutta: "Literata", "Noto Serif", "Georgia", "Times New Roman", serif;
 
   --container-width: 800px;
   --radius-md: 8px;
