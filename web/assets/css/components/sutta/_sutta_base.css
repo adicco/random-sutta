@@ -191,7 +191,7 @@ article.single-language p .root.promoted,
 body.view-mode-root-only blockquote .root,
 body.view-mode-trans-only blockquote .trans {
   display: inline !important;
-  font-size: 1rem !important; /* Unified size for reading text */
+  font-size: 1rem; /* Removed !important to allow language-specific scaling */
   line-height: 1.55 !important; /* Unified compact line-height */
 }
 
