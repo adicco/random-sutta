@@ -11,12 +11,14 @@ To overcome file size limits (GitHub Pages) and mobile memory constraints (iOS J
 *   **Purpose:** Global metadata, structural hierarchy, and application configuration.
 *   **Tables:**
     *   `config (key PK, value TEXT)`: App-wide constants (e.g., `author_priority`).
-    *   `metadata (uid PK, ...)`: Contains 16 fields including `acronym`, `translated_title`, `original_title`, `blurb`, `parent_uid`, `children` (JSON), and `nav_prev`/`nav_next`.
+    *   `metadata (uid PK, ...)`: Contains 17 fields including `root_lang` (e.g., 'pi', 'lzh'), `acronym`, `translated_title`, `original_title`, `blurb`, `parent_uid`, `children` (JSON), and `nav_prev`/`nav_next`.
     *   `structure (book_id PK, tree_json TEXT)`: Pre-computed navigation trees for every book.
     *   `random_pools (book_id, sutta_uid, PK(book_id, sutta_uid))`: Mapping for the random sutta generator.
 
 ### 2. `sutta_content_{category}.db` (Vertical Content Shards)
-*   **Categories:** `major` (DN, MN, SN, AN), `minor` (KN), `vinaya`, `abhidhamma`.
+*   **Categories:** 
+    *   **Pali:** `major` (DN, MN, SN, AN), `minor` (KN), `vinaya`, `abhidhamma`.
+    *   **Chinese (Lzh):** `lzh_major` (Agamas), `lzh_vinaya_dg`, `lzh_vinaya_mg`, `lzh_vinaya_sarv`, `lzh_vinaya_other`, `lzh_abhidhamma`, `lzh_minor`.
 *   **Purpose:** Normalized storage of all segmented text.
 *   **Table:** `content_segments`
     *   `sutta_uid`, `segment_id`, `segment_order`, `type` (pli/eng/html), `lang`, `author_uid`, `content`.
