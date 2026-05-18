@@ -100,7 +100,7 @@ export const MagicNav = {
         
         // Auto-scroll to active item
         if (tabId === "tab-magic-nav") {
-            if (this._navMode === 'toc') this._scrollToActive();
+            if (this._navMode === 'toc') UIManager._scrollToActive();
             else {
                 setTimeout(() => {
                     const active = els.headingsList.querySelector(".active");
@@ -123,7 +123,7 @@ export const MagicNav = {
             els.tabNav.textContent = "Contents";
             iconToc.style.display = "block";
             iconHeadings.style.display = "none";
-            this._scrollToActive();
+            UIManager._scrollToActive();
         } else {
             els.tabNav.textContent = "Headings";
             iconToc.style.display = "none";

@@ -11,7 +11,11 @@
 
 #tab-magic-nav {
   min-width: 90px; /* Fixed width to prevent shifting when label changes */
+  width: 90px;
+  flex-shrink: 0;
   text-align: center;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .magic-tab-content {
