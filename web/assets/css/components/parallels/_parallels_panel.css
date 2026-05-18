@@ -114,16 +114,13 @@
   margin-top: 15px;
   font-weight: 700;
   cursor: pointer;
-  padding: 4px 8px;
-  background: var(--bg-hover);
-  border-radius: 4px;
+  padding: 4px 0;
   display: inline-block;
 }
 
 .parallels-segment-group {
   margin-top: 15px;
-  padding-left: 10px;
-  border-left: 2px solid var(--primary-color);
+  padding-left: 0;
   opacity: 0.9;
 }
 
