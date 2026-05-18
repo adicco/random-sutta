@@ -50,7 +50,7 @@ h6 .root.promoted,
 
 .gatha {
   margin: var(--para-spacing) 0; 
-  padding-left: 10%; 
+  padding-left: 3rem; 
   font-family: var(--font-sutta);
   line-height: 1.5;
   color: var(--text-main);
@@ -84,7 +84,6 @@ h6 .root.promoted,
 .gatha .segment .root {
     display: block; 
     margin-bottom: 0 !important;
-    white-space: nowrap;
     text-align: left;
 }
 
