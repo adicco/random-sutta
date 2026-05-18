@@ -137,8 +137,8 @@ body.view-mode-root-only .comment-marker {
     margin-left: calc(-1 * var(--highlight-side-offset));
     padding-left: calc(var(--highlight-side-offset) - var(--highlight-border-width));
     border-radius: 0;
-    margin-bottom: 0; 
-    padding-bottom: var(--para-spacing); 
+    margin-bottom: 0 !important; 
+    padding-bottom: var(--para-spacing) !important; 
 }
 
 .parent-highlight-bridge .segment.highlight {
