@@ -81,6 +81,7 @@
 #magic-breadcrumb-bar {
   display: flex;
   align-items: center;
+  justify-content: flex-end; /* Căn lề phải để thu/che từ bên trái */
   
   overflow-x: auto;
   white-space: nowrap;
@@ -100,8 +101,9 @@
   flex-grow: 1;
   max-width: 100%;
   
-  mask-image: linear-gradient(to right, transparent, black 15px, black 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 15px, black 100%);
+  /* Fade ở bên trái */
+  mask-image: linear-gradient(to right, transparent, black 20px, black 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black 100%);
 }
 
 .magic-nav-divider {
