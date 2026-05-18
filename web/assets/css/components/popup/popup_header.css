@@ -210,13 +210,19 @@
   padding: 4px 8px;
   margin-left: -8px; /* Offset padding */
   border-radius: 6px;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   flex: 1; /* Allow title to take up available space but not overlap close btn */
   display: flex;
   align-items: center;
   overflow: hidden;
 }
 
-.quicklook-footer .ql-title:hover {
-  background-color: var(--bg-hover);
+.quicklook-footer .ql-title .ql-uid-badge,
+.quicklook-footer .ql-title .ql-sutta-title {
+  transition: color 0.2s;
+}
+
+.quicklook-footer .ql-title:hover .ql-uid-badge,
+.quicklook-footer .ql-title:hover .ql-sutta-title {
+  color: var(--primary-hover);
 }
