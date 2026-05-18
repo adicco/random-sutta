@@ -2,6 +2,8 @@
 import { SuttaRepository } from 'data/sutta_repository.js';
 import { getLogger } from 'utils/logger.js';
 import { Scroller } from 'ui/common/scroller.js';
+import { Router } from 'core/router.js';
+import { FilterComponent } from 'ui/components/filters/index.js';
 
 const logger = getLogger("ParallelsData");
 
@@ -95,14 +97,16 @@ export const ParallelsData = {
             
             segmentKeys.forEach(segKey => {
                 const segLabel = segKey.split('#')[1] || segKey;
-                const elementPrefix = segKey.replace('#', ':'); // Match HTML segment ID format (e.g. dn1:1.6.3)
-                
+
+                // [FIX] Priority: Use segment label directly if it exists as an ID in DOM (e.g. vns256)
+                // Fallback to prefixed format (e.g. thag3.13:1.1)
+                const elementPrefix = document.getElementById(segLabel) ? segLabel : segKey.replace('#', ':');
+
                 html += `
                     <li class="parallels-item parallels-segment-group">
                         <div class="parallels-segment-header" data-prefix="${elementPrefix}" title="Jump to segment">Seg ${segLabel}</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
-                `;
-                
+                `;                
                 RELATION_ORDER.forEach(relType => {
                     if (parallelsData[segKey][relType] && parallelsData[segKey][relType].length > 0) {
                          html += `<div class="parallels-type-label">${relType}</div>`;
@@ -152,15 +156,29 @@ export const ParallelsData = {
                     const firstEl = targetArray[0];
                     Scroller.jumpTo(firstEl.id);
                     
+                    // Update URL hash to match jump target
+                    try {
+                        const bookParam = FilterComponent.generateBookParam();
+                        Router.updateURL(suttaId, bookParam, false, firstEl.id);
+                    } catch (err) {
+                        logger.warn("Failed to update URL on jump", err);
+                    }
+                    
                     targetArray.forEach(el => {
-                        const highlightClass = el.classList.contains('segment') ? 'highlight' : 'highlight-container';
-                        el.classList.add(highlightClass);
+                        // [FIX] If targeting a reference anchor, highlight the parent segment instead
+                        let highlightEl = el;
+                        if (el.classList.contains('anchor-ref')) {
+                            highlightEl = el.closest('.segment') || el;
+                        }
+
+                        const highlightClass = highlightEl.classList.contains('segment') ? 'highlight' : 'highlight-container';
+                        highlightEl.classList.add(highlightClass);
                         
                         const timerId = setTimeout(() => {
-                            el.classList.remove(highlightClass);
-                            delete el.dataset.highlightTimer;
+                            highlightEl.classList.remove(highlightClass);
+                            delete highlightEl.dataset.highlightTimer;
                         }, 3500);
-                        el.dataset.highlightTimer = timerId;
+                        highlightEl.dataset.highlightTimer = timerId;
                     });
                 } else {
                     logger.warn(`Could not find segments for: ${prefix}`);
