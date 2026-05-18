@@ -28,8 +28,8 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  opacity: 0.3;
+  transition: all 0.25s ease;
+  opacity: 0.2;
   color: var(--text-light);
 }
 
@@ -38,7 +38,6 @@
   opacity: 1;
   color: var(--primary-color);
   background-color: var(--bg-hover);
-  transform: scale(1.1);
 }
 
 /* --- 2. MENU DRAWER --- */
