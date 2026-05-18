@@ -11,7 +11,7 @@ import { HeadingsRenderer } from './headings_renderer.js';
 export const MagicNav = {
     _currentTocLevel: 1, // Default expansion level
     _headingsObserver: null,
-    _topicsMode: 'toc', // 'toc' or 'headings'
+    _navMode: 'toc', // 'toc' or 'headings'
 
     init() {
         const els = UIManager.init();
@@ -25,7 +25,7 @@ export const MagicNav = {
 
         // Tab Switching Logic
         const tabs = [
-            { btn: els.tabTopics, content: null }, // Topics is special
+            { btn: els.tabNav, content: null }, // Nav is special (toggles TOC/Headings)
             { btn: els.tabBookmarks, content: els.bookmarksContent },
             { btn: els.tabRead, content: els.readContent }
         ];
@@ -39,11 +39,11 @@ export const MagicNav = {
             }
         });
 
-        // Toggle Topics Mode Logic
+        // Toggle Nav Mode Logic
         if (els.btnToggleTopics) {
             els.btnToggleTopics.addEventListener("click", (e) => {
                 e.stopPropagation();
-                this.toggleTopicsMode();
+                this.toggleNavMode();
             });
         }
 
@@ -77,7 +77,7 @@ export const MagicNav = {
     switchTab(tabId) {
         const els = UIManager.elements;
         const tabs = [
-            { id: "tab-magic-topics", btn: els.tabTopics },
+            { id: "tab-magic-nav", btn: els.tabNav },
             { id: "tab-magic-bookmarks", btn: els.tabBookmarks, content: els.bookmarksContent },
             { id: "tab-magic-read", btn: els.tabRead, content: els.readContent }
         ];
@@ -85,8 +85,8 @@ export const MagicNav = {
         tabs.forEach(tab => {
             if (tab.id === tabId) {
                 tab.btn?.classList.add("active");
-                if (tab.id === "tab-magic-topics") {
-                    this._updateTopicsVisibility();
+                if (tab.id === "tab-magic-nav") {
+                    this._updateNavVisibility();
                     els.btnToggleTopics.style.display = "flex";
                 } else {
                     tab.content?.classList.remove("hidden");
@@ -99,8 +99,8 @@ export const MagicNav = {
         });
         
         // Auto-scroll to active item
-        if (tabId === "tab-magic-topics") {
-            if (this._topicsMode === 'toc') this._scrollToActive();
+        if (tabId === "tab-magic-nav") {
+            if (this._navMode === 'toc') this._scrollToActive();
             else {
                 setTimeout(() => {
                     const active = els.headingsList.querySelector(".active");
@@ -110,20 +110,22 @@ export const MagicNav = {
         }
     },
 
-    toggleTopicsMode() {
-        this._topicsMode = this._topicsMode === 'toc' ? 'headings' : 'toc';
-        this._updateTopicsVisibility();
+    toggleNavMode() {
+        this._navMode = this._navMode === 'toc' ? 'headings' : 'toc';
+        this._updateNavVisibility();
         
-        // Refresh icons
+        // Refresh icons and labels
         const els = UIManager.elements;
         const iconToc = els.btnToggleTopics.querySelector(".icon-toc");
         const iconHeadings = els.btnToggleTopics.querySelector(".icon-headings");
         
-        if (this._topicsMode === 'toc') {
+        if (this._navMode === 'toc') {
+            els.tabNav.textContent = "Contents";
             iconToc.style.display = "block";
             iconHeadings.style.display = "none";
             this._scrollToActive();
         } else {
+            els.tabNav.textContent = "Headings";
             iconToc.style.display = "none";
             iconHeadings.style.display = "block";
             setTimeout(() => {
@@ -133,9 +135,9 @@ export const MagicNav = {
         }
     },
 
-    _updateTopicsVisibility() {
+    _updateNavVisibility() {
         const els = UIManager.elements;
-        if (this._topicsMode === 'toc') {
+        if (this._navMode === 'toc') {
             els.tocContent.classList.remove("hidden");
             els.headingsContent.classList.add("hidden");
         } else {
@@ -319,7 +321,7 @@ export const MagicNav = {
         this.updateHeadings();
 
         // Ensure correct sub-mode visibility
-        this._updateTopicsVisibility();
+        this._updateNavVisibility();
     }
 };
 

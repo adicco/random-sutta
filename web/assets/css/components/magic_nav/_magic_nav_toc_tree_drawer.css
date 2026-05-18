@@ -6,6 +6,12 @@
   padding: 8px 10px 0;
   border-bottom: 1px solid var(--border-light);
   flex-shrink: 0;
+  display: flex;
+}
+
+#tab-magic-nav {
+  min-width: 90px; /* Fixed width to prevent shifting when label changes */
+  text-align: center;
 }
 
 .magic-tab-content {

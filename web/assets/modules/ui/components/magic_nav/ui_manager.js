@@ -7,7 +7,7 @@ export const UIManager = {
             wrapper: document.getElementById("magic-nav-wrapper"),
             corner: document.getElementById("magic-nav-corner"),
             btnToc: document.getElementById("btn-magic-toc"),
-            tabTopics: document.getElementById("tab-magic-topics"),
+            tabNav: document.getElementById("tab-magic-nav"),
             btnToggleTopics: document.getElementById("btn-magic-toggle-topics"),
             tabBookmarks: document.getElementById("tab-magic-bookmarks"),
             tabRead: document.getElementById("tab-magic-read"),
