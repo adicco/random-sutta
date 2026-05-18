@@ -118,7 +118,7 @@ export const ParallelsData = {
                 html += `
                     <li class="parallels-item parallels-segment-group">
                         <div class="parallels-segment-header" data-start="${normStart}" data-end="${normEnd || ''}" title="Jump to segment">Seg ${segLabel}</div>
-                        <ul style="list-style: none; padding: 0; margin: 0;">
+                        <ul class="parallels-segment-list">
                 `;                
                 RELATION_ORDER.forEach(relType => {
                     if (parallelsData[segKey][relType] && parallelsData[segKey][relType].length > 0) {

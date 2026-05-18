@@ -124,6 +124,15 @@
   opacity: 0.9;
 }
 
+.parallels-segment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  padding-left: 12px;
+  margin-left: 4px;
+  border-left: 2px solid var(--border-light);
+}
+
 .parallels-type-label {
   font-size: 0.7em;
   color: var(--text-light);
