@@ -100,11 +100,13 @@ class BuildManager:
         if book_obj and "id" in book_obj:
             bid = book_obj["id"]
             self.processed_book_ids.append(bid)
-            # Register structure: "an" -> ["an1", "an2"...]
-            root_id = group.split("/")[-1]
-            if bid != root_id:
-                if root_id not in self.group_structure: self.group_structure[root_id] = []
-                self.group_structure[root_id].append(bid)
+            # Register structure: "sutta" -> ["dn", "mn"...]
+            parts = group.split("/")
+            if len(parts) > 1:
+                category = parts[0]
+                if bid not in self.group_structure.get(category, []):
+                    if category not in self.group_structure: self.group_structure[category] = []
+                    self.group_structure[category].append(bid)
 
         # [REMOVED] write_book_file (Legacy JSON)
         # write_book_file(group, book_obj, dry_run=True) 
@@ -119,11 +121,11 @@ class BuildManager:
             self.sqlite_gen.insert_metadata_batch(self.names_map)
 
         # 1. Generate Tasks
-        book_tasks, all_discovered_ids = generate_book_tasks(self.names_map)
+        book_tasks, all_discovered_map = generate_book_tasks(self.names_map)
         all_tasks = []
         
         # Identify Active Books for Pre-calculation
-        active_book_ids = []
+        active_book_ids = list(all_discovered_map.keys())
 
         for group, tasks in book_tasks.items():
             self.book_totals[group] = len(tasks)
@@ -131,8 +133,8 @@ class BuildManager:
             self.buffers[group] = {}
             
             # Extract ID: "sutta/dn" -> "dn"
-            book_id = group.split("/")[-1]
-            active_book_ids.append(book_id)
+            # book_id = group.split("/")[-1]
+            # active_book_ids.append(book_id)
 
             for task in tasks:
                 all_tasks.append(task)
@@ -140,7 +142,7 @@ class BuildManager:
 
         # [UPDATED] 1.5 Pre-calculate Super Navigation
         # Use ALL discovered IDs to ensure a complete hierarchy
-        self.super_nav_map = precalculate_super_navigation(all_discovered_ids)
+        self.super_nav_map = precalculate_super_navigation(active_book_ids)
 
         # 2. Build Validation Universe
         valid_uids_universe = UniverseBuilder.build(self.names_map, book_tasks)
@@ -177,6 +179,13 @@ class BuildManager:
                 if (i + 1) % 1000 == 0:
                     logger.info(f"   Processed {i + 1}/{len(all_tasks)} items...")
 
+        # [NEW] Handle empty books (those with structure but no content)
+        # Ensure they are included in structure table and super tree
+        for bid, group in all_discovered_map.items():
+            if bid not in self.processed_book_ids:
+                logger.info(f"   🌑 Finalizing empty book: {bid} ({group})")
+                self._finalize_book(group)
+
         # 4. Generate Reports
         missing_msg = self.reporter.write_missing_report(all_missing_links)
         generated_msg = self.reporter.write_generated_report(self.all_generated_items)
@@ -205,9 +214,8 @@ class BuildManager:
             self.sqlite_gen.insert_config("sub_books_map", self.group_structure)
 
             # Insert Parallels
-            parallels_file = PROJECT_ROOT / "data" / "json" / "sc-data" / "parallels.json"
-            if parallels_file.exists():
-                parallels_data = parse_parallels(parallels_file)
+            if RAW_PARALLELS_FILE.exists():
+                parallels_data = parse_parallels(RAW_PARALLELS_FILE)
                 self.sqlite_gen.insert_parallels(parallels_data)
 
             self.sqlite_gen.finalize()
