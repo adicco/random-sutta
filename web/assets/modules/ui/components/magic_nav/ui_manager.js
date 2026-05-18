@@ -304,6 +304,9 @@ export const UIManager = {
         bar?.classList.add("expanded");
         backdrop?.classList.remove("hidden");
         this._scrollBreadcrumbToEnd();
+        
+        // [NEW] Automatically open TOC when opening wrapper
+        this.toggleTOC();
     },
 
     closeAll() {
