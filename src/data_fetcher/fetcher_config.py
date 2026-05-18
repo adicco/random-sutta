@@ -13,12 +13,14 @@ class FetcherConfig:
     PROJECT_ROOT: Path = Path(__file__).parents[2]
     DATA_DIR: Path = PROJECT_ROOT / "data"
     CACHE_DIR: Path = Path(".cache/sc_bilara_data")
+    SC_DATA_REPO_DIR: Path = DATA_DIR / "sc-data"
 
 class BilaraConfig:
-    DATA_ROOT: Path = FetcherConfig.DATA_DIR / "bilara"
+    DATA_ROOT: Path = FetcherConfig.SC_DATA_REPO_DIR / "sc_bilara_data"
     ROOT_TEXT_DIR: Path = DATA_ROOT / "root" / "pli" / "ms"
     REPO_URL: str = "https://github.com/suttacentral/sc-data.git"
     BRANCH_NAME: str = "main"
+    # [DEPRECATED] Mapping is no longer used for sparse-checkout
     FETCH_MAPPING: Dict[str, str] = {
         "sc_bilara_data/root/pli/ms": "root/pli/ms",
         "sc_bilara_data/root/lzh": "root/lzh",

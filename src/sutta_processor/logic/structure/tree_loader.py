@@ -3,18 +3,18 @@ import json
 import logging
 from typing import Dict, Any, List
 
-from ...shared.app_config import RAW_BILARA_DIR
+from ...shared.app_config import RAW_BILARA_DIR, RAW_STRUCTURE_DIR
 
 logger = logging.getLogger("SuttaProcessor.Logic.Structure.Loader")
 
 def load_original_tree(group_name: str) -> Dict[str, Any]:
     """Tải file tree gốc từ thư mục raw."""
     book_id = group_name.split("/")[-1]
-    tree_path = RAW_BILARA_DIR / "tree" / group_name / f"{book_id}-tree.json"
+    tree_path = RAW_STRUCTURE_DIR / "tree" / group_name / f"{book_id}-tree.json"
     
     if not tree_path.exists():
         # Fallback search
-        found = list((RAW_BILARA_DIR / "tree").rglob(f"{book_id}-tree.json"))
+        found = list((RAW_STRUCTURE_DIR / "tree").rglob(f"{book_id}-tree.json"))
         if found:
             tree_path = found[0]
         else:

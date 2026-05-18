@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple, Any, Optional
 # [UPDATED]
 from ..shared.app_config import (
     RAW_BILARA_DIR, 
+    RAW_STRUCTURE_DIR,
     RAW_ROOT_DIRS, 
     RAW_HTML_DIRS, 
     RAW_TRANS_DIRS, 
@@ -95,8 +96,8 @@ def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], 
 
 def _identify_book_group_from_tree(tree_file: Path) -> str:
     try:
-        # [UPDATED]
-        base_tree = RAW_BILARA_DIR / "tree"
+        # [UPDATED] Use RAW_STRUCTURE_DIR
+        base_tree = RAW_STRUCTURE_DIR / "tree"
         rel_path = tree_file.relative_to(base_tree)
         parent = rel_path.parent
         book_id = tree_file.name.replace("-tree.json", "")
@@ -120,8 +121,8 @@ def _get_priority_score(group_name: str) -> int:
     return 3
 
 def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]]]:
-    # [UPDATED]
-    tree_dir = RAW_BILARA_DIR / "tree"
+    # [UPDATED] Scan structure/tree
+    tree_dir = RAW_STRUCTURE_DIR / "tree"
     if not tree_dir.exists():
         logger.warning(f"Tree directory missing: {tree_dir}")
         return {}

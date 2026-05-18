@@ -4,13 +4,13 @@ import logging
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
-from ..shared.app_config import RAW_API_JSON_DIR, CONFIG_AUTHOR_PRIORITY, RAW_BILARA_DIR
+from ..shared.app_config import RAW_API_JSON_DIR, CONFIG_AUTHOR_PRIORITY, RAW_BILARA_DIR, RAW_STRUCTURE_DIR
 from ..shared.domain_types import SuttaMeta
 
 logger = logging.getLogger("SuttaProcessor.Ingestion.Meta")
 
 def _load_child_range() -> Dict[str, str]:
-    child_range_file = RAW_BILARA_DIR / "child_range.json"
+    child_range_file = RAW_STRUCTURE_DIR / "child_range.json"
     if child_range_file.exists():
         try:
             with open(child_range_file, "r", encoding="utf-8") as f:

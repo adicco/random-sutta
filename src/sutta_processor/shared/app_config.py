@@ -7,11 +7,13 @@ _DATA_BASE = PROJECT_ROOT / "data"
 _WEB_BASE = PROJECT_ROOT / "web"
 _ASSETS_BASE = _WEB_BASE / "assets"
 
-# --- 1. RAW INPUTS (Source of Truth) ---
-RAW_BILARA_DIR = _DATA_BASE / "bilara"
+# --- 1. RAW INPUTS (Source of Truth - Points to full sc-data repo) ---
+_SC_DATA_REPO = _DATA_BASE / "sc-data"
+RAW_BILARA_DIR = _SC_DATA_REPO / "sc_bilara_data"
+RAW_STRUCTURE_DIR = _SC_DATA_REPO / "structure"
 BILARA_MORE_DIR = _DATA_BASE / "bilara_more"
 
-# [UPDATED] Hỗ trợ quét đa nguồn
+# [UPDATED] Hỗ trợ quét từ repo sc-data trọn vẹn
 RAW_ROOT_DIRS = [
     RAW_BILARA_DIR / "root/pli/ms",
     BILARA_MORE_DIR / "root/lzh",
@@ -37,7 +39,7 @@ RAW_REFERENCE_DIRS = [
 
 RAW_API_JSON_DIR = _DATA_BASE / "json"
 RAW_SUPER_META_DIR = RAW_API_JSON_DIR / "super"
-RAW_SUPER_TREE_FILE = RAW_BILARA_DIR / "tree" / "super-tree.json"
+RAW_SUPER_TREE_FILE = RAW_STRUCTURE_DIR / "tree" / "super-tree.json"
 
 # [NEW] Fix Data
 FIX_DATA_DIR = _DATA_BASE / "fix"
