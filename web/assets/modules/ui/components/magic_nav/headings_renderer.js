@@ -9,29 +9,29 @@ export const HeadingsRenderer = {
             if (!item.id) return; 
 
             const li = document.createElement("li");
-            li.className = `toh-item ${item.levelClass}`;
+            li.className = `headings-item ${item.levelClass}`;
             li.dataset.targetId = item.id; 
             
             const wrapper = document.createElement("div"); 
-            wrapper.className = "toh-item-wrapper collapsed"; 
+            wrapper.className = "headings-item-wrapper collapsed"; 
             
             // --- 1. Header Row ---
             const headerRow = document.createElement("div");
-            headerRow.className = "toh-header-row";
+            headerRow.className = "headings-header-row";
             
             const mainTextDiv = document.createElement("div");
-            mainTextDiv.className = "toh-main-text clickable";
+            mainTextDiv.className = "headings-main-text clickable";
             
             // Render Title & Description
             let titleHtml = "";
             if (item.prefix) {
-                titleHtml = `<span class="toh-prefix">${item.prefix}.</span> ${item.text}`;
+                titleHtml = `<span class="headings-prefix">${item.prefix}.</span> ${item.text}`;
             } else {
                 titleHtml = item.text;
             }
 
             if (item.description) {
-                titleHtml += `<div class="toh-row-sub" style="font-weight: normal; margin-top: 2px;">${item.description}</div>`;
+                titleHtml += `<div class="headings-row-sub" style="font-weight: normal; margin-top: 2px;">${item.description}</div>`;
             }
 
             mainTextDiv.innerHTML = titleHtml;
@@ -50,7 +50,7 @@ export const HeadingsRenderer = {
             const hasChildren = item.subTexts && Array.isArray(item.subTexts) && item.subTexts.length > 0;
             if (hasChildren) {
                 const toggleBtn = document.createElement("span");
-                toggleBtn.className = "toh-toggle-icon";
+                toggleBtn.className = "headings-toggle-icon";
                 toggleBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
                 toggleBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -64,14 +64,14 @@ export const HeadingsRenderer = {
             // --- 2. Children Container ---
             if (hasChildren) {
                 const childrenContainer = document.createElement("div");
-                childrenContainer.className = "toh-children";
+                childrenContainer.className = "headings-children";
                 
                 item.subTexts.forEach(sub => {
                     const subDiv = document.createElement("div");
-                    subDiv.className = "toh-sub-text clickable";
+                    subDiv.className = "headings-sub-text clickable";
                     
                     if (sub.prefix) {
-                        subDiv.innerHTML = `<span class="toh-prefix">${sub.prefix}</span> ${sub.text}`;
+                        subDiv.innerHTML = `<span class="headings-prefix">${sub.prefix}</span> ${sub.text}`;
                     } else {
                         subDiv.textContent = sub.text;
                     }
@@ -95,7 +95,7 @@ export const HeadingsRenderer = {
             } 
             else if (item.subText) {
                 const subDiv = document.createElement("div");
-                subDiv.className = "toh-sub-text";
+                subDiv.className = "headings-sub-text";
                 subDiv.textContent = item.subText;
                 wrapper.appendChild(subDiv);
             }
@@ -114,16 +114,16 @@ export const HeadingsRenderer = {
 
         if (!targetId) return;
 
-        let targetEl = list.querySelector(`.toh-sub-text[data-target-id="${targetId}"]`);
+        let targetEl = list.querySelector(`.headings-sub-text[data-target-id="${targetId}"]`);
         if (!targetEl) {
             const li = list.querySelector(`li[data-target-id="${targetId}"]`);
-            if (li) targetEl = li.querySelector(".toh-header-row");
+            if (li) targetEl = li.querySelector(".headings-header-row");
         }
 
         if (targetEl) {
             targetEl.classList.add("active");
-            if (targetEl.classList.contains("toh-sub-text")) {
-                const wrapper = targetEl.closest(".toh-item-wrapper");
+            if (targetEl.classList.contains("headings-sub-text")) {
+                const wrapper = targetEl.closest(".headings-item-wrapper");
                 if (wrapper) wrapper.classList.remove("collapsed");
             }
             targetEl.scrollIntoView({ block: "center", behavior: "instant" });

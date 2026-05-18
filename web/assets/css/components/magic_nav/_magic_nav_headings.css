@@ -1,0 +1,185 @@
+/* Path: web/assets/css/components/magic_nav/_magic_nav_headings.css */
+
+/* --- 1. LIST & ITEM LAYOUT --- */
+#magic-headings-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.headings-item {
+  margin-bottom: 2px;
+}
+
+.headings-item-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Adjust padding for drawer context */
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* --- 2. HEADER ROW (MAIN HEADING) --- */
+.headings-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-right: 15px;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+  position: relative;
+  min-height: 28px;
+}
+
+.headings-header-row:hover {
+  background-color: var(--bg-hover);
+}
+
+.headings-header-row.active {
+  background-color: var(--highlight-color-background);
+}
+
+.headings-header-row.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--primary-color);
+  z-index: 1;
+}
+
+.headings-main-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  line-height: 1.4;
+  flex: 1;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.headings-header-row.active .headings-main-text {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.headings-prefix {
+  font-weight: 700;
+  color: var(--text-light);
+  margin-right: 6px;
+  font-size: 0.85em;
+}
+
+.headings-row-sub {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* --- 3. SUB-TEXT ITEMS --- */
+.headings-sub-text {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-right: 15px;
+  cursor: default;
+  position: relative;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.headings-sub-text.clickable {
+  cursor: pointer;
+}
+.headings-sub-text.clickable:hover {
+  color: var(--primary-color);
+  background-color: var(--bg-hover);
+}
+.headings-sub-text.active {
+  color: var(--primary-color);
+  background-color: var(--highlight-color-background);
+  font-weight: 500;
+}
+.headings-sub-text.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: var(--primary-color);
+  z-index: 1;
+}
+
+.headings-sub-text.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* --- 4. ICONS & COLLAPSE --- */
+.headings-toggle-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  transition: transform 0.2s ease, color 0.2s;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.headings-toggle-icon:hover {
+  color: var(--primary-color);
+  background-color: var(--bg-hover);
+}
+
+.headings-item-wrapper.collapsed .headings-toggle-icon svg {
+  transform: rotate(-90deg);
+}
+
+.headings-children {
+  display: block;
+}
+.headings-item-wrapper.collapsed .headings-children {
+  display: none;
+}
+
+/* --- 5. INDENTATION LEVELS --- */
+/* Adjust indentation for drawer context */
+.headings-h1 .headings-header-row { padding-left: 10px; }
+.headings-h1 .headings-sub-text { padding-left: 10px; }
+
+.headings-h2 .headings-header-row, .headings-h2 .headings-sub-text { padding-left: 15px; }
+.headings-h3 .headings-header-row, .headings-h3 .headings-sub-text { padding-left: 25px; }
+.headings-h4 .headings-header-row, .headings-h4 .headings-sub-text { padding-left: 35px; }
+.headings-h5 .headings-header-row, .headings-h5 .headings-sub-text { padding-left: 45px; }
+
+/* --- 6. PARAGRAPHS MODE SPECIFIC --- */
+.headings-mode-paragraphs .headings-main-text {
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.headings-mode-paragraphs .headings-prefix {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin-right: 6px;
+}
+
+.headings-mode-paragraphs .headings-item-wrapper {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.headings-mode-paragraphs .headings-header-row.active .headings-main-text {
+  font-weight: 700;
+  color: var(--primary-color);
+}

@@ -1,4 +1,4 @@
-// Path: web/assets/modules/ui/components/toh/content_scanner.js
+// Path: web/assets/modules/ui/components/magic_nav/content_scanner.js
 import { extractParagraphNumber, getCleanTextContent } from './text_utils.js';
 
 export const ContentScanner = {
@@ -50,7 +50,7 @@ export const ContentScanner = {
 
     _parseHeading(heading, index, useArticlePrefix) {
         if (!heading.id) {
-            heading.id = `toh-heading-${index}`;
+            heading.id = `headings-heading-${index}`;
         }
 
         let prefix = null;
@@ -115,7 +115,7 @@ export const ContentScanner = {
         return {
             id: heading.id,
             text: getCleanTextContent(heading),
-            levelClass: `toh-${heading.tagName.toLowerCase()}`, 
+            levelClass: `headings-${heading.tagName.toLowerCase()}`, 
             prefix: prefix,
             description: description, // [NEW] Trả về description
             subTexts: subTexts 
@@ -139,7 +139,7 @@ export const ContentScanner = {
         return {
             id: segment.id,
             text: text,
-            levelClass: "toh-h3", 
+            levelClass: "headings-h3", 
             prefix: paraNum
         };
     }

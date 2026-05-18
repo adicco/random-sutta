@@ -114,9 +114,9 @@ export const MagicNav = {
             });
 
             if (scanResult.mode === 'paragraphs') {
-                els.headingsContent.classList.add("toh-mode-paragraphs");
+                els.headingsContent.classList.add("headings-mode-paragraphs");
             } else {
-                els.headingsContent.classList.remove("toh-mode-paragraphs");
+                els.headingsContent.classList.remove("headings-mode-paragraphs");
             }
 
             // 3. Setup Observer for active state

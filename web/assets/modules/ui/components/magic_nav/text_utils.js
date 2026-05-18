@@ -1,4 +1,4 @@
-// Path: web/assets/modules/ui/components/toh/text_utils.js
+// Path: web/assets/modules/ui/components/magic_nav/text_utils.js
 
 /**
  * Trích xuất số đoạn từ Segment ID.

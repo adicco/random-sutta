@@ -1,5 +1,5 @@
 // Path: web/assets/modules/ui/components/popup/utils/popup_scanner.js
-import { getCleanTextContent } from 'ui/components/toh/text_utils.js';
+import { getCleanTextContent } from 'ui/components/magic_nav/text_utils.js';
 
 export const PopupScanner = {
     scan(containerId) {
