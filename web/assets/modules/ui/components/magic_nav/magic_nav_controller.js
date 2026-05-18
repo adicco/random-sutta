@@ -17,6 +17,17 @@ export const MagicNav = {
         const els = UIManager.init();
         if (!els.wrapper) return;
 
+        // [NEW] Load persistent Nav mode
+        try {
+            const savedMode = localStorage.getItem("magic_nav_mode");
+            if (savedMode === 'toc' || savedMode === 'headings') {
+                this._navMode = savedMode;
+            }
+        } catch (e) {}
+
+        // [NEW] Sync UI with loaded mode
+        this._syncNavUI();
+
         els.btnToc.addEventListener("click", (e) => {
             e.stopPropagation();
             UIManager.toggleTOC();
@@ -119,37 +130,56 @@ export const MagicNav = {
 
     toggleNavMode() {
         this._navMode = this._navMode === 'toc' ? 'headings' : 'toc';
-        this._updateNavVisibility();
         
-        // Refresh icons and labels
+        // [NEW] Save persistent Nav mode
+        try {
+            localStorage.setItem("magic_nav_mode", this._navMode);
+        } catch (e) {}
+
+        this._updateNavVisibility();
+        this._syncNavUI();
+    },
+
+    _syncNavUI() {
         const els = UIManager.elements;
+        if (!els.tabNav || !els.btnToggleTopics) return;
+
         const iconToc = els.btnToggleTopics.querySelector(".icon-toc");
         const iconHeadings = els.btnToggleTopics.querySelector(".icon-headings");
-        
+
         if (this._navMode === 'toc') {
             els.tabNav.textContent = "Contents";
-            iconToc.style.display = "block";
-            iconHeadings.style.display = "none";
-            UIManager._scrollToActive();
+            if (iconToc) iconToc.style.display = "block";
+            if (iconHeadings) iconHeadings.style.display = "none";
         } else {
             els.tabNav.textContent = "Headings";
-            iconToc.style.display = "none";
-            iconHeadings.style.display = "block";
-            setTimeout(() => {
-                const active = els.headingsList.querySelector(".active");
-                if (active) active.scrollIntoView({ block: "center", behavior: "instant" });
-            }, 0);
+            if (iconToc) iconToc.style.display = "none";
+            if (iconHeadings) iconHeadings.style.display = "block";
         }
     },
 
     _updateNavVisibility() {
         const els = UIManager.elements;
+        if (!els.tabNav) return;
+
+        // [FIX] Only show navigation content if the Nav tab is active
+        const isNavTabActive = els.tabNav.classList.contains("active");
+        
         if (this._navMode === 'toc') {
-            els.tocContent.classList.remove("hidden");
-            els.headingsContent.classList.add("hidden");
+            if (isNavTabActive) {
+                els.tocContent?.classList.remove("hidden");
+                UIManager._scrollToActive();
+            }
+            els.headingsContent?.classList.add("hidden");
         } else {
-            els.tocContent.classList.add("hidden");
-            els.headingsContent.classList.remove("hidden");
+            els.tocContent?.classList.add("hidden");
+            if (isNavTabActive) {
+                els.headingsContent?.classList.remove("hidden");
+                setTimeout(() => {
+                    const active = els.headingsList?.querySelector(".active");
+                    if (active) active.scrollIntoView({ block: "center", behavior: "instant" });
+                }, 0);
+            }
         }
     },
 
