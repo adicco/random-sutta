@@ -167,7 +167,7 @@ def generate_super_book_data(processed_book_ids: List[str]) -> Optional[Dict[str
     
     final_meta = _load_super_metadata(valid_keys)
 
-    # 1. Identify Direct Children and change type to 'branch'
+    # 1. Assign book_id and identify Direct Children
     top_level_keys = []
     if isinstance(final_structure, list):
          for item in final_structure:
@@ -176,6 +176,17 @@ def generate_super_book_data(processed_book_ids: List[str]) -> Optional[Dict[str
     elif isinstance(final_structure, dict):
         top_level_keys.extend(final_structure.keys())
     
+    # Traverse tree to assign book_id correctly
+    # Rule: If a node is a real book (in processed_book_ids), it's its own book_id.
+    # Otherwise, it belongs to the super book (tpk).
+    real_books = set(processed_book_ids)
+    for uid in valid_keys:
+        if uid in final_meta:
+            if uid in real_books:
+                final_meta[uid]['book_id'] = uid
+            else:
+                final_meta[uid]['book_id'] = 'tpk'
+
     for key in top_level_keys:
         if key in final_meta:
             final_meta[key]['type'] = 'branch'

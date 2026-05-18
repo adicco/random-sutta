@@ -336,6 +336,7 @@ class SqliteGenerator:
                         hash_id, extract_id, nav_prev, nav_next, child_range, search_priority
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(uid) DO UPDATE SET
+                        book_id=excluded.book_id,
                         type=excluded.type, root_lang=excluded.root_lang, acronym=excluded.acronym,
                         translated_title=excluded.translated_title, original_title=excluded.original_title,
                         blurb=excluded.blurb, author_uid=excluded.author_uid,
