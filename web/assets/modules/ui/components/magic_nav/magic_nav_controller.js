@@ -83,7 +83,8 @@ export const MagicNav = {
         ];
 
         tabs.forEach(tab => {
-            if (tab.id === tabId) {
+            const isActive = tab.id === tabId;
+            if (isActive) {
                 tab.btn?.classList.add("active");
                 if (tab.id === "tab-magic-nav") {
                     this._updateNavVisibility();
@@ -94,7 +95,13 @@ export const MagicNav = {
                 }
             } else {
                 tab.btn?.classList.remove("active");
-                tab.content?.classList.add("hidden");
+                if (tab.id === "tab-magic-nav") {
+                    // [FIX] Hide both navigation content areas when switching away
+                    els.tocContent?.classList.add("hidden");
+                    els.headingsContent?.classList.add("hidden");
+                } else {
+                    tab.content?.classList.add("hidden");
+                }
             }
         });
         
