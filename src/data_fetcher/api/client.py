@@ -5,9 +5,10 @@ import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import List, Tuple
+import os
 
 from src.logging_config import setup_logging
-from ..fetcher_config import ApiConfig, BilaraConfig
+from ..fetcher_config import FetcherConfig, ApiConfig, BilaraConfig
 
 logger = setup_logging("DataFetcher.API")
 
@@ -17,58 +18,46 @@ class MetadataClient:
 
     def discover_books(self) -> List[Tuple[str, str]]:
         """
-        Quét thư mục dựa trên DISCOVERY_RULES được định nghĩa trong config.
+        Quét thư mục structure/tree để tự động tìm các Book ID cần fetch metadata.
         """
-        root_dir = BilaraConfig.ROOT_TEXT_DIR
+        tree_root = FetcherConfig.STRUCTURE_TREE_DIR
         
-        if not root_dir.exists():
-            logger.error(f"❌ Root text data not found at {root_dir}.")
-            logger.error("   👉 Please run 'make sync-text' or 'python -m src.data_fetcher -s' first.")
+        if not tree_root.exists():
+            logger.error(f"❌ Structure tree data not found at {tree_root}.")
+            logger.error("   👉 Please run 'python -m src.data_fetcher -s' first.")
             return []
 
         discovered: List[Tuple[str, str]] = []
-        logger.info(f"   🔍 Scanning Book IDs in {root_dir.name}...")
+        logger.info(f"   🔍 Scanning Book IDs in {tree_root}...")
 
-        # 1. Rule-based Discovery
-        for rule in ApiConfig.DISCOVERY_RULES:
-            scan_path = root_dir / rule["path"]
-            category = rule["category"]
-            exclude_set = rule["exclude"]
-
-            if not scan_path.exists():
-                logger.debug(f"   ⚠️ Path not found (skipped): {rule['path']}")
+        # 1. Directory-based Discovery
+        # Quét các thư mục con: sutta, vinaya, abhidhamma
+        for category in ["sutta", "vinaya", "abhidhamma"]:
+            cat_path = tree_root / category
+            if not cat_path.exists():
                 continue
 
-            # Chỉ lấy các folder con trực tiếp (Immediate subdirectories)
-            # Đây là Book ID (ví dụ: dn, mn, sn...)
             count = 0
-            for item in scan_path.iterdir():
-                if item.is_dir():
-                    book_id = item.name
-                    # Bỏ qua folder hệ thống và folder nằm trong exclude list (ví dụ: kn)
-                    if (book_id in ApiConfig.SYSTEM_IGNORE) or (book_id in exclude_set):
-                        continue
-                    
-                    discovered.append((book_id, category))
-                    count += 1
+            for tree_file in cat_path.glob("*-tree.json"):
+                # Extract ID from filename (e.g., an-tree.json -> an)
+                book_id = tree_file.name.replace("-tree.json", "")
+                
+                if book_id in ApiConfig.SYSTEM_IGNORE:
+                    continue
+                
+                discovered.append((book_id, category))
+                count += 1
             
-            logger.debug(f"   -> Scanned {rule['path']}: found {count} items.")
+            logger.info(f"   -> Scanned {category}: found {count} items.")
 
-        # 2. Add Super Targets & Extras
-        # Thêm các mục lục lớn (sutta, vinaya...)
+        # 2. Add Super Targets
         for uid in ApiConfig.SUPER_TARGET_CATS:
             discovered.append((uid, "super"))
-            
-        # Thêm các mục bổ sung thủ công
-        for uid, cat in ApiConfig.EXTRA_UIDS.items():
-            discovered.append((uid, cat))
 
         # 3. Deduplicate & Sort
-        # Loại bỏ trùng lặp và sắp xếp theo độ ưu tiên
         seen = set()
         final_list = []
         
-        # Priority items first
         priority_candidates = []
         normal_candidates = []
 
@@ -86,7 +75,7 @@ class MetadataClient:
                 normal_candidates.append(info)
 
         priority_candidates.sort(key=lambda x: self.priority_map[x])
-        normal_candidates.sort(key=lambda x: x[0]) # Sort chữ cái cho phần còn lại
+        normal_candidates.sort(key=lambda x: x[0])
 
         final_list = priority_candidates + normal_candidates
         
@@ -100,8 +89,6 @@ class MetadataClient:
         category_dir = ApiConfig.DATA_JSON_DIR / category_path
         category_dir.mkdir(parents=True, exist_ok=True)
         dest_file = category_dir / f"{book_id}.json"
-        
-        # Check cache logic could be added here later
         
         try:
             timeout = ApiConfig.TIMEOUT_DEFAULT

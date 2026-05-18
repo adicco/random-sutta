@@ -9,7 +9,8 @@ from .shared.app_config import (
     STAGE_PROCESSED_DIR, 
     LEGACY_DIST_BOOKS_DIR, 
     PROJECT_ROOT,
-    DIST_DB_DIR
+    DIST_DB_DIR,
+    RAW_PARALLELS_FILE
 )
 from .ingestion.metadata_parser import load_names_map
 from .ingestion.file_crawler import generate_book_tasks

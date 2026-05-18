@@ -40,6 +40,7 @@ RAW_REFERENCE_DIRS = [
 RAW_API_JSON_DIR = _DATA_BASE / "json"
 RAW_SUPER_META_DIR = RAW_API_JSON_DIR / "super"
 RAW_SUPER_TREE_FILE = RAW_STRUCTURE_DIR / "tree" / "super-tree.json"
+RAW_PARALLELS_FILE = _SC_DATA_REPO / "relationship" / "new_parallels.json"
 
 # [NEW] Fix Data
 FIX_DATA_DIR = _DATA_BASE / "fix"

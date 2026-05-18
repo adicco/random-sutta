@@ -14,6 +14,7 @@ class FetcherConfig:
     DATA_DIR: Path = PROJECT_ROOT / "data"
     CACHE_DIR: Path = Path(".cache/sc_bilara_data")
     SC_DATA_REPO_DIR: Path = DATA_DIR / "sc-data"
+    STRUCTURE_TREE_DIR: Path = SC_DATA_REPO_DIR / "structure" / "tree"
 
 class BilaraConfig:
     DATA_ROOT: Path = FetcherConfig.SC_DATA_REPO_DIR / "sc_bilara_data"
@@ -54,43 +55,14 @@ class HtmlTextConfig:
 class ApiConfig:
     DATA_JSON_DIR: Path = FetcherConfig.DATA_DIR / "json"
     API_TEMPLATE: str = "https://suttacentral.net/api/suttaplex/{}"
-    DISCOVERY_RULES: List[DiscoveryRule] = [
-        {"path": "sutta", "category": "pli/sutta", "exclude": {"kn"}},
-        {"path": "sutta/kn", "category": "pli/sutta/kn", "exclude": set()},
-        {"path": "vinaya", "category": "pli/vinaya", "exclude": set()},
-        {"path": "abhidhamma", "category": "pli/abhidhamma", "exclude": set()},
-        {"path": "lzh", "category": "lzh/sutta", "exclude": set()}, # Sẽ được fetch vào lzh/sutta
-    ]
-    EXTRA_UIDS: Dict[str, str] = {
-        # Pli Extras
-        "pli-tv-bi-pm": "pli/vinaya",
-        "pli-tv-bu-pm": "pli/vinaya",
-        # Lzh Sutta
-        "da": "lzh/sutta", "da-ot": "lzh/sutta", "ea": "lzh/sutta", 
-        "ea-2": "lzh/sutta", "ea-ot": "lzh/sutta", "lzh-art": "lzh/sutta", 
-        "lzh-dharani": "lzh/sutta", "lzh-dhp": "lzh/sutta", "lzh-nbs": "lzh/sutta", 
-        "lzh-ssnp": "lzh/sutta", "ma": "lzh/sutta", "ma-ot": "lzh/sutta", 
-        "sa": "lzh/sutta", "sa-2": "lzh/sutta", "sa-3": "lzh/sutta", "sa-ot": "lzh/sutta",
-        # Lzh Vinaya
-        "lzh-dg-bi-vb": "lzh/vinaya", "lzh-dg-bu-vb": "lzh/vinaya", "lzh-dg-kd": "lzh/vinaya", 
-        "lzh-mg-asc": "lzh/vinaya", "lzh-mg-bi-pn": "lzh/vinaya", "lzh-mg-bi-vb": "lzh/vinaya", 
-        "lzh-mg-bu-pn": "lzh/vinaya", "lzh-mg-bu-vb": "lzh/vinaya", "lzh-mi-bi-vb": "lzh/vinaya", 
-        "lzh-mi-bu-vb": "lzh/vinaya", "lzh-mi-kd": "lzh/vinaya", "lzh-sarv-ba": "lzh/vinaya", 
-        "lzh-sarv-bi-vb": "lzh/vinaya", "lzh-sarv-bu-vb": "lzh/vinaya", "lzh-sarv-kd": "lzh/vinaya", 
-        "lzh-sarv-upp": "lzh/vinaya", "lzh-sarv-ve": "lzh/vinaya", "lzh-sarv-vi-misc": "lzh/vinaya", 
-        "lzh-dg-bi-pm": "lzh/vinaya", "lzh-dg-bu-pm-2": "lzh/vinaya", "lzh-dg-bu-pm": "lzh/vinaya", 
-        "lzh-dg-ve1": "lzh/vinaya", "lzh-dg-vs1": "lzh/vinaya", "lzh-ka-bu-pm": "lzh/vinaya", 
-        "lzh-mg-bi-pm": "lzh/vinaya", "lzh-mg-bu-pm": "lzh/vinaya", "lzh-mi-bi-pm": "lzh/vinaya", 
-        "lzh-mi-bu-pm": "lzh/vinaya", "lzh-mi-vs1": "lzh/vinaya", "lzh-mu-bi-pm": "lzh/vinaya", 
-        "lzh-mu-bu-pm": "lzh/vinaya", "lzh-sarv-bi-pm": "lzh/vinaya", "lzh-sarv-bu-pm-2": "lzh/vinaya", 
-        "lzh-sarv-bu-pm": "lzh/vinaya",
-    }
+
+    # [UPDATED] Discovery now scans structure/tree
     SUPER_TARGET_CATS: List[str] = ["sutta", "vinaya", "abhidhamma"]
     LARGE_BOOKS: Set[str] = {"dn", "mn", "sn", "an", "vinaya"}
     SYSTEM_IGNORE: Set[str] = {'xplayground', '__pycache__', '.git', '.DS_Store'}
     PRIORITY_ORDER: List[Tuple[str, str]] = [
-        ("sutta", "super"), ("dn", "pli/sutta"), ("mn", "pli/sutta"), 
-        ("sn", "pli/sutta"), ("an", "pli/sutta"), ("dhp", "pli/sutta/kn"),
+        ("sutta", "super"), ("dn", "sutta"), ("mn", "sutta"), 
+        ("sn", "sutta"), ("an", "sutta"), ("dhp", "sutta"),
         ("vinaya", "super"), ("abhidhamma", "super"),
     ]
     TIMEOUT_DEFAULT: int = 60
@@ -110,6 +82,7 @@ class DpdConfig:
     ASSET_NAME: str = "dpd.db.tar.bz2"
 
 class ParallelsConfig:
-    URL: str = "https://raw.githubusercontent.com/suttacentral/sc-data/main/relationship/new_parallels.json"
+    # [UPDATED] Sourced from local repo
+    SOURCE_FILE: Path = FetcherConfig.SC_DATA_REPO_DIR / "relationship" / "new_parallels.json"
     DEST_DIR: Path = FetcherConfig.DATA_DIR / "json" / "sc-data"
     DEST_FILE: Path = DEST_DIR / "parallels.json"
