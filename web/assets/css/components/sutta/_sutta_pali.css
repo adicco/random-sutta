@@ -49,7 +49,7 @@ h6 .root.promoted,
 /* --- 2. VERSE / GATHA (Mostly Pali) --- */
 
 .gatha {
-  margin: 1.5rem 0; 
+  margin: var(--para-spacing) 0; 
   padding-left: 10%; 
   font-family: var(--font-sutta);
   line-height: 1.5;
@@ -59,11 +59,18 @@ h6 .root.promoted,
 }
 
 .gatha p {
-    margin-bottom: 0;
+    margin-top: 0;
+    margin-bottom: var(--para-spacing);
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    display: block;
+}
+
+.gatha p:last-child {
+    margin-bottom: 0;
+}
+
+.verse-line {
+    display: block;
 }
 
 .gatha-row {
@@ -80,6 +87,11 @@ h6 .root.promoted,
     margin-bottom: 0 !important;
     white-space: nowrap;
     text-align: left;
+}
+
+/* For highlighting in verses, respect the verse-line structure if needed */
+.gatha .segment.highlight {
+    padding-bottom: 0;
 }
 
 .gatha br {
