@@ -145,7 +145,8 @@
   right: 15px;
   width: 320px;
   max-width: calc(100vw - 30px);
-  max-height: 70vh;
+  height: calc(100vh - 15vh - 80px); /* Để chừa khoảng 15% bên dưới */
+  max-height: 85vh;
   min-width: 280px; /* Minimum width */
   min-height: 200px; /* Minimum height */
   background-color: var(--bg-card);
@@ -201,7 +202,8 @@
   #magic-toc-drawer {
     width: 60vw;
     max-width: 800px;
-    max-height: 80vh;
+    height: 85vh;
+    max-height: 85vh;
   }
 }
 
@@ -209,6 +211,8 @@
   #magic-toc-drawer {
     width: 45vw; /* Trên màn hình rất rộng, 60% có thể hơi quá, 45% là vừa đẹp */
     max-width: 900px;
+    height: 85vh;
+    max-height: 85vh;
   }
 }
 
