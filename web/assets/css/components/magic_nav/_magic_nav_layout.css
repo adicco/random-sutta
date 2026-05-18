@@ -124,7 +124,7 @@
 /* [NEW] Marker cuối cùng - Sát nút bấm hơn */
 #magic-bc-end {
   display: inline-block;
-  min-width: 8px;
+  min-width: 2px;
   height: 1px;
   opacity: 0;
   pointer-events: none;
@@ -132,7 +132,7 @@
 
 @media (min-width: 600px) {
   #magic-bc-end {
-    min-width: 5px;
+    min-width: 2px;
   }
 }
 
