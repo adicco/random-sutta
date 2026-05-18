@@ -88,3 +88,31 @@
   margin-top: 2px;
   font-style: normal; /* Restore original */
 }
+
+/* --- LEAF BLURB --- */
+#leaf-blurb-container {
+  padding: 0;
+}
+
+.leaf-blurb {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 10px auto 15px;
+  max-width: var(--container-width, 800px);
+  padding: 0 40px;
+  background-color: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  font-style: italic;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .leaf-blurb {
+    font-size: 0.9rem;
+    padding: 0 35px;
+    margin: 8px auto 12px;
+  }
+}
