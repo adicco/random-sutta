@@ -45,16 +45,25 @@ export function setupParallelsPanel() {
         }
     });
 
-    function generate(suttaId) {
+    async function generate(suttaId) {
         // Reset State
         els.list.innerHTML = "";
         closeMenu();
         
-        // Load Parallels
-        ParallelsData.load(suttaId, els.list);
+        // Hide FAB initially while loading
+        els.fab.classList.add("hidden");
         
-        // Show panel
-        els.wrapper.classList.remove("hidden");
+        // Load Parallels
+        const hasData = await ParallelsData.load(suttaId, els.list);
+        
+        if (hasData) {
+            // Show panel wrapper and fab
+            els.wrapper.classList.remove("hidden");
+            els.fab.classList.remove("hidden");
+        } else {
+            // Keep fab hidden if no data, ensure wrapper is also somewhat clean or hidden if needed
+            els.wrapper.classList.remove("hidden"); // keeping wrapper as before, just hiding the fab
+        }
     }
 
     return { generate };

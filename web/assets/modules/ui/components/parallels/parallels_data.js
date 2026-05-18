@@ -9,18 +9,18 @@ const logger = getLogger("ParallelsData");
 
 export const ParallelsData = {
     async load(suttaId, listElement) {
-        if (!listElement) return;
+        if (!listElement) return false;
         listElement.innerHTML = '';
         
         if (!suttaId) {
             listElement.innerHTML = '<li class="parallels-item"><div class="parallels-header-row"><span class="parallels-main-text" style="text-align: center; color: var(--text-muted); font-weight: normal; font-size: 0.9em; padding: 15px;">No parallels data available.</span></div></li>';
-            return;
+            return false;
         }
 
         const parallelsData = await SuttaRepository.getParallels(suttaId);
         if (!parallelsData || Object.keys(parallelsData).length === 0) {
             listElement.innerHTML = '<li class="parallels-item"><div class="parallels-header-row"><span class="parallels-main-text" style="text-align: center; color: var(--text-muted); font-weight: normal; font-size: 0.9em; padding: 15px;">No parallels found.</span></div></li>';
-            return;
+            return false;
         }
 
         // Collect all target UIDs (stripping segment IDs) to fetch their titles
@@ -168,5 +168,7 @@ export const ParallelsData = {
                 }
             });
         });
+        
+        return true;
     }
 };
