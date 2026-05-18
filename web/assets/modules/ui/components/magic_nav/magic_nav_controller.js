@@ -11,6 +11,7 @@ import { HeadingsRenderer } from './headings_renderer.js';
 export const MagicNav = {
     _currentTocLevel: 1, // Default expansion level
     _headingsObserver: null,
+    _topicsMode: 'toc', // 'toc' or 'headings'
 
     init() {
         const els = UIManager.init();
@@ -24,8 +25,7 @@ export const MagicNav = {
 
         // Tab Switching Logic
         const tabs = [
-            { btn: els.tabToc, content: els.tocContent },
-            { btn: els.tabHeadings, content: els.headingsContent },
+            { btn: els.tabTopics, content: null }, // Topics is special
             { btn: els.tabBookmarks, content: els.bookmarksContent },
             { btn: els.tabRead, content: els.readContent }
         ];
@@ -38,6 +38,14 @@ export const MagicNav = {
                 });
             }
         });
+
+        // Toggle Topics Mode Logic
+        if (els.btnToggleTopics) {
+            els.btnToggleTopics.addEventListener("click", (e) => {
+                e.stopPropagation();
+                this.toggleTopicsMode();
+            });
+        }
 
         // [NEW] Event Delegation for Drawer Actions
         els.drawer.addEventListener("click", (e) => {
@@ -69,8 +77,7 @@ export const MagicNav = {
     switchTab(tabId) {
         const els = UIManager.elements;
         const tabs = [
-            { id: "tab-magic-toc", btn: els.tabToc, content: els.tocContent },
-            { id: "tab-magic-headings", btn: els.tabHeadings, content: els.headingsContent },
+            { id: "tab-magic-topics", btn: els.tabTopics },
             { id: "tab-magic-bookmarks", btn: els.tabBookmarks, content: els.bookmarksContent },
             { id: "tab-magic-read", btn: els.tabRead, content: els.readContent }
         ];
@@ -78,20 +85,62 @@ export const MagicNav = {
         tabs.forEach(tab => {
             if (tab.id === tabId) {
                 tab.btn?.classList.add("active");
-                tab.content?.classList.remove("hidden");
+                if (tab.id === "tab-magic-topics") {
+                    this._updateTopicsVisibility();
+                    els.btnToggleTopics.style.display = "flex";
+                } else {
+                    tab.content?.classList.remove("hidden");
+                    els.btnToggleTopics.style.display = "none";
+                }
             } else {
                 tab.btn?.classList.remove("active");
                 tab.content?.classList.add("hidden");
             }
         });
         
-        // Auto-scroll to active item when switching to Headings or TOC
-        if (tabId === "tab-magic-toc") this._scrollToActive();
-        else if (tabId === "tab-magic-headings") {
+        // Auto-scroll to active item
+        if (tabId === "tab-magic-topics") {
+            if (this._topicsMode === 'toc') this._scrollToActive();
+            else {
+                setTimeout(() => {
+                    const active = els.headingsList.querySelector(".active");
+                    if (active) active.scrollIntoView({ block: "center", behavior: "instant" });
+                }, 0);
+            }
+        }
+    },
+
+    toggleTopicsMode() {
+        this._topicsMode = this._topicsMode === 'toc' ? 'headings' : 'toc';
+        this._updateTopicsVisibility();
+        
+        // Refresh icons
+        const els = UIManager.elements;
+        const iconToc = els.btnToggleTopics.querySelector(".icon-toc");
+        const iconHeadings = els.btnToggleTopics.querySelector(".icon-headings");
+        
+        if (this._topicsMode === 'toc') {
+            iconToc.style.display = "block";
+            iconHeadings.style.display = "none";
+            this._scrollToActive();
+        } else {
+            iconToc.style.display = "none";
+            iconHeadings.style.display = "block";
             setTimeout(() => {
                 const active = els.headingsList.querySelector(".active");
                 if (active) active.scrollIntoView({ block: "center", behavior: "instant" });
             }, 0);
+        }
+    },
+
+    _updateTopicsVisibility() {
+        const els = UIManager.elements;
+        if (this._topicsMode === 'toc') {
+            els.tocContent.classList.remove("hidden");
+            els.headingsContent.classList.add("hidden");
+        } else {
+            els.tocContent.classList.add("hidden");
+            els.headingsContent.classList.remove("hidden");
         }
     },
 
@@ -268,6 +317,9 @@ export const MagicNav = {
         
         // [NEW] Update Headings tab
         this.updateHeadings();
+
+        // Ensure correct sub-mode visibility
+        this._updateTopicsVisibility();
     }
 };
 
