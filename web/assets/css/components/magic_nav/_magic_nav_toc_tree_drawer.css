@@ -130,7 +130,7 @@
 }
 #magic-toc-drawer {
   position: fixed;
-  top: calc(55px + env(safe-area-inset-top, 0px));
+  top: calc(65px + env(safe-area-inset-top, 0px));
   left: 15px;
   width: 320px;
   max-width: calc(100vw - 30px);
@@ -139,13 +139,13 @@
   min-height: 200px; /* Minimum height */
   background-color: var(--bg-card);
   border-radius: 8px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
   
   display: flex;
   flex-direction: column;
   overflow: hidden; /* Crucial: drawer itself shouldn't scroll */
   
-  z-index: 1101;
+  z-index: 1200;
   opacity: 0;
   transform: translateY(-10px);
   pointer-events: none;

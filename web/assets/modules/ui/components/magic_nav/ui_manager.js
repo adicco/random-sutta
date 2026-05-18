@@ -85,7 +85,7 @@ export const UIManager = {
                 // Validate height
                 if (height) {
                     const hVal = parseInt(height);
-                    const maxHeight = window.innerHeight - 70;
+                    const maxHeight = window.innerHeight - 80;
                     if (hVal < maxHeight + 50) {
                         drawer.style.height = height;
                         drawer.style.maxHeight = "95vh"; 
@@ -126,7 +126,7 @@ export const UIManager = {
             drawer.style.maxWidth = "none"; // Override CSS max-width
             
             // Constrain height
-            const maxHeight = window.innerHeight - 70;
+            const maxHeight = window.innerHeight - 80;
             const finalHeight = Math.min(Math.max(200, newHeight), maxHeight);
             drawer.style.height = `${finalHeight}px`;
             drawer.style.maxHeight = "none"; // Override CSS max-height
