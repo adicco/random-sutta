@@ -58,8 +58,6 @@
   padding: 6px 12px 6px 8px; 
   z-index: 1150;
 }
-  z-index: 1150;
-}
 
 #magic-nav-wrapper:not(.collapsed) #magic-group {
   display: flex;
