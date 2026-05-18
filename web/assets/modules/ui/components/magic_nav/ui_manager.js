@@ -254,7 +254,10 @@ export const UIManager = {
     },
 
     updateContent(bcHtml, tocHtml) {
-        if (this.elements.bar) this.elements.bar.innerHTML = bcHtml;
+        if (this.elements.bar) {
+            this.elements.bar.innerHTML = bcHtml;
+            this._scrollBreadcrumbToEnd();
+        }
         if (this.elements.tocContent) this.elements.tocContent.innerHTML = tocHtml;
     },
 
@@ -263,44 +266,45 @@ export const UIManager = {
         let startX;
         let scrollLeft;
 
+        const getX = (e) => e.clientX - slider.getBoundingClientRect().left;
+
         slider.addEventListener('mousedown', (e) => {
             isDown = true;
             slider.classList.add('active');
-            startX = e.pageX - slider.offsetLeft;
+            startX = getX(e);
             scrollLeft = slider.scrollLeft;
         });
-        slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.remove('active'); });
-        slider.addEventListener('mouseup', () => { isDown = false; slider.classList.remove('active'); });
+
+        slider.addEventListener('mouseleave', () => { 
+            isDown = false; 
+            slider.classList.remove('active'); 
+        });
+
+        slider.addEventListener('mouseup', () => { 
+            isDown = false; 
+            slider.classList.remove('active'); 
+        });
+
         slider.addEventListener('mousemove', (e) => {
             if (!isDown) return;
             e.preventDefault();
-            const x = e.pageX - slider.offsetLeft;
+            const x = getX(e);
             const walk = (x - startX) * 2; 
             slider.scrollLeft = scrollLeft - walk;
         });
 
-        slider.addEventListener('touchstart', (e) => {
-            isDown = true;
-            startX = e.touches[0].pageX - slider.offsetLeft;
-            scrollLeft = slider.scrollLeft;
-        }, { passive: true });
-        slider.addEventListener('touchend', () => { isDown = false; });
-
-        slider.addEventListener('touchmove', (e) => {
-            if (!isDown) return;
-            const x = e.touches[0].pageX - slider.offsetLeft;
-            const walk = (x - startX) * 1.5; 
-            slider.scrollLeft = scrollLeft - walk;
-        }, { passive: true });
-
+        // [MODIFIED] Mouse Wheel: Mapping vertical scroll to horizontal
         slider.addEventListener("wheel", (e) => {
-            if (e.shiftKey || Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-                if (slider.scrollWidth > slider.clientWidth) {
+            // If horizontal scroll is possible and user is scrolling vertically
+            if (slider.scrollWidth > slider.clientWidth) {
+                if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
                     e.preventDefault();
                     slider.scrollLeft += e.deltaY;
                 }
             }
         }, { passive: false });
+
+        // Note: Touch scrolling is handled natively by overflow-x: auto
     },
 
     openWrapper() {

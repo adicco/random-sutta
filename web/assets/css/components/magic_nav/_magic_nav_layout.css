@@ -81,7 +81,7 @@
 #magic-breadcrumb-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* Căn lề phải để thu/che từ bên trái */
+  justify-content: flex-start; /* FIX: Changed from flex-end to allow standard scrollLeft behavior */
   
   overflow-x: auto;
   white-space: nowrap;

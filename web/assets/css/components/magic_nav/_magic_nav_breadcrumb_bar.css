@@ -12,7 +12,9 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
-  overflow: hidden;
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 
   /* Animation State: Đóng (Width 0) */
   width: 0;
