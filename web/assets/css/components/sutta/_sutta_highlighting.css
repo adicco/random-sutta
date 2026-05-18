@@ -137,6 +137,10 @@ body.view-mode-root-only .comment-marker {
     margin-left: calc(-1 * var(--highlight-side-offset));
     padding-left: calc(var(--highlight-side-offset) - var(--highlight-border-width));
     border-radius: 0;
+}
+
+/* ONLY extend padding to bridge the gap if there is a following highlighted paragraph */
+.parent-highlight-bridge:has(+ .parent-highlight-bridge) {
     margin-bottom: 0 !important; 
     padding-bottom: var(--para-spacing) !important; 
 }
