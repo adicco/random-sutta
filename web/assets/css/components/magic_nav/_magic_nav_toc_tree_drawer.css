@@ -186,7 +186,7 @@
   height: 8px;
   border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
-  border-bottom-right-radius: 2px; /* [NEW] Rounded corner */
+  border-bottom-right-radius: 8px; /* Pronounced rounding */
   margin-right: 4px;
   margin-bottom: 4px;
 }
