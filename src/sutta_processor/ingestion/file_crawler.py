@@ -120,12 +120,12 @@ def _get_priority_score(group_name: str) -> int:
     if group_name.startswith("abhidhamma"): return 2
     return 3
 
-def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]]]:
+def generate_book_tasks(meta_map: Dict[str, Any]) -> Tuple[Dict[str, List[Tuple[str, Path, Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[Path], Optional[str]]]], List[str]]:
     # [UPDATED] Scan structure/tree
     tree_dir = RAW_STRUCTURE_DIR / "tree"
     if not tree_dir.exists():
         logger.warning(f"Tree directory missing: {tree_dir}")
-        return {}
+        return {}, []
 
     # Build comprehensive indices once
     root_index, trans_index, html_index, comment_index, variant_index, reference_index = _build_file_indices()
@@ -134,12 +134,15 @@ def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, P
     
     raw_tasks_list: List[Tuple[str, List[Tuple]]] = []
     total_suttas = 0
+    all_discovered_ids = []
     
     tree_files = sorted(list(tree_dir.rglob("*-tree.json")))
     
     for tree_file in tree_files:
         if tree_file.name == "super-tree.json": continue
         group_id = _identify_book_group_from_tree(tree_file)
+        book_id = tree_file.name.replace("-tree.json", "")
+        all_discovered_ids.append(book_id)
         
         try:
             with open(tree_file, "r", encoding="utf-8") as f:
@@ -196,4 +199,4 @@ def generate_book_tasks(meta_map: Dict[str, Any]) -> Dict[str, List[Tuple[str, P
     book_tasks = {k: v for k, v in raw_tasks_list}
 
     logger.info(f"✅ Generated tasks for {total_suttas} suttas (Sorted by Priority).")
-    return book_tasks
+    return book_tasks, all_discovered_ids

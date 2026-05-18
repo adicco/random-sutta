@@ -114,8 +114,12 @@ class BuildManager:
     def run(self) -> None:
         self._prepare_environment()
         
+        # [NEW] 0. Ingest baseline metadata for ALL items (Search completeness)
+        if self.sqlite_gen:
+            self.sqlite_gen.insert_metadata_batch(self.names_map)
+
         # 1. Generate Tasks
-        book_tasks = generate_book_tasks(self.names_map)
+        book_tasks, all_discovered_ids = generate_book_tasks(self.names_map)
         all_tasks = []
         
         # Identify Active Books for Pre-calculation
@@ -134,9 +138,9 @@ class BuildManager:
                 all_tasks.append(task)
                 self.sutta_group_map[task[0]] = group
 
-        # [NEW] 1.5 Pre-calculate Super Navigation
-        # Bước này mô phỏng Super Book Structure để lấy Nav Map cho các root book
-        self.super_nav_map = precalculate_super_navigation(active_book_ids)
+        # [UPDATED] 1.5 Pre-calculate Super Navigation
+        # Use ALL discovered IDs to ensure a complete hierarchy
+        self.super_nav_map = precalculate_super_navigation(all_discovered_ids)
 
         # 2. Build Validation Universe
         valid_uids_universe = UniverseBuilder.build(self.names_map, book_tasks)

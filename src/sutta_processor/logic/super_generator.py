@@ -77,23 +77,27 @@ def _load_super_metadata(valid_keys: Set[str]) -> Dict[str, Any]:
                     "blurb": item.get("blurb", None)
                 }
 
-    # 2. Kiểm tra những key còn thiếu và thử tìm trong RAW_API_JSON_DIR (Deep Search)
+    # 2. Kiểm tra những key còn thiếu và thử tìm trong RAW_API_JSON_DIR (Recursive Search)
     missing_keys = valid_keys - set(merged_meta.keys())
     if missing_keys:
         logger.info(f"   🔍 Searching for {len(missing_keys)} missing meta entries in API data...")
         from ..shared.app_config import RAW_API_JSON_DIR
+        
+        # Build a lookup index for all JSON files once for performance
+        json_index = {f.stem: f for f in RAW_API_JSON_DIR.rglob("*.json")}
+        
         for uid in missing_keys:
-            # Tìm file JSON tương ứng với UID (vd: dn.json)
-            # Lưu ý: Các branch node thường có file JSON riêng hoặc nằm trong file cha
-            potential_file = RAW_API_JSON_DIR / f"{uid}.json"
-            if potential_file.exists():
+            potential_file = json_index.get(uid)
+            if potential_file and potential_file.exists():
                 data = _load_json(potential_file)
-                if data and isinstance(data, list) and len(data) > 0:
-                    item = data[0] # Lấy entry đầu tiên thường là của chính nó
+                if data:
+                    item = data[0] if isinstance(data, list) and len(data) > 0 else data
+                    if not isinstance(item, dict): continue
+                    
                     merged_meta[uid] = {
                         "uid": uid,
                         "type": item.get("type", "branch"),
-                        "root_lang": item.get("root_lang"), # [NEW]
+                        "root_lang": item.get("root_lang"),
                         "acronym": item.get("acronym", ""),
                         "translated_title": item.get("translated_title", ""),
                         "original_title": item.get("original_title", ""),

@@ -173,6 +173,49 @@ class SqliteGenerator:
         # Pali Minor (Khuddaka and others)
         return "minor"
 
+    def _get_search_priority(self, book_id: str) -> int:
+        """Determines search priority based on book_id."""
+        if book_id in ['dn', 'mn', 'sn', 'an', 'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig']:
+            return 0
+        if book_id.startswith('pli-tv-'):
+            return 1
+        if book_id in ['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana']:
+            return 2
+        return 3
+
+    def insert_metadata_batch(self, meta_map: Dict[str, Any]):
+        """Populates the metadata table with baseline data from a names map."""
+        if not meta_map: return
+        
+        insert_data = []
+        for uid, m in meta_map.items():
+            # We don't have book_id here, so we try to infer it from uid or leave it null
+            # Most uids start with book_id (e.g., 'dn1' -> 'dn')
+            # But it's safer to let insert_book/insert_super_book fill it in correctly.
+            
+            insert_data.append((
+                uid, m.get("type"), m.get("root_lang"), m.get("acronym"),
+                m.get("translated_title"), m.get("original_title"), m.get("blurb"),
+                m.get("best_author_uid") or m.get("author_uid"), m.get("extract_id"),
+                m.get("child_range")
+            ))
+
+        with self._get_core_connection() as conn:
+            cursor = conn.cursor()
+            cursor.executemany("""
+                INSERT INTO metadata (
+                    uid, type, root_lang, acronym, translated_title, original_title,
+                    blurb, author_uid, extract_id, child_range
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(uid) DO UPDATE SET
+                    type=excluded.type, root_lang=excluded.root_lang, acronym=excluded.acronym,
+                    translated_title=excluded.translated_title, original_title=excluded.original_title,
+                    blurb=excluded.blurb, author_uid=excluded.author_uid,
+                    extract_id=excluded.extract_id, child_range=excluded.child_range
+            """, insert_data)
+            conn.commit()
+        logger.info(f"   📊 [SQLite] Ingested baseline metadata for {len(insert_data)} items.")
+
     def insert_book(self, book_obj: Dict[str, Any]):
         book_id = book_obj.get("id")
         if not book_id: return
