@@ -1,0 +1,102 @@
+/* Path: web/assets/css/components/sutta/_sutta_layout.css */
+
+/* --- 1. SHARED CONTAINERS --- */
+
+/* Main wrapper for sutta content */
+.sutta-text-view {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+/* Reset list style inside the text view */
+.sutta-text-view ul {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+/* Hide metadata lists in the header if they exist */
+.sutta-text-view header ul {
+  display: none;
+}
+
+/* --- 2. COMMON METADATA & HEADINGS --- */
+
+/* Sutta Information (Translator, Version, etc.) */
+.suttainfo {
+  font-size: 0.75rem; 
+  color: var(--text-muted);
+  font-style: normal;
+  margin: 1.2rem 0;
+  padding: 0.8rem 1rem;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  text-align: left; 
+  padding-left: 2em; 
+  line-height: 1.2;
+}
+
+.suttainfo .segment {
+  display: inline;
+}
+
+/* Scribe / Author Info */
+.scribe, .author {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: block;
+  text-align: center;
+  margin: 0.3rem 0;
+}
+
+/* Division & Mirror Headings */
+.division {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  text-align: center;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.mirror-row {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+h1.mirror-row {
+  font-size: 1.8rem;
+  margin-top: 1rem;
+}
+
+h1.sutta-title {
+  text-align: center;
+  color: var(--text-main);
+  margin-bottom: 30px;
+  line-height: 1.3;
+}
+
+@media (max-width: 600px) {
+  h1.sutta-title {
+    font-size: 1.4rem;
+  }
+}
+
+/* Common overrides for root text (pali/lzh) inside headings */
+h1.sutta-title .root.promoted,
+h2 .root.promoted,
+h3 .root.promoted,
+h4 .root.promoted,
+h5 .root.promoted,
+h6 .root.promoted {
+  font-size: 1em;
+  color: inherit;
+  font-weight: inherit;
+  font-style: normal;
+  font-family: inherit;
+}

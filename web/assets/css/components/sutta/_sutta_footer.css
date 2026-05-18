@@ -1,0 +1,90 @@
+/* Path: web/assets/css/components/sutta/_sutta_footer.css */
+
+/* End Markers */
+.endsutta,
+.endsegment,
+.endvagga,
+.endsection { 
+  text-align: center;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--text-light);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.endsutta *,
+.endsegment *,
+.endvagga * {
+  text-align: center;
+  display: block; 
+}
+
+/* [RESTORED] Context Footer (See also) Styling - December 2025 Version */
+.sutta-context-footer {
+  margin-top: 40px; 
+  padding-top: 20px;  
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+  text-align: right;
+  
+  /* Reset previous experimental background/borders */
+  background-color: transparent;
+  border-radius: 0;
+  margin-bottom: 20px;
+}
+
+/* Dòng 1: Label "See also" (Muted nhất) */
+.ctx-label {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-style: italic;
+  margin-bottom: 8px;
+  opacity: 0.8;
+  text-transform: none; /* Restore original style */
+  letter-spacing: normal;
+  font-weight: normal;
+}
+
+/* Button Wrapper */
+.ctx-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; 
+  
+  min-width: auto; /* Reset */
+  box-shadow: none; /* Reset */
+  transition: transform 0.2s ease, opacity 0.2s;
+}
+
+.ctx-link:hover {
+  transform: translateX(-5px); 
+  opacity: 0.9;
+  box-shadow: none;
+}
+
+/* Dòng 2: Acronym (Điểm nhấn chính) */
+.ctx-acronym {
+  font-family: var(--font-main);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  line-height: 1.2;
+}
+
+/* Dòng 3: Title (Bình thường) */
+.ctx-title {
+  font-family: var(--font-sutta);
+  font-size: 0.9rem;
+  color: var(--text-main);
+  margin-top: 2px;
+  font-style: normal; /* Restore original */
+}

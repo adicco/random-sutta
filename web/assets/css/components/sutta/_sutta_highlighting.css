@@ -1,0 +1,200 @@
+/* Path: web/assets/css/components/sutta/_sutta_highlighting.css */
+
+/* --- 4. VIEW MODE TOGGLES (Paragraph Flow) --- */
+
+/* SINGLE LANGUAGE MODES & PAGES: Switch to Paragraph Flow */
+body.view-mode-root-only .segment,
+body.view-mode-trans-only .segment,
+article.single-language .segment {
+  display: inline;
+  margin-bottom: 0;
+  margin-right: 0.25em; 
+}
+
+/* Adjust paragraph spacing in single language modes */
+body.view-mode-root-only p,
+body.view-mode-trans-only p,
+article.single-language p {
+  margin-bottom: var(--para-spacing);
+}
+
+/* Fix Sutta Title margin for single language modes */
+body.view-mode-root-only h1.sutta-title,
+body.view-mode-trans-only h1.sutta-title,
+article.single-language h1.sutta-title {
+  margin-bottom: 1.5rem !important; 
+}
+
+/* EXCEPTION: Keep Verses (Gatha) as block even in single language mode */
+.gatha .segment {
+  display: block !important;
+  margin-bottom: 0;
+}
+
+/* Force inline behavior and unified sizing ONLY for body text in reading modes */
+body.view-mode-root-only p .root,
+body.view-mode-trans-only p .trans,
+body.view-mode-trans-only p .root.promoted,
+article.single-language p .root.promoted,
+body.view-mode-root-only blockquote .root,
+body.view-mode-trans-only blockquote .trans {
+  display: inline !important;
+  font-size: 1rem; 
+  line-height: 1.55 !important; 
+}
+
+/* Base inline behavior for single-language modes (applies to headings too, but without size override) */
+body.view-mode-root-only .root,
+body.view-mode-trans-only .trans,
+body.view-mode-trans-only .root.promoted,
+article.single-language .root.promoted {
+  display: inline !important;
+}
+
+/* Ensure headings in single language modes stay centered and properly sized */
+h1.sutta-title, h2, h3, h4, h5, h6 {
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+/* Headings internal text should inherit heading size, not body size */
+h1 .root, h1 .trans,
+h2 .root, h2 .trans,
+h3 .root, h3 .trans,
+h4 .root, h4 .trans,
+h5 .root, h5 .trans,
+h6 .root, h6 .trans,
+.sutta-title .root, .sutta-title .trans {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* Root Only Mode Refinement: Formal Typography */
+body.view-mode-root-only .root {
+  font-style: normal !important;
+  color: var(--text-main) !important;
+  font-weight: 400; 
+}
+
+/* Visibility Toggles */
+body.view-mode-root-only .trans,
+body.view-mode-root-only .segment.no-root,
+body.view-mode-root-only .no-root-content { 
+  display: none !important; 
+}
+
+/* Hide Root if it's NOT promoted and we are in Trans Only mode */
+body.view-mode-trans-only .root:not(.promoted),
+body.view-mode-trans-only .segment.no-trans,
+body.view-mode-trans-only .no-trans-content { 
+  display: none !important; 
+}
+
+/* [NEW] Comment markers are for translations; hide in Root Only */
+body.view-mode-root-only .comment-marker {
+  display: none !important;
+}
+
+/* --- 5. HIGHLIGHTING SYSTEM --- */
+
+.segment.highlight {
+  margin-bottom: 0;
+  padding-bottom: var(--seg-spacing);
+}
+
+.highlight,
+.highlight-container {
+  border-left: var(--highlight-border-width) solid var(--primary-color);
+  padding-left: calc(var(--highlight-side-offset) - var(--highlight-border-width));
+  margin-left: calc(-1 * var(--highlight-side-offset)); 
+  background-color: var(--highlight-bg);
+  border-radius: 0; 
+  transition: background-color 0.2s ease;
+}
+
+/* Rounded corners for single or boundary highlights */
+.segment.highlight:not(.segment.highlight + .segment.highlight) {
+    border-radius: 4px 4px 0 0;
+}
+.segment.highlight {
+    border-radius: 0 0 4px 4px;
+}
+.segment.highlight:has(+ .segment.highlight) {
+    border-radius: 0;
+}
+.segment.highlight:not(.segment.highlight + .segment.highlight):has(+ .segment.highlight) {
+    border-radius: 4px 4px 0 0;
+}
+.segment.highlight:not(.segment.highlight + .segment.highlight):not(:has(+ .segment.highlight)) {
+    border-radius: 4px;
+}
+
+/* Bridge gaps across paragraphs */
+.parent-highlight-bridge {
+    background-color: var(--highlight-bg);
+    border-left: var(--highlight-border-width) solid var(--primary-color);
+    margin-left: calc(-1 * var(--highlight-side-offset));
+    padding-left: calc(var(--highlight-side-offset) - var(--highlight-border-width));
+    border-radius: 0;
+    margin-bottom: 0; 
+    padding-bottom: var(--para-spacing); 
+}
+
+.parent-highlight-bridge .segment.highlight {
+    background-color: transparent;
+    border-left: none;
+    margin-left: 0;
+    padding-left: 0;
+    margin-bottom: var(--seg-spacing);
+    padding-bottom: 0;
+}
+
+.parent-highlight-bridge .segment.highlight:last-child {
+    margin-bottom: 0;
+}
+
+.parent-highlight-bridge + .parent-highlight-bridge {
+    margin-top: 0; 
+}
+
+.parent-highlight-bridge:not(.parent-highlight-bridge + .parent-highlight-bridge) {
+    border-radius: 4px 4px 0 0;
+}
+.parent-highlight-bridge {
+    border-radius: 0 0 4px 4px;
+}
+.parent-highlight-bridge:has(+ .parent-highlight-bridge) {
+    border-radius: 0;
+}
+.parent-highlight-bridge:not(.parent-highlight-bridge + .parent-highlight-bridge):has(+ .parent-highlight-bridge) {
+    border-radius: 4px 4px 0 0;
+}
+.parent-highlight-bridge:not(.parent-highlight-bridge + .parent-highlight-bridge):not(:has(+ .parent-highlight-bridge)) {
+    border-radius: 4px;
+}
+
+/* Inline Segment Highlight (Single Language Mode) */
+body.view-mode-root-only .segment.highlight,
+body.view-mode-trans-only .segment.highlight,
+article.single-language .segment.highlight {
+  display: inline;
+  margin-left: 0;
+  padding: 0.1em 0; 
+  border-left: none; 
+  background-color: rgba(var(--primary-rgb), 0.15); 
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+[data-theme="dark"] .highlight,
+[data-theme="dark"] .highlight-container {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+[data-theme="dark"] body.view-mode-root-only .segment.highlight,
+[data-theme="dark"] body.view-mode-trans-only .segment.highlight,
+[data-theme="dark"] article.single-language .segment.highlight {
+    background-color: rgba(255, 255, 255, 0.18);
+}

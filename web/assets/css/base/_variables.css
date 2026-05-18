@@ -189,6 +189,13 @@
   --popup-padding-desktop: 25px 30px;
 
   /* TTS Specific */
+  /* Highlighting & Spacing (Linked Master System) */
+  --highlight-bg: rgba(var(--primary-rgb), 0.08);
+  --highlight-border-width: 4px;
+  --highlight-side-offset: 1.25rem; /* Increased slightly for better visual balance */
+  --para-spacing: 1.2rem;
+  --seg-spacing: 0.6rem;
+
   --tts-cached-color: #2e7d32;
 }
 

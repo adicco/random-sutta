@@ -43,16 +43,20 @@ export const ParallelsData = {
 
         // Helper to format a link
         const createLinkHtml = (target) => {
-            const cleanUid = target.split('#')[0];
-            const segmentSuffix = target.includes('#') ? `#${target.split('#')[1]}` : '';
+            const hashIndex = target.indexOf('#');
+            const cleanUid = hashIndex !== -1 ? target.substring(0, hashIndex) : target;
+            const segmentSuffix = hashIndex !== -1 ? target.substring(hashIndex) : '';
             
             const meta = metadata[cleanUid];
             const acronym = meta ? meta.acronym : cleanUid;
             const title = meta ? (meta.translated_title || meta.original_title || "") : "";
             
+            // [UPDATED] Use normalized action format
+            const action = `window.loadSutta('${target}')`;
+
             return `
                 <li class="parallels-item">
-                    <a class="parallels-link" onclick="window.loadSutta('${target}'); return false;">
+                    <a class="parallels-link" onclick="${action}; return false;">
                         <span class="parallels-acronym">${acronym}${segmentSuffix}</span>
                         <span class="parallels-title">${title}</span>
                     </a>
@@ -96,15 +100,27 @@ export const ParallelsData = {
             `;
             
             segmentKeys.forEach(segKey => {
-                const segLabel = segKey.split('#')[1] || segKey;
+                // [FIX] Correctly extract range label
+                const hashIndex = segKey.indexOf('#');
+                let segLabel = hashIndex !== -1 ? segKey.substring(hashIndex + 1) : segKey;
+                segLabel = segLabel.replace(/#/g, ''); // Clean up internal hashes if any
 
-                // [FIX] Priority: Use segment label directly if it exists as an ID in DOM (e.g. vns256)
-                // Fallback to prefixed format (e.g. thag3.13:1.1)
-                const elementPrefix = document.getElementById(segLabel) ? segLabel : segKey.replace('#', ':');
+                // [FIX] Prepare jump/highlight data
+                let startId = segKey;
+                let endId = null;
+                if (segKey.includes('-')) {
+                    const parts = segKey.split('-');
+                    startId = parts[0];
+                    endId = parts[1].replace(/^#/, '');
+                }
+
+                // Normalize IDs
+                const normStart = document.getElementById(startId.split('#')[1] || "") ? (startId.split('#')[1]) : startId.replace('#', ':');
+                const normEnd = endId ? (document.getElementById(endId) ? endId : (endId.includes(':') ? endId : `${suttaId}:${endId}`)) : null;
 
                 html += `
                     <li class="parallels-item parallels-segment-group">
-                        <div class="parallels-segment-header" data-prefix="${elementPrefix}" title="Jump to segment">Seg ${segLabel}</div>
+                        <div class="parallels-segment-header" data-start="${normStart}" data-end="${normEnd || ''}" title="Jump to segment">Seg ${segLabel}</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                 `;                
                 RELATION_ORDER.forEach(relType => {
@@ -127,61 +143,28 @@ export const ParallelsData = {
         listElement.querySelectorAll('.parallels-segment-header').forEach(header => {
             header.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const prefix = header.dataset.prefix; // e.g., "dn1:1.7.1"
+                const startId = header.dataset.start;
+                const endId = header.dataset.end || null;
                 
                 // 1. Prepare search patterns
-                // Escape colons and periods for querySelector
-                const escapedPrefix = prefix.replace(/:/g, '\\:').replace(/\./g, '\\.');
-                
-                // Find all elements that are exactly this ID OR start with this ID followed by a dot
-                // This covers both single segments and groups/prefixes.
-                const targets = document.querySelectorAll(`#${escapedPrefix}, [id^='${escapedPrefix}.']`);
+                const escapedStart = startId.replace(/:/g, '\\:').replace(/\./g, '\\.');
+                const startEl = document.getElementById(startId);
 
-                // 2. Clear previous highlights
-                document.querySelectorAll('.highlight, .highlight-container').forEach(el => {
-                    el.classList.remove('highlight', 'highlight-container');
-                    if (el.dataset.highlightTimer) {
-                        clearTimeout(parseInt(el.dataset.highlightTimer));
-                        delete el.dataset.highlightTimer;
-                    }
-                });
-
-                // 3. Execute Jump and Highlight
-                if (targets.length > 0) {
-                    // Convert to Array and sort by ID numeric value if possible
-                    const targetArray = Array.from(targets).sort((a, b) => 
-                        a.id.localeCompare(b.id, undefined, {numeric: true, sensitivity: 'base'})
-                    );
-                    
-                    const firstEl = targetArray[0];
-                    Scroller.jumpTo(firstEl.id);
+                // 2. Execute Jump and Highlight
+                if (startEl) {
+                    Scroller.jumpTo(startId);
+                    Scroller.highlightElement(startId, true, endId); // Use auto-remove for UI feedback
                     
                     // Update URL hash to match jump target
                     try {
                         const bookParam = FilterComponent.generateBookParam();
-                        Router.updateURL(suttaId, bookParam, false, firstEl.id);
+                        const hlParam = endId ? `${startId}-${endId}` : startId;
+                        Router.updateURL(suttaId, bookParam, false, startId, Scroller.getScrollTop(), { replace: true, hl: hlParam });
                     } catch (err) {
                         logger.warn("Failed to update URL on jump", err);
                     }
-                    
-                    targetArray.forEach(el => {
-                        // [FIX] If targeting a reference anchor, highlight the parent segment instead
-                        let highlightEl = el;
-                        if (el.classList.contains('anchor-ref')) {
-                            highlightEl = el.closest('.segment') || el;
-                        }
-
-                        const highlightClass = highlightEl.classList.contains('segment') ? 'highlight' : 'highlight-container';
-                        highlightEl.classList.add(highlightClass);
-                        
-                        const timerId = setTimeout(() => {
-                            highlightEl.classList.remove(highlightClass);
-                            delete highlightEl.dataset.highlightTimer;
-                        }, 3500);
-                        highlightEl.dataset.highlightTimer = timerId;
-                    });
                 } else {
-                    logger.warn(`Could not find segments for: ${prefix}`);
+                    logger.warn(`Could not find start segment: ${startId}`);
                 }
             });
         });

@@ -20,23 +20,22 @@ export const AppRouter = {
         const initialParams = Router.getParams();
         
         if (initialParams.q) {
-            // Direct access to a Sutta -> Go to Reader
             ViewManager.switchView('reader');
             
             let loadId = initialParams.q;
             if (window.location.hash) loadId += window.location.hash;
             
-            // Check if this is the last read sutta to restore scroll position
+            // [NEW] Carry over highlight param
+            const options = {};
+            if (initialParams.hl) options.hl = initialParams.hl;
+
             let restoreScroll = 0;
             const progress = SuttaPersistence.load();
             if (progress && progress.id === loadId.split('#')[0]) {
                 restoreScroll = progress.scrollY;
             }
 
-            console.time("⏱️ Direct Load Total");
-            await SuttaController.loadSutta(loadId, true, restoreScroll);
-            console.timeEnd("⏱️ Direct Load Total");
-
+            await SuttaController.loadSutta(loadId, true, restoreScroll, options);
             RandomBuffer.startBackgroundWork();
         } else {
             // Root access -> Try restore last read or go to Landing
@@ -67,9 +66,11 @@ export const AppRouter = {
                 ViewManager.switchView('reader');
                 let loadId = currentParams.q;
                 if (window.location.hash) loadId += window.location.hash;
-                SuttaController.loadSutta(loadId, false, savedScroll, {
-                    transition: false,
-                });
+                
+                const options = { transition: false };
+                if (currentParams.hl) options.hl = currentParams.hl;
+
+                SuttaController.loadSutta(loadId, false, savedScroll, options);
             } else {
                 ViewManager.switchView('landing');
             }

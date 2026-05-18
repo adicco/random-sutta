@@ -57,6 +57,14 @@ export const SuttaController = {
         let preFetchedData = null;
         let suttaId;
         let scrollTarget = null;
+        let rangeEnd = null;
+
+        // [NEW] Resolve Range from Options (e.g. from Router)
+        if (options.hl) {
+            const hlParts = options.hl.split('-');
+            scrollTarget = hlParts[0];
+            rangeEnd = hlParts[1] || null;
+        }
 
         if (typeof input === 'object' && input.payload && input.data) {
             preFetchedData = input.data;
@@ -64,18 +72,38 @@ export const SuttaController = {
         } else if (typeof input === 'object') {
             suttaId = input.uid;
         } else {
-            const parts = input.split('#');
-            suttaId = parts[0].trim().toLowerCase();
-            if (parts.length > 1) {
-                scrollTarget = decodeURIComponent(parts[1]);
+            const hashIndex = input.indexOf('#');
+            if (hashIndex !== -1) {
+                suttaId = input.substring(0, hashIndex).trim().toLowerCase();
+                const hashContent = decodeURIComponent(input.substring(hashIndex + 1));
+                
+                // If not already set by hl option, parse from hash
+                if (!scrollTarget) {
+                    if (hashContent.includes('-')) {
+                        // Split by '-' but handle if parts still have '#'
+                        const rangeParts = hashContent.split('-');
+                        scrollTarget = rangeParts[0].trim().replace(/^#/, '');
+                        rangeEnd = rangeParts[1].trim().replace(/^#/, '') || null;
+                    } else {
+                        scrollTarget = hashContent.replace(/^#/, '');
+                    }
+                }
+            } else {
+                suttaId = input.trim().toLowerCase();
             }
         }
+
+        // [NEW] Normalize immediately to avoid double URL updates
+        scrollTarget = this._normalizeScrollTarget(suttaId, scrollTarget);
+        rangeEnd = this._normalizeScrollTarget(suttaId, rangeEnd);
 
         // 1. Update URL State (Optional)
         if (shouldUpdateUrl) {
             try {
                 const bookParam = FilterComponent.generateBookParam();
-                Router.updateURL(suttaId, bookParam, false, scrollTarget, currentScroll);
+                // [UPDATED] Use hl param in URL
+                const hlParam = rangeEnd ? `${scrollTarget}-${rangeEnd}` : scrollTarget;
+                Router.updateURL(suttaId, bookParam, false, scrollTarget, currentScroll, { hl: hlParam });
             } catch (e) {}
         }
 
@@ -92,7 +120,8 @@ export const SuttaController = {
             if (result && result.uid && result.uid !== suttaId && !result.isAlias && shouldUpdateUrl) {
                 try {
                     const bookParam = FilterComponent.generateBookParam();
-                    Router.updateURL(result.uid, bookParam, false, scrollTarget, Scroller.getScrollTop());
+                    const hlParam = rangeEnd ? `${scrollTarget}-${rangeEnd}` : scrollTarget;
+                    Router.updateURL(result.uid, bookParam, false, scrollTarget, Scroller.getScrollTop(), { replace: true, hl: hlParam });
                 } catch (e) {}
             }
 
@@ -104,16 +133,17 @@ export const SuttaController = {
             SuttaNavigation.update(result.nav);
 
             if (result.isAlias) {
-                return await this._handleAlias(result, scrollTarget);
+                const fullHash = rangeEnd ? `${scrollTarget}-${rangeEnd}` : scrollTarget;
+                return await this._handleAlias(result, fullHash);
             }
             
-            this._normalizeScrollTarget(suttaId, scrollTarget);
+            // scrollTarget and rangeEnd already normalized above
 
             // Rendering
             const success = await renderSutta(suttaId, result, options);
 
             if (success) {
-                this._handleSuccessfulRender(suttaId, scrollTarget, currentScroll, shouldUpdateUrl);
+                this._handleSuccessfulRender(suttaId, scrollTarget, currentScroll, shouldUpdateUrl, rangeEnd);
             }
 
             logger.timerEnd(`Render: ${suttaId}`);
@@ -127,8 +157,11 @@ export const SuttaController = {
 
             await new Promise(r => requestAnimationFrame(r));
             if (scrollTarget) {
-                Scroller.smoothScrollTo(scrollTarget);
-                Scroller.highlightElement(scrollTarget);
+                // Consistency delay
+                setTimeout(() => {
+                    Scroller.smoothScrollTo(scrollTarget);
+                    Scroller.highlightElement(scrollTarget, false, rangeEnd);
+                }, 50);
             } else {
                 await Scroller.restoreScrollTop(0);
             }
@@ -140,9 +173,21 @@ export const SuttaController = {
             if (status === 'ALIAS_REDIRECTED') return;
             
             if (scrollTarget) {
-                Scroller.jumpTo(scrollTarget);
-                Scroller.highlightElement(scrollTarget);
-                SuttaPersistence.save(suttaId, Scroller.getScrollTop());
+                // [NEW] Balanced jump logic. 
+                // We do one immediate attempt and one short-delayed attempt (for layout stability).
+                const performJump = () => {
+                    const el = document.getElementById(scrollTarget);
+                    if (el) {
+                        Scroller.jumpTo(scrollTarget);
+                        Scroller.highlightElement(scrollTarget, false, rangeEnd);
+                        SuttaPersistence.save(suttaId, Scroller.getScrollTop());
+                    }
+                };
+
+                // Immediate attempt
+                requestAnimationFrame(performJump);
+                // Layout stability attempt (covers most browser reflows)
+                setTimeout(performJump, 300); 
             } else if (scrollY > 0) {
                 await Scroller.restoreScrollTop(scrollY);
             } else if (Scroller.getScrollTop() > 0) {
@@ -238,7 +283,7 @@ export const SuttaController = {
     return scrollTarget;
   },
 
-  _handleSuccessfulRender: function(suttaId, scrollTarget, currentScroll, shouldUpdateUrl) {
+  _handleSuccessfulRender: function(suttaId, scrollTarget, currentScroll, shouldUpdateUrl, rangeEnd = null) {
     PopupAPI.scan();
     if (!shouldUpdateUrl) PopupAPI.restore();
     
@@ -248,7 +293,9 @@ export const SuttaController = {
 
     if (shouldUpdateUrl) {
         const bookParam = FilterComponent.generateBookParam();
-        Router.updateURL(suttaId, bookParam, false, scrollTarget ? `#${scrollTarget}` : null, currentScroll);
+        const hlParam = rangeEnd ? `${scrollTarget}-${rangeEnd}` : (scrollTarget ? `${scrollTarget}` : null);
+        // Use replace: true to update normalized URL without pushing a new history entry
+        Router.updateURL(suttaId, bookParam, false, scrollTarget, currentScroll, { replace: true, hl: hlParam });
         SuttaPersistence.save(suttaId, currentScroll);
     }
   },

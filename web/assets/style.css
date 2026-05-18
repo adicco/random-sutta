@@ -21,7 +21,10 @@
 @import "css/components/_buttons.css";
 
 /* Sutta Text Modules */
-@import "css/components/sutta/_sutta_base.css";
+@import "css/components/sutta/_sutta_layout.css";
+@import "css/components/sutta/_sutta_typography.css";
+@import "css/components/sutta/_sutta_highlighting.css";
+@import "css/components/sutta/_sutta_footer.css";
 @import "css/components/sutta/_sutta_pali.css";
 @import "css/components/sutta/_sutta_lzh.css";
 

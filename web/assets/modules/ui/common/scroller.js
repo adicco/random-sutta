@@ -111,37 +111,89 @@ export const Scroller = {
         this.smoothScrollTo(targetId);
     },
 
-    highlightElement: function(targetId, autoRemove = false) {
-        document.querySelectorAll('.highlight, .highlight-container').forEach(el => {
-            el.classList.remove('highlight', 'highlight-container');
-        });
+    highlightElement: function(targetId, autoRemove = false, endId = null) {
         if (!targetId) return;
 
-        let el = document.getElementById(targetId);
-        if (el) {
-            // [NEW] If targeting a reference anchor, highlight the parent segment instead
-            if (el.classList.contains('anchor-ref')) {
-                const parentSeg = el.closest('.segment');
-                if (parentSeg) el = parentSeg;
+        let retries = 0;
+        const maxRetries = 40; // Approx 0.6s total
+
+        const attemptHighlight = () => {
+            const startEl = document.getElementById(targetId);
+            const endEl = endId ? document.getElementById(endId) : null;
+
+            if (!startEl || (endId && !endEl)) {
+                if (retries < maxRetries) {
+                    retries++;
+                    requestAnimationFrame(attemptHighlight);
+                } else if (startEl) {
+                    this._executeHighlight(startEl, null, autoRemove, targetId, endId);
+                }
+                return;
             }
 
-            const highlightClass = el.classList.contains('segment') ? 'highlight' : 'highlight-container';
-            el.classList.add(highlightClass);
+            this._executeHighlight(startEl, endEl, autoRemove, targetId, endId);
+        };
 
-            if (autoRemove) {
-                // Clear any existing timer for this element to prevent race conditions
-                if (el.dataset.highlightTimer) {
-                    clearTimeout(parseInt(el.dataset.highlightTimer));
+        requestAnimationFrame(attemptHighlight);
+    },
+
+    _executeHighlight: function(startEl, endEl, autoRemove, targetId, endId) {
+        document.querySelectorAll('.highlight, .highlight-container, .parent-highlight-bridge').forEach(e => {
+            e.classList.remove('highlight', 'highlight-container', 'parent-highlight-bridge');
+        });
+
+        const allSegments = Array.from(document.querySelectorAll('.segment'));
+        const startIndex = allSegments.findIndex(s => s.id === targetId || s.contains(startEl));
+        let endIndex = endEl ? allSegments.findIndex(s => s.id === endId || s.contains(endEl)) : -1;
+
+        if (startIndex !== -1) {
+            let from = startIndex;
+            let to = endIndex !== -1 ? endIndex : startIndex;
+            if (from > to) [from, to] = [to, from];
+
+            const highlightedParents = new Set();
+            const BLOCK_TAGS = ['P', 'BLOCKQUOTE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'DIV', 'SECTION', 'LI'];
+
+            for (let i = from; i <= to; i++) {
+                const seg = allSegments[i];
+                seg.classList.add('highlight');
+                if (autoRemove) this._setupAutoRemove(seg, 'highlight');
+
+                // [FIX] Walk up to find the closest block-level container
+                let parent = seg.parentElement;
+                while (parent && parent.tagName !== 'ARTICLE' && !BLOCK_TAGS.includes(parent.tagName)) {
+                    parent = parent.parentElement;
                 }
                 
-                const timerId = setTimeout(() => {
-                    el.classList.remove(highlightClass);
-                    delete el.dataset.highlightTimer;
-                }, 2000);
-                
-                el.dataset.highlightTimer = timerId;
+                if (parent && parent.tagName !== 'ARTICLE') {
+                    highlightedParents.add(parent);
+                }
             }
+
+            highlightedParents.forEach(parent => {
+                parent.classList.add('parent-highlight-bridge');
+                if (autoRemove) this._setupAutoRemove(parent, 'parent-highlight-bridge');
+            });
+
+        } else {
+            const el = startEl.classList.contains('anchor-ref') ? (startEl.closest('.segment') || startEl) : startEl;
+            const highlightClass = el.classList.contains('segment') ? 'highlight' : 'highlight-container';
+            el.classList.add(highlightClass);
+            if (autoRemove) this._setupAutoRemove(el, highlightClass);
         }
+    },
+
+    _setupAutoRemove: function(el, className) {
+        if (el.dataset.highlightTimer) {
+            clearTimeout(parseInt(el.dataset.highlightTimer));
+        }
+        
+        const timerId = setTimeout(() => {
+            el.classList.remove(className);
+            delete el.dataset.highlightTimer;
+        }, 3500); 
+        
+        el.dataset.highlightTimer = timerId;
     },
 
     transitionTo: async function(renderAction, targetId) {
@@ -157,13 +209,11 @@ export const Scroller = {
 
     _findAndScroll(target, positionCalculator, behavior) {
         let retries = 0;
-        const maxRetries = 60; 
+        const maxRetries = 60; // Approx 1s total
 
-        // [OPTIMIZED] Logic cuộn
         const executeScroll = (element) => {
             const targetY = positionCalculator(element);
             
-            // Cưỡng chế tắt smooth scroll của trình duyệt nếu muốn instant
             if (behavior === 'instant') {
                 document.documentElement.style.scrollBehavior = 'auto';
             }

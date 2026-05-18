@@ -2,15 +2,12 @@
 
 export const Router = {
   // Giữ nguyên tham số enableRandomMode để tránh lỗi gọi hàm, nhưng sẽ ignore nó trong logic
-  updateURL: function (suttaId, bookParam, enableRandomMode = false, explicitHash = null, savedScrollPosition = null) {
+  updateURL: function (suttaId, bookParam, enableRandomMode = false, explicitHash = null, savedScrollPosition = null, options = {}) {
     try {
       const currentScrollY = (savedScrollPosition !== null) ? savedScrollPosition : (window.scrollY || 0);
       
       const currentState = window.history.state || {};
       
-      // [CRITICAL] KEEP "...currentState"
-      // Preserves 'popupSnapshot' for back-button restoration functionality.
-      // DO NOT remove or replace with a fresh object.
       window.history.replaceState(
           { ...currentState, scrollY: currentScrollY }, 
           "", 
@@ -24,9 +21,7 @@ export const Router = {
       const params = new URLSearchParams(window.location.search);
       const currentSuttaId = params.get("q");
 
-      // 1. Luôn xóa cờ 'r' để làm sạch URL
       params.delete("r");
-      // 2. Luôn set 'q' nếu có suttaId (kể cả khi enableRandomMode = true)
       if (suttaId) {
         params.set("q", suttaId);
       }
@@ -35,6 +30,13 @@ export const Router = {
         params.set("b", bookParam);
       } else {
         params.delete("b");
+      }
+
+      // [NEW] Handle highlight parameter
+      if (options.hl) {
+          params.set("hl", options.hl);
+      } else if (!suttaId || suttaId !== currentSuttaId) {
+          params.delete("hl");
       }
 
       let hash = "";
@@ -47,12 +49,14 @@ export const Router = {
       const newUrl = `${window.location.pathname}?${params.toString()}${hash}`;
       const stateId = suttaId || params.get("q");
 
-      // [UPDATED] Normalized comparison to avoid duplicate pushes
-      // Create relative URL string from current location for comparison
       const currentRelativeUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
       
       if (newUrl !== currentRelativeUrl) {
-         window.history.pushState({ suttaId: stateId, scrollY: 0 }, "", newUrl);
+         if (options.replace) {
+             window.history.replaceState({ ...window.history.state, suttaId: stateId, scrollY: 0 }, "", newUrl);
+         } else {
+             window.history.pushState({ suttaId: stateId, scrollY: 0 }, "", newUrl);
+         }
       }
     } catch (e) {
       console.warn("Router Error:", e);
@@ -63,8 +67,9 @@ export const Router = {
     const p = new URLSearchParams(window.location.search);
     return {
       q: p.get("q"),
-      r: p.get("r"), // Vẫn lấy để check backward compatibility nếu cần
+      r: p.get("r"),
       b: p.get("b"),
+      hl: p.get("hl"), // [NEW]
     };
   },
 };
