@@ -51,12 +51,9 @@ export const ParallelsData = {
             const acronym = meta ? meta.acronym : cleanUid;
             const title = meta ? (meta.translated_title || meta.original_title || "") : "";
             
-            // [UPDATED] Use normalized action format
-            const action = `window.loadSutta('${target}')`;
-
             return `
                 <li class="parallels-item">
-                    <a class="parallels-link" onclick="${action}; return false;">
+                    <a class="parallels-link" data-target="${target}">
                         <span class="parallels-acronym">${acronym}${segmentSuffix}</span>
                         <span class="parallels-title">${title}</span>
                     </a>

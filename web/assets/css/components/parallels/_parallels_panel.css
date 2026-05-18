@@ -12,12 +12,8 @@
   pointer-events: none;
 }
 
-#parallels-fab,
-#parallels-menu {
-  pointer-events: auto;
-}
-
 #parallels-fab {
+  pointer-events: auto;
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -40,59 +36,19 @@
   background-color: var(--bg-hover);
 }
 
-/* --- 2. MENU DRAWER --- */
-#parallels-menu {
-  margin-top: 5px;
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-light);
-  
-  width: 320px;
-  max-height: 70vh;
-  border-radius: 8px;
-  box-shadow: var(--shadow-card);
-  
+/* --- 2. POPUP INTEGRATION --- */
+#parallels-popup {
+  bottom: 0;
+  max-height: var(--popup-parallels-height);
+  height: var(--popup-parallels-height);
+  z-index: 1020;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
+}
+
+#parallels-popup .popup-body {
   padding: 15px;
-  overflow-y: hidden;
-  overscroll-behavior: contain;
-  animation: slideDown 0.2s ease-out;
-  display: flex;
-  flex-direction: column;
-}
-
-.parallels-header {
-  font-size: 0.8rem;
-  color: var(--text-light);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-light);
-  margin-bottom: 10px;
-}
-
-.parallels-tab-content {
-  flex-grow: 1;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color) transparent;
-}
-
-/* Scrollbar styling (Webkit) */
-.parallels-tab-content::-webkit-scrollbar {
-  width: 6px;
-}
-.parallels-tab-content::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
-  border-radius: 10px;
-}
-.parallels-tab-content::-webkit-scrollbar-thumb:hover {
-  background-color: var(--text-light);
-}
-
-@media (max-width: 600px) {
-  #parallels-menu {
-    width: 280px;
-  }
+  overscroll-behavior: contain;
 }
 
 .parallels-group-header {
@@ -122,17 +78,16 @@
 .parallels-link {
   display: flex;
   align-items: flex-start;
-  padding: 4px 8px;
+  padding: 8px;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: background-color 0.1s ease;
-  min-height: 24px;
+  min-height: 32px;
   text-decoration: none !important;
 }
 
 .parallels-link:hover {
   background-color: var(--bg-hover);
-  text-decoration: none !important;
 }
 
 .parallels-acronym {
@@ -153,22 +108,23 @@
 }
 
 .parallels-segment-header {
-  font-size: 0.8em;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.parallels-segment-header:hover {
+  font-size: 0.85em;
   color: var(--primary-color);
+  margin-bottom: 8px;
+  margin-top: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  display: inline-block;
 }
 
 .parallels-segment-group {
-  margin-top: 10px;
+  margin-top: 15px;
   padding-left: 10px;
-  border-left: 2px solid var(--border-light);
+  border-left: 2px solid var(--primary-color);
+  opacity: 0.9;
 }
 
 .parallels-type-label {
@@ -176,40 +132,6 @@
   color: var(--text-light);
   text-transform: uppercase;
   margin-left: 8px;
-  margin-top: 4px;
+  margin-top: 6px;
   margin-bottom: 2px;
-}
-
-/* --- 10. RESIZE HANDLE --- */
-#parallels-resize-handle {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 20px;
-  height: 20px;
-  cursor: nesw-resize;
-  z-index: 1105;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  color: var(--text-muted);
-  opacity: 0.15;
-  border-bottom-left-radius: 8px;
-  transition: opacity 0.2s ease, color 0.2s ease;
-}
-
-#parallels-resize-handle::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-left: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
-  border-bottom-left-radius: 8px; /* Pronounced rounding */
-  margin-left: 4px;
-  margin-bottom: 4px;
-}
-
-#parallels-resize-handle:hover {
-  opacity: 0.8;
-  color: var(--primary-color);
 }

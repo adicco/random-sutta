@@ -1,54 +1,94 @@
 // Path: web/assets/modules/ui/components/parallels/parallels_controller.js
 import { ParallelsData } from './parallels_data.js';
-import { ParallelsResize } from './parallels_resize.js';
+import { ResizeHandler } from 'ui/common/resize_handler.js';
 import { ParallelsScroll } from './parallels_scroll.js';
+import { QuicklookController } from '../popup/controllers/quicklook_controller.js';
+import { ZIndexManager } from 'ui/common/z_index_manager.js';
 
 export function setupParallelsPanel() {
     const els = {
         wrapper: document.getElementById("parallels-panel"),
         fab: document.getElementById("parallels-fab"),
-        menu: document.getElementById("parallels-menu"),
+        popup: document.getElementById("parallels-popup"),
         list: document.getElementById("parallels-list"),
-        container: document.getElementById("sutta-container"),
-        content: document.getElementById("parallels-content"),
+        closeBtn: document.getElementById("close-parallels"),
         resizeHandle: document.getElementById("parallels-resize-handle")
     };
 
-    if (!els.wrapper || !els.fab || !els.menu || !els.list) {
+    if (!els.wrapper || !els.fab || !els.popup || !els.list) {
         return { generate: () => {} };
     }
 
+    // [Z-INDEX] Register popup
+    ZIndexManager.register(els.popup);
+
     // --- Resize Logic ---
-    ParallelsResize.enable(els.menu, els.resizeHandle);
+    if (els.resizeHandle) {
+        ResizeHandler.attach(els.popup, els.resizeHandle, {
+            storageKey: 'parallels_popup_height',
+            cssVar: '--popup-parallels-height',
+            maxHeightVh: 80
+        });
+    }
 
     // --- Event Handlers ---
-    const closeMenu = () => {
-        els.menu.classList.add("hidden");
+    const closePopup = () => {
+        els.popup.classList.add("hidden");
         els.fab.classList.remove("active");
+        document.body.classList.remove("parallels-open");
     };
 
-    const toggleMenu = (e) => {
-        els.menu.classList.toggle("hidden");
-        els.fab.classList.toggle("active");
+    const togglePopup = (e) => {
+        const isHidden = els.popup.classList.contains("hidden");
+        if (isHidden) {
+            els.popup.classList.remove("hidden");
+            els.fab.classList.add("active");
+            document.body.classList.add("parallels-open");
+            ZIndexManager.bringToFront(els.popup);
+        } else {
+            closePopup();
+        }
         e.stopPropagation();
     };
 
-    els.fab.onclick = toggleMenu;
+    els.fab.onclick = togglePopup;
+    if (els.closeBtn) {
+        els.closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            closePopup();
+        };
+    }
+
+    // Handle link clicks inside parallels list
+    els.list.addEventListener("click", (e) => {
+        const link = e.target.closest(".parallels-link");
+        if (link) {
+            e.preventDefault();
+            e.stopPropagation();
+            const target = link.dataset.target;
+            if (target) {
+                QuicklookController.handleLinkRequest(target);
+            }
+        }
+    });
 
     // --- Scroll Isolation ---
-    ParallelsScroll.enableIsolation(els.menu, () => els.content);
+    const popupBody = els.popup.querySelector(".popup-body");
+    ParallelsScroll.enableIsolation(els.popup, () => popupBody);
 
-    // Click outside to close
+    // Click outside to close (optional, depending on preference)
     document.addEventListener("click", (e) => {
-        if (!els.menu.classList.contains("hidden") && !els.wrapper.contains(e.target)) {
-            closeMenu();
+        if (!els.popup.classList.contains("hidden") && 
+            !els.popup.contains(e.target) && 
+            !els.fab.contains(e.target)) {
+            closePopup();
         }
     });
 
     async function generate(suttaId) {
         // Reset State
         els.list.innerHTML = "";
-        closeMenu();
+        closePopup();
         
         // Hide FAB initially while loading
         els.fab.classList.add("hidden");
@@ -61,8 +101,8 @@ export function setupParallelsPanel() {
             els.wrapper.classList.remove("hidden");
             els.fab.classList.remove("hidden");
         } else {
-            // Keep fab hidden if no data, ensure wrapper is also somewhat clean or hidden if needed
-            els.wrapper.classList.remove("hidden"); // keeping wrapper as before, just hiding the fab
+            // Keep fab hidden if no data
+            els.wrapper.classList.remove("hidden");
         }
     }
 

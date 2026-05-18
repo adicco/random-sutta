@@ -3,6 +3,7 @@
 /* --- SHARED STYLES --- */
 :root {
   --popup-comment-height: 40vh;
+  --popup-parallels-height: 40vh;
   --popup-filter-height: auto;
   --popup-quicklook-top: calc(70px + env(safe-area-inset-top, 0px));
 }
@@ -150,11 +151,17 @@ body.is-resizing .popup-container {
   background-color: var(--bg-drawer);
 }
 
-/* [NEW] Stacking Logic: When Comment Popup is open, lift Quicklook above it */
-body.popup-open #quicklook-popup {
+/* [NEW] Stacking Logic: When Comment or Parallels Popup is open, lift Quicklook above it */
+body.popup-open #quicklook-popup,
+body.parallels-open #quicklook-popup {
   bottom: var(--popup-comment-height) !important;
   top: auto; /* Let it grow upwards from the bottom constraint */
   max-height: calc(100vh - var(--popup-comment-height) - var(--popup-quicklook-top));
+}
+
+body.parallels-open #quicklook-popup {
+  bottom: var(--popup-parallels-height) !important;
+  max-height: calc(100vh - var(--popup-parallels-height) - var(--popup-quicklook-top));
 }
 
 #quicklook-popup.hidden {
