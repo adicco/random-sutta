@@ -116,14 +116,15 @@ export const UIManager = {
             startHeight = drawer.offsetHeight;
             
             drawer.style.transition = "none"; // Disable transition during resize
-            document.body.style.cursor = "nwse-resize";
+            document.body.style.cursor = "nesw-resize";
             document.body.style.userSelect = "none";
         };
 
         const doResize = (clientX, clientY) => {
             if (!isResizing) return;
             
-            const newWidth = startWidth + (clientX - startX);
+            // On the right, dragging left (decreasing clientX) should increase width
+            const newWidth = startWidth + (startX - clientX);
             const newHeight = startHeight + (clientY - startY);
             
             // Constrain width

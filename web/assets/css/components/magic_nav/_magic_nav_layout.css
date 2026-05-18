@@ -2,18 +2,18 @@
 #magic-nav-wrapper {
   position: fixed;
   top: calc(10px + env(safe-area-inset-top, 0px));
-  left: 10px;
+  right: 10px;
   z-index: 1100;
   display: flex;
   align-items: center;
   gap: 8px;
-  
+
   padding: 6px;
   border-radius: 30px;
-  
+
   transition: none; 
   background-color: transparent;
-  
+
   width: auto;
   max-width: calc(100vw - 20px);
 }
@@ -23,11 +23,11 @@
 #magic-nav-wrapper::before {
   content: '';
   position: absolute;
-  /* Mở rộng lên trên và sang trái 10px để lấp đầy khoảng cách margin */
+  /* Mở rộng lên trên và sang phải 10px để lấp đầy khoảng cách margin */
   top: -10px; 
-  left: -10px;
+  right: -10px;
   /* Mở rộng thêm một chút sang các hướng khác để dễ bấm hơn */
-  right: -5px;
+  left: -5px;
   bottom: -5px;
   z-index: -1; /* Nằm dưới nội dung chính */
   cursor: pointer;
@@ -50,14 +50,14 @@
   display: none;
 }
 
-/* ... (Các phần còn lại giữ nguyên) ... */
-
 #magic-nav-wrapper:not(.collapsed) {
   background-color: var(--bg-card);
   box-shadow: var(--shadow-soft);
   border: 1px solid var(--border-light);
   opacity: 1;
-  padding: 6px 8px 6px 12px; 
+  padding: 6px 12px 6px 8px; 
+  z-index: 1150;
+}
   z-index: 1150;
 }
 

@@ -42,7 +42,7 @@
 /* [UPDATED] Corner Trigger (Chevron Left) */
 #magic-nav-corner {
   /* Chỉ cần căn chỉnh lề riêng, còn lại kế thừa từ .magic-btn */
-  margin-right: 2px;
+  margin-left: 2px;
   width: 24px;
   height: 24px;
   
@@ -55,6 +55,11 @@
 /* Khi đóng (Collapsed): Hiện mờ như một floating button */
 #magic-nav-wrapper.collapsed #magic-nav-corner {
   opacity: 0.3;
+}
+
+/* On the right, collapsed should point LEFT (rotated 180deg) */
+#magic-nav-wrapper.collapsed #magic-nav-corner svg {
+  transform: rotate(180deg);
 }
 
 #magic-nav-wrapper.collapsed:hover #magic-nav-corner {
@@ -75,8 +80,9 @@
   transition: transform 0.2s ease;
 }
 
+/* On the right, expanded should point RIGHT (rotated 0deg) */
 #magic-nav-wrapper:not(.collapsed) #magic-nav-corner svg {
-  transform: rotate(180deg);
+  transform: rotate(0deg);
 }
 
 /* --- 3. ICON ANIMATIONS --- */

@@ -141,7 +141,7 @@
 #magic-toc-drawer {
   position: fixed;
   top: calc(65px + env(safe-area-inset-top, 0px));
-  left: 15px;
+  right: 15px;
   width: 320px;
   max-width: calc(100vw - 30px);
   max-height: 70vh;
@@ -166,17 +166,17 @@
 #magic-toc-resize-handle {
   position: absolute;
   bottom: 0;
-  right: 0;
+  left: 0;
   width: 20px;
   height: 20px;
-  cursor: nwse-resize;
+  cursor: nesw-resize;
   z-index: 1105;
   display: flex;
   align-items: flex-end;
-  justify-content: flex-end;
+  justify-content: flex-start;
   color: var(--text-muted);
   opacity: 0.15; 
-  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;
   transition: opacity 0.2s ease, color 0.2s ease;
 }
 
@@ -184,10 +184,10 @@
   content: "";
   width: 8px;
   height: 8px;
-  border-right: 1.5px solid currentColor;
+  border-left: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
-  border-bottom-right-radius: 8px; /* Pronounced rounding */
-  margin-right: 4px;
+  border-bottom-left-radius: 8px; /* Pronounced rounding */
+  margin-left: 4px;
   margin-bottom: 4px;
 }
 
@@ -242,7 +242,7 @@
   border-top: 1px solid var(--border-light);
   background-color: transparent;
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
   flex-shrink: 0;
 }
 
