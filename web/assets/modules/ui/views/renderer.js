@@ -2,14 +2,14 @@
 import { LeafRenderer } from "./renderers/leaf_renderer.js";
 import { BranchRenderer } from "./renderers/branch_renderer.js";
 import { SearchRenderer } from "./renderers/search_renderer.js";
-import { setupTableOfHeadings } from "ui/components/toh/toh_controller.js";
+import { setupParallelsPanel } from "ui/components/parallels/parallels_controller.js";
 import { UIFactory } from "ui/common/ui_factory.js";
 import { HeaderView } from "./header_view.js";
 import { MagicNav } from "ui/components/magic_nav/magic_nav_controller.js";
 import { FamiliarityBar } from "ui/components/familiarity_bar.js";
 import { BookmarkManager } from "ui/managers/bookmark_manager.js";
 
-let tohInstance = null;
+let parallelsInstance = null;
 
 export async function renderSutta(suttaId, data, options = {}) {
     const container = document.getElementById("sutta-container");
@@ -41,9 +41,7 @@ export async function renderSutta(suttaId, data, options = {}) {
     if (data.type === 'search_results') {
         renderResult = SearchRenderer.render(data);
         document.getElementById("breadcrumb-container")?.classList.add("hidden");
-        // [FIX] Keep toh-wrapper visible for search results too if needed, 
-        // but for now, we follow user request for "bài kinh" (suttas/branches).
-        document.getElementById("toh-wrapper")?.classList.add("hidden");
+        document.getElementById("parallels-panel")?.classList.add("hidden");
     }
     // [FIX LOGIC] Phân loại dựa trên Meta Type thay vì chỉ dựa vào sự tồn tại của Content
     // Nếu có content -> Chắc chắn render Leaf
@@ -55,7 +53,6 @@ export async function renderSutta(suttaId, data, options = {}) {
     // Nếu Meta nói là 'branch' hoặc 'super_book' -> Render Branch
     else if (data.meta && (data.meta.type === 'branch' || data.meta.type === 'super_book' || data.meta.type === 'root')) {
         renderResult = BranchRenderer.render(data);
-        // [FIXED] Do not hide toh-wrapper for branches, as it contains the Bookmark button.
     } 
     // [NEW] Trường hợp còn lại: Meta là Leaf nhưng Content = null (Lỗi tải)
     else {
@@ -114,10 +111,10 @@ export async function renderSutta(suttaId, data, options = {}) {
         data.superMeta
     );
 
-    // [UPDATED] Generate Table of Headings / Tools for both Leaf and Branch views
+    // [UPDATED] Generate Parallels Panel for both Leaf and Branch views
     if (data.type !== 'search_results') {
-        if (!tohInstance) tohInstance = setupTableOfHeadings();
-        tohInstance.generate(data.uid);
+        if (!parallelsInstance) parallelsInstance = setupParallelsPanel();
+        parallelsInstance.generate(data.uid);
     }
 
     return true;

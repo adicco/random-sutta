@@ -28,7 +28,6 @@
 @import "css/components/_navigation.css";
 @import "css/components/_cards.css";
 @import "css/components/popup/popup_main.css";
-@import "css/components/_toh.css";
 @import "css/components/_splash.css";
 @import "css/components/_loader.css";
 @import "css/components/_search_results.css";
@@ -41,8 +40,10 @@
 @import "css/components/magic_nav/_magic_nav_trigger_buttons.css";
 @import "css/components/magic_nav/_magic_nav_breadcrumb_bar.css";
 @import "css/components/magic_nav/_magic_nav_toc_tree_drawer.css";
+@import "css/components/magic_nav/_magic_nav_headings.css";
 @import "css/components/magic_nav/_magic_nav_read.css";
 @import "css/components/_familiarity_bar.css";
+@import "css/components/parallels/_parallels_panel.css";
 
 @import "css/components/_misc.css";
 @import "css/components/_sync_widget.css";
