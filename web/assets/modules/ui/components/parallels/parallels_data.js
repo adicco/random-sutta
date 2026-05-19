@@ -48,13 +48,21 @@ export const ParallelsData = {
                 const getLangPriority = (lang) => {
                     if (lang === 'pli') return 0;
                     if (lang === 'lzh') return 1;
-                    return 2;
+                    if (lang === 'san') return 2;
+                    if (lang === 'pra') return 3;
+                    return 4;
                 };
 
                 const pA = getLangPriority(langA);
                 const pB = getLangPriority(langB);
 
                 if (pA !== pB) return pA - pB;
+                
+                // If priorities are equal (both in "others" category), sort by language code first
+                if (pA === 4 && langA !== langB) {
+                    return langA.localeCompare(langB);
+                }
+                
                 return a.localeCompare(b);
             });
         };
