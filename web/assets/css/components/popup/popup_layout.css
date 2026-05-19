@@ -190,7 +190,7 @@ body.parallels-open #quicklook-popup {
 }
 
 /* [NEW] Body Padding for Popup */
-body.popup-open, body.lookup-open {
+body.popup-open, body.lookup-open, body.parallels-open {
   /* No special body padding needed for bottom popups if they overlay content */
   /* But if we want to scroll content fully: */
   padding-bottom: 45vh !important;

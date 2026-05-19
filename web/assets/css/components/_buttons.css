@@ -64,7 +64,8 @@ button,
 /* Hide edge nav when any major overlay is open to avoid accidental triggers */
 body.popup-open .edge-nav-zone,
 body.quicklook-open .edge-nav-zone,
-body.lookup-open .edge-nav-zone {
+body.lookup-open .edge-nav-zone,
+body.parallels-open .edge-nav-zone {
   display: none !important;
 }
 
