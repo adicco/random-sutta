@@ -70,20 +70,25 @@ export const QuicklookController = {
         PopupState.loadingUid = uid;
         
         // Provide visual feedback if loading takes more than 150ms to prevent flickering
-        const loadingTimer = setTimeout(() => {
-            QuicklookUI.showLoading(uid.toUpperCase());
-        }, 150);
+        // Skip delay if restoring to prevent flash
+        let loadingTimer = null;
+        if (isRestoring) {
+            QuicklookUI.showLoading(uid.toUpperCase(), true);
+        } else {
+            loadingTimer = setTimeout(() => {
+                QuicklookUI.showLoading(uid.toUpperCase());
+            }, 150);
+        }
 
         try {
             const data = await SuttaService.loadSutta(uid, { prefetchNav: false });
-            clearTimeout(loadingTimer);
+            if (loadingTimer) clearTimeout(loadingTimer);
             if (data && data.content) {
                 const renderRes = LeafRenderer.render(data);
                 const displayTitle = this._buildTitle(data.meta, uid);
-                
+
                 // 1. Render HTML vào DOM ngay lập tức
-                QuicklookUI.render(renderRes.html, displayTitle, href);
-                
+                QuicklookUI.render(renderRes.html, displayTitle, href, isRestoring);                
                 // Update State
                 PopupState.setQuicklookActive(href);
                 

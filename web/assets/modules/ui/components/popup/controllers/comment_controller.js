@@ -127,7 +127,7 @@ export const CommentController = {
         }
     },
 
-    activate(index) {
+    activate(index, isRestoring = false) {
         PopupState.setCommentActive(index);
         
         const comments = PopupState.getComments();
@@ -136,7 +136,7 @@ export const CommentController = {
         if (index >= 0 && index < total) {
             const item = comments[index];
             const context = PopupScanner.getContextText(comments, index);
-            CommentUI.render(item.text, index, total, context);
+            CommentUI.render(item.text, index, total, context, isRestoring);
 
             // [FIXED] Ensure segment highlight matches the currently active comment
             if (item && item.id) {

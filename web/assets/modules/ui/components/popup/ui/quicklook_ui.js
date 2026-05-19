@@ -54,13 +54,17 @@ export const QuicklookUI = {
         });
     },
 
-    render(htmlContent, title = "Preview", sourceUrl = null) {
+    render(htmlContent, title = "Preview", sourceUrl = null, isRestoring = false) {
         if (this.elements.title) this.elements.title.innerHTML = title;
         this.elements.content.innerHTML = htmlContent;
 
         // Store URL for footer interaction
         this.currentSourceUrl = sourceUrl;
 
+        if (isRestoring) {
+            this.elements.popup.classList.add("no-transition");
+        }
+        
         this.elements.popup.classList.remove("hidden");
         document.body.classList.add("quicklook-open");
         
@@ -68,10 +72,17 @@ export const QuicklookUI = {
         ZIndexManager.bringToFront(this.elements.popup);
         
         if (this.elements.popupBody) this.elements.popupBody.scrollTop = 0;
+
+        if (isRestoring) {
+            this.elements.popup.offsetHeight;
+            requestAnimationFrame(() => {
+                this.elements.popup.classList.remove("no-transition");
+            });
+        }
     },
 
-    showLoading(title = "Loading...") {
-        this.render('<div style="text-align:center; padding: 20px;">Loading...</div>', title);
+    showLoading(title = "Loading...", isRestoring = false) {
+        this.render('<div style="text-align:center; padding: 20px;">Loading...</div>', title, null, isRestoring);
     },
 
     showError(msg) {

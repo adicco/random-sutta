@@ -32,7 +32,7 @@ export const RestorationController = {
             if (snapshot.commentIndex < comments.length) {
                 logger.info("Restore", `Restoring Comment at index: ${snapshot.commentIndex}`);
                 
-                CommentController.activate(snapshot.commentIndex);
+                CommentController.activate(snapshot.commentIndex, true);
                 restoredAnything = true;
 
                 // [FIXED] Restore Scroll & Highlight
@@ -54,7 +54,7 @@ export const RestorationController = {
         // 3. Phục hồi Parallels
         if (snapshot.parallelsOpen) {
             logger.info("Restore", `Restoring Parallels Panel`);
-            ParallelsController.open(true);
+            ParallelsController.open(true, true);
             restoredAnything = true;
         }
 

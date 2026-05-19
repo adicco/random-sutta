@@ -92,7 +92,7 @@ export const CommentUI = {
         });
     },
 
-    render(text, index, total, contextText = "") {
+    render(text, index, total, contextText = "", isRestoring = false) {
         if (!this.elements.content) return;
         
         // [UPDATED] Split by | and wrap in paragraphs
@@ -113,6 +113,10 @@ export const CommentUI = {
             this.elements.headerContext.scrollLeft = 0;
         }
 
+        if (isRestoring) {
+            this.elements.popup.classList.add("no-transition");
+        }
+
         // [Z-INDEX] Bring to front
         ZIndexManager.bringToFront(this.elements.popup);
 
@@ -122,6 +126,13 @@ export const CommentUI = {
         if (this.elements.popupBody) this.elements.popupBody.scrollTop = 0;
 
         this._updateNav(index, total);
+
+        if (isRestoring) {
+            this.elements.popup.offsetHeight;
+            requestAnimationFrame(() => {
+                this.elements.popup.classList.remove("no-transition");
+            });
+        }
     },
 
     hide() {
