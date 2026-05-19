@@ -132,7 +132,7 @@ export const ParallelsData = {
 
                     suttaHtml = `
                         <li class="parallels-item" style="margin-top: 25px;">
-                            <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">${suttaHeading}</h4>
+                            <h4 class="parallels-main-header">${suttaHeading}</h4>
                             <ul style="list-style: none; padding: 0; margin: 0;">
                                 ${tempSuttaHtml}
                             </ul>
@@ -202,7 +202,7 @@ export const ParallelsData = {
             if (hasSegmentContent) {
                 const isSubleaf = effectiveUid !== suttaId;
                 const topMargin = isSubleaf ? "" : "margin-top: 25px;";
-                const headerHtml = isSubleaf ? "" : `<h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">By Segment</h4>`;
+                const headerHtml = isSubleaf ? "" : `<h4 class="parallels-main-header">By Segment</h4>`;
 
                 segmentsHtml = `
                     <li class="parallels-item" style="${topMargin}">

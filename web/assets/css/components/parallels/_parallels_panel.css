@@ -64,6 +64,20 @@
   text-align: left;
 }
 
+/* [NEW] Main Section Header for Parallels (Centered, Primary Color) */
+.parallels-main-header {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
 /* --- 3. LIST & ITEM LAYOUT --- */
 #parallels-list {
   list-style: none;
