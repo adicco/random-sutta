@@ -6,6 +6,7 @@ import { QuicklookController } from 'ui/components/popup/controllers/quicklook_c
 import { QuicklookUI } from 'ui/components/popup/ui/quicklook_ui.js';
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
 import { PopupState } from 'ui/components/popup/state/popup_state.js';
+import { SuttaRepository } from 'data/sutta_repository.js';
 
 let currentEls = null;
 
@@ -59,7 +60,8 @@ export function setupParallelsPanel() {
         popup: document.getElementById("parallels-popup"),
         list: document.getElementById("parallels-list"),
         closeBtn: document.getElementById("close-parallels"),
-        resizeHandle: document.getElementById("parallels-resize-handle")
+        resizeHandle: document.getElementById("parallels-resize-handle"),
+        title: document.querySelector("#parallels-popup .popup-title-text") // Added title element
     };
 
     if (!els.wrapper || !els.fab || !els.popup || !els.list) {
@@ -129,6 +131,13 @@ export function setupParallelsPanel() {
     async function generate(suttaId) {
         // Reset State
         els.list.innerHTML = "";
+        
+        // [NEW] Update Title Header with Acronym
+        if (els.title) {
+            const currentMeta = await SuttaRepository.fetchMetaList([suttaId]);
+            const acronym = currentMeta[suttaId]?.acronym || suttaId.toUpperCase();
+            els.title.innerText = `${acronym} Parallels`;
+        }
         
         // Hide FAB initially while loading
         els.fab.classList.add("hidden");
