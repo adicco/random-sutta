@@ -74,7 +74,8 @@ export const ParallelsData = {
 
         // Render sections in order
         const RELATION_ORDER = ["parallels", "resembles", "mentions", "retells"];
-        let html = '';
+        let suttaHtml = '';
+        let segmentsHtml = '';
 
         // Helper to format a link
         const createLinkHtml = (target) => {
@@ -98,28 +99,49 @@ export const ParallelsData = {
             `;
         };
 
-        // 1. Render Sutta-level relations first (key == effectiveUid)
+        // 1. Prepare Sutta-level relations
         if (parallelsData[effectiveUid]) {
+            let hasSuttaContent = false;
+            let tempSuttaHtml = '';
+
             RELATION_ORDER.forEach(relType => {
                 if (parallelsData[effectiveUid][relType] && parallelsData[effectiveUid][relType].length > 0) {
                     const sectionTitle = relType.charAt(0).toUpperCase() + relType.slice(1);
-                    html += `
+                    tempSuttaHtml += `
                         <li class="parallels-item" style="margin-top: 10px;">
                             <h4 class="parallels-group-header">${sectionTitle}</h4>
                             <ul style="list-style: none; padding: 0; margin: 0;">
                     `;
                     const sortedTargets = sortTargetsByLang(parallelsData[effectiveUid][relType]);
                     sortedTargets.forEach(target => {
-                        html += createLinkHtml(target);
+                        tempSuttaHtml += createLinkHtml(target);
                     });
-                    html += `</ul></li>`;
+                    tempSuttaHtml += `</ul></li>`;
+                    hasSuttaContent = true;
                 }
             });
+
+            if (hasSuttaContent) {
+                // Determine heading based on whether we are in a subleaf
+                const isSubleaf = effectiveUid !== suttaId;
+                const parentMeta = await SuttaRepository.fetchMetaList([effectiveUid]);
+                const parentAcronym = parentMeta[effectiveUid]?.acronym || effectiveUid.toUpperCase();
+                const suttaHeading = isSubleaf ? `${parentAcronym} Parallels (Full)` : 'Sutta Parallels';
+
+                suttaHtml = `
+                    <li class="parallels-item" style="margin-top: 25px;">
+                        <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">${suttaHeading}</h4>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            ${tempSuttaHtml}
+                        </ul>
+                    </li>
+                `;
+            }
         }
 
-        // 2. Render Segment-level relations
+        // 2. Prepare Segment-level relations
         const segmentKeys = Object.keys(parallelsData).filter(k => k !== effectiveUid && !k.startsWith('_'));
-        // Sort segment keys (e.g. by order if numeric, otherwise alphabetical)
+        // Sort segment keys
         segmentKeys.sort((a, b) => {
             const aNum = parseFloat(a.split('#')[1]);
             const bNum = parseFloat(b.split('#')[1]);
@@ -128,31 +150,20 @@ export const ParallelsData = {
         });
 
         if (segmentKeys.length > 0) {
-            let hasSegmentHeader = false;
+            let hasSegmentContent = false;
+            let tempSegmentsHtml = '';
             
             segmentKeys.forEach(segKey => {
-                // [NEW] Filter: Only show segments present in current DOM
-                // Segment IDs in DOM use ':' instead of '#' (e.g., dn1:1.1)
+                // Filter: Only show segments present in current DOM
                 const domId = segKey.replace('#', ':');
-                if (!document.getElementById(domId)) {
-                    return; // Skip if not on current page
-                }
-
-                if (!hasSegmentHeader) {
-                    html += `
-                        <li class="parallels-item" style="margin-top: 20px;">
-                            <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center;">By Segment</h4>
-                            <ul style="list-style: none; padding: 0; margin: 0;">
-                    `;
-                    hasSegmentHeader = true;
-                }
+                if (!document.getElementById(domId)) return;
 
                 // [FIX] Correctly extract range label
                 const hashIndex = segKey.indexOf('#');
                 let segLabel = hashIndex !== -1 ? segKey.substring(hashIndex + 1) : segKey;
-                segLabel = segLabel.replace(/#/g, ''); // Clean up internal hashes if any
+                segLabel = segLabel.replace(/#/g, '');
 
-                // [FIX] Prepare jump/highlight data
+                // Prepare jump/highlight data
                 let startId = segKey;
                 let endId = null;
                 if (segKey.includes('-')) {
@@ -161,34 +172,51 @@ export const ParallelsData = {
                     endId = parts[1].replace(/^#/, '');
                 }
 
-                // Normalize IDs
                 const normStart = document.getElementById(startId.split('#')[1] || "") ? (startId.split('#')[1]) : startId.replace('#', ':');
                 const normEnd = endId ? (document.getElementById(endId) ? endId : (endId.includes(':') ? endId : `${suttaId}:${endId}`)) : null;
 
-                html += `
+                tempSegmentsHtml += `
                     <li class="parallels-item parallels-segment-group">
                         <div class="parallels-segment-header" data-start="${normStart}" data-end="${normEnd || ''}" title="Jump to segment">Seg ${segLabel}</div>
                         <ul class="parallels-segment-list">
                 `;                
                 RELATION_ORDER.forEach(relType => {
                     if (parallelsData[segKey][relType] && parallelsData[segKey][relType].length > 0) {
-                         html += `<div class="parallels-type-label">${relType}</div>`;
+                         tempSegmentsHtml += `<div class="parallels-type-label">${relType}</div>`;
                          const sortedTargets = sortTargetsByLang(parallelsData[segKey][relType]);
                          sortedTargets.forEach(target => {
-                            html += createLinkHtml(target);
+                            tempSegmentsHtml += createLinkHtml(target);
                         });
                     }
                 });
-                
-                html += `</ul></li>`;
+                tempSegmentsHtml += `</ul></li>`;
+                hasSegmentContent = true;
             });
-            
-            if (hasSegmentHeader) {
-                html += `</ul></li>`;
+
+            if (hasSegmentContent) {
+                segmentsHtml = `
+                    <li class="parallels-item">
+                        <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">By Segment</h4>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            ${tempSegmentsHtml}
+                        </ul>
+                    </li>
+                `;
             }
         }
 
-        listElement.innerHTML = html;
+        // Assemble Final HTML
+        // If it's a subleaf, show segments first
+        if (effectiveUid !== suttaId) {
+            listElement.innerHTML = segmentsHtml + suttaHtml;
+        } else {
+            listElement.innerHTML = suttaHtml + segmentsHtml;
+        }
+
+        if (!suttaHtml && !segmentsHtml) {
+             listElement.innerHTML = '<li class="parallels-item"><div class="parallels-header-row"><span class="parallels-main-text" style="text-align: center; color: var(--text-muted); font-weight: normal; font-size: 0.9em; padding: 15px;">No parallels found on this page.</span></div></li>';
+             return false;
+        }
 
         // Bind segment click events for jumping and highlighting
         listElement.querySelectorAll('.parallels-segment-header').forEach(header => {
