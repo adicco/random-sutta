@@ -25,10 +25,10 @@ export const QuicklookController = {
                 }
             },
             onDeepLink: (href) => {
-                NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all')));
+                NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all', { detail: { skipSnapshot: true } })));
             },
             onOpenOriginal: (href) => {
-                NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all')));
+                NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all', { detail: { skipSnapshot: true } })));
             },
             onCommentClick: (text) => {
                 this.openNestedComment(text);

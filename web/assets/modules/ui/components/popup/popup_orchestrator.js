@@ -7,6 +7,7 @@ import { CommentUI } from './ui/comment_ui.js';
 import { QuicklookUI } from './ui/quicklook_ui.js';
 import { AppConfig } from 'core/app_config.js';
 import { Scroller } from 'ui/common/scroller.js'; // [NEW] Import Scroller
+import { ParallelsController } from 'ui/components/parallels/parallels_controller.js'; // [NEW] Import Parallels
 
 export const PopupOrchestrator = {
     isInitialized: false,
@@ -19,7 +20,7 @@ export const PopupOrchestrator = {
         CommentController.init();
         QuicklookController.init();
         // 2. Listen for Custom Events (Bus)
-        window.addEventListener('popup:close-all', () => this.closeAll());
+        window.addEventListener('popup:close-all', (e) => this.closeAll(e.detail?.skipSnapshot));
         window.addEventListener('popup:request-link', (e) => {
             if (e.detail && e.detail.href) {
                 QuicklookController.handleLinkRequest(e.detail.href);
@@ -39,12 +40,15 @@ export const PopupOrchestrator = {
         CommentController.scanComments();
     },
 
-    closeAll() {
+    closeAll(skipSnapshot = false) {
         CommentUI.hide();
         QuicklookUI.hide();
         PopupState.loadingUid = null;
         PopupState.clearActive();
         
+        // [NEW] Also close Parallels
+        ParallelsController.close(skipSnapshot);
+
         // [UX IMPROVEMENT] Xóa highlight khi đóng popup
         // Giúp giao diện sạch sẽ, người dùng không bị rối mắt bởi vệt sáng cũ
         Scroller.highlightElement(null);

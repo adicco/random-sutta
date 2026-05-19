@@ -20,7 +20,7 @@ export const ParallelsController = {
         PopupState.saveSnapshot();
     },
 
-    close() {
+    close(skipSnapshot = false) {
         if (!currentEls) return;
         currentEls.popup.classList.add("hidden");
         currentEls.fab.classList.remove("active");
@@ -38,7 +38,7 @@ export const ParallelsController = {
             }
         }
         
-        PopupState.saveSnapshot();
+        if (!skipSnapshot) PopupState.saveSnapshot();
     },
 
     toggle() {
