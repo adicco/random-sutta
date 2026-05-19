@@ -150,13 +150,15 @@ export const CommentUI = {
         let processedText = text.replace(/\s*\|\s*/g, ' | ');
 
         // 2. Split into paragraphs ONLY by numbered prefixes (e.g., "1. ", "2. ")
-        // We use a regex that looks ahead for a number followed by a dot and space.
-        // We don't split by " | " anymore to allow the pipe to be visible.
         const paragraphs = processedText.split(/(?=\d+\.\s)/);
         
         let finalHtml = "";
         paragraphs.forEach(p => {
             let subText = p.trim();
+            if (!subText) return;
+
+            // [NEW] Remove trailing divider if it was followed by a numbered paragraph
+            subText = subText.replace(/\|\s*$/, '').trim();
             if (!subText) return;
 
             // Style the prefix (e.g., "1. ")
