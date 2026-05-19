@@ -95,16 +95,22 @@ export const CommentUI = {
     render(text, index, total, contextText = "", isRestoring = false) {
         if (!this.elements.content) return;
         
+        // [NEW] Strip sequence number prepended by backend (e.g., "1. " -> "")
+        let cleanText = text || "";
+        if (cleanText.match(/^\d+\.\s/)) {
+            cleanText = cleanText.replace(/^\d+\.\s/, "");
+        }
+
         // [UPDATED] Split by | and wrap in paragraphs
-        if (text && text.includes('|')) {
-            const paragraphs = text.split('|')
+        if (cleanText && cleanText.includes('|')) {
+            const paragraphs = cleanText.split('|')
                 .map(p => p.trim())
                 .filter(p => p.length > 0)
                 .map(p => `<p class="comment-paragraph">${p}</p>`)
                 .join('');
             this.elements.content.innerHTML = paragraphs;
         } else {
-            this.elements.content.innerHTML = `<p class="comment-paragraph">${text}</p>`;
+            this.elements.content.innerHTML = `<p class="comment-paragraph">${cleanText}</p>`;
         }
         
         if (this.elements.headerContext) {

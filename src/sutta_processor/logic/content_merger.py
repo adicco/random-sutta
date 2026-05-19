@@ -196,6 +196,9 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
         segments_dict = {} 
         has_content = False
         
+        # [NEW] Comment counter for sequential numbering
+        comment_counter = 0
+
         for key in sorted_keys:
             # Each key will store a list of content objects (Vertical structure)
             content_list = []
@@ -233,11 +236,16 @@ def process_worker(args: Tuple[str, Path, Optional[Path], Optional[Path], Option
             # 4. Comments
             comm = data_comment.get(key)
             if comm:
+                comment_counter += 1
+                sanitized_comm = _sanitize_links(comm, sutta_id, key, missing_refs)
+                # Prepend counter for frontend superscript support
+                numbered_comm = f"{comment_counter}. {sanitized_comm}"
+                
                 content_list.append({
                     "type": meta_comm[0],
                     "lang": meta_comm[1],
                     "author": meta_comm[2],
-                    "content": _sanitize_links(comm, sutta_id, key, missing_refs)
+                    "content": numbered_comm
                 })
 
             # 5. Variants

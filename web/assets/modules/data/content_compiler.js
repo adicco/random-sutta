@@ -58,7 +58,13 @@ export const ContentCompiler = {
             
             if (comm) {
                 const safeComm = comm.replace(/"/g, '&quot;');
-                segmentHtml += `<span class="comment-marker" title="View note" data-comment="${safeComm}">*</span>`;
+                // [NEW] Extract sequence number (e.g., "1. " -> "1")
+                let marker = "*";
+                const match = comm.match(/^(\d+)\.\s/);
+                if (match) {
+                    marker = `<sup>${match[1]}</sup>`;
+                }
+                segmentHtml += `<span class="comment-marker" title="View note" data-comment="${safeComm}">${marker}</span>`;
             }
             
             segmentHtml += trailingSpace;
