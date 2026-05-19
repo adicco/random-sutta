@@ -21,7 +21,7 @@ export const QuicklookController = {
                     PopupState.activeType = 'comment';
                     PopupState.activeUrl = null;
                 } else {
-                    window.dispatchEvent(new CustomEvent('popup:close-all'));
+                    window.dispatchEvent(new CustomEvent('popup:close-all', { detail: { skipParallels: true } }));
                 }
             },
             onDeepLink: (href) => {

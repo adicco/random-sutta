@@ -20,7 +20,7 @@ export const PopupOrchestrator = {
         CommentController.init();
         QuicklookController.init();
         // 2. Listen for Custom Events (Bus)
-        window.addEventListener('popup:close-all', (e) => this.closeAll(e.detail?.skipSnapshot));
+        window.addEventListener('popup:close-all', (e) => this.closeAll(e.detail?.skipSnapshot, e.detail));
         window.addEventListener('popup:request-link', (e) => {
             if (e.detail && e.detail.href) {
                 QuicklookController.handleLinkRequest(e.detail.href);
@@ -40,14 +40,16 @@ export const PopupOrchestrator = {
         CommentController.scanComments();
     },
 
-    closeAll(skipSnapshot = false) {
+    closeAll(skipSnapshot = false, options = {}) {
         CommentUI.hide();
         QuicklookUI.hide();
         PopupState.loadingUid = null;
         PopupState.clearActive();
         
-        // [NEW] Also close Parallels
-        ParallelsController.close(skipSnapshot);
+        // [NEW] Also close Parallels, unless explicitly skipped
+        if (options.skipParallels !== true) {
+            ParallelsController.close(skipSnapshot);
+        }
 
         // [UX IMPROVEMENT] Xóa highlight khi đóng popup
         // Giúp giao diện sạch sẽ, người dùng không bị rối mắt bởi vệt sáng cũ
@@ -81,7 +83,7 @@ export const PopupOrchestrator = {
                             PopupState.activeType = 'comment';
                             PopupState.activeUrl = null;
                         } else {
-                            this.closeAll();
+                            this.closeAll(false, { skipParallels: true });
                         }
                     }
                     // [MODIFIED] Comment Popup now ONLY closes via the Close Button (X).
@@ -99,7 +101,7 @@ export const PopupOrchestrator = {
                         PopupState.activeType = 'comment';
                         PopupState.activeUrl = null;
                     } else {
-                        this.closeAll();
+                        this.closeAll(false, { skipParallels: true });
                     }
                 }
                 else if (CommentUI.isVisible()) this.closeAll();
