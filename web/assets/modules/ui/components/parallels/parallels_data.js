@@ -202,10 +202,11 @@ export const ParallelsData = {
             if (hasSegmentContent) {
                 const isSubleaf = effectiveUid !== suttaId;
                 const topMargin = isSubleaf ? "" : "margin-top: 25px;";
+                const headerHtml = isSubleaf ? "" : `<h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">By Segment</h4>`;
 
                 segmentsHtml = `
                     <li class="parallels-item" style="${topMargin}">
-                        <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">By Segment</h4>
+                        ${headerHtml}
                         <ul style="list-style: none; padding: 0; margin: 0;">
                             ${tempSegmentsHtml}
                         </ul>
