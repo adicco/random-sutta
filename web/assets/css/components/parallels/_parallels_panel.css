@@ -91,6 +91,19 @@
   background-color: var(--bg-hover);
 }
 
+.parallels-root-lang {
+  font-size: 0.65em;
+  color: var(--text-light);
+  opacity: 0.6;
+  width: 24px;
+  flex-shrink: 0;
+  margin-right: 4px;
+  text-transform: uppercase;
+  font-weight: 500;
+  text-align: right;
+  line-height: 2; /* Align with acronym */
+}
+
 .parallels-acronym {
   color: var(--primary-color);
   font-weight: 700;

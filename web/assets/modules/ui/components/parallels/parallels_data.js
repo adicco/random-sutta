@@ -37,6 +37,28 @@ export const ParallelsData = {
         // Fetch metadata for titles
         const metadata = await SuttaRepository.fetchMetaList([...targetUids]);
 
+        // Helper to sort targets by language: pli > lzh > others
+        const sortTargetsByLang = (targets) => {
+            return [...targets].sort((a, b) => {
+                const uidA = a.split('#')[0];
+                const uidB = b.split('#')[0];
+                const langA = metadata[uidA]?.root_lang || "";
+                const langB = metadata[uidB]?.root_lang || "";
+
+                const getLangPriority = (lang) => {
+                    if (lang === 'pli') return 0;
+                    if (lang === 'lzh') return 1;
+                    return 2;
+                };
+
+                const pA = getLangPriority(langA);
+                const pB = getLangPriority(langB);
+
+                if (pA !== pB) return pA - pB;
+                return a.localeCompare(b);
+            });
+        };
+
         // Render sections in order
         const RELATION_ORDER = ["parallels", "resembles", "mentions", "retells"];
         let html = '';
@@ -50,10 +72,12 @@ export const ParallelsData = {
             const meta = metadata[cleanUid];
             const acronym = meta ? meta.acronym : cleanUid;
             const title = meta ? (meta.translated_title || meta.original_title || "") : "";
+            const rootLang = meta ? (meta.root_lang || "") : "";
             
             return `
                 <li class="parallels-item">
                     <a class="parallels-link" data-target="${target}">
+                        ${rootLang ? `<span class="parallels-root-lang">${rootLang}</span>` : ''}
                         <span class="parallels-acronym">${acronym}${segmentSuffix}</span>
                         <span class="parallels-title">${title}</span>
                     </a>
@@ -71,7 +95,8 @@ export const ParallelsData = {
                             <h4 class="parallels-group-header">${sectionTitle}</h4>
                             <ul style="list-style: none; padding: 0; margin: 0;">
                     `;
-                    parallelsData[suttaId][relType].forEach(target => {
+                    const sortedTargets = sortTargetsByLang(parallelsData[suttaId][relType]);
+                    sortedTargets.forEach(target => {
                         html += createLinkHtml(target);
                     });
                     html += `</ul></li>`;
@@ -123,7 +148,8 @@ export const ParallelsData = {
                 RELATION_ORDER.forEach(relType => {
                     if (parallelsData[segKey][relType] && parallelsData[segKey][relType].length > 0) {
                          html += `<div class="parallels-type-label">${relType}</div>`;
-                         parallelsData[segKey][relType].forEach(target => {
+                         const sortedTargets = sortTargetsByLang(parallelsData[segKey][relType]);
+                         sortedTargets.forEach(target => {
                             html += createLinkHtml(target);
                         });
                     }
