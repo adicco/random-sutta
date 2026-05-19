@@ -137,6 +137,22 @@ class EpubGenerator:
 
         meta = self.all_meta.get(uid, {})
         m_type = meta.get("type", "branch")
+        root_lang = meta.get("root_lang")
+
+        # [NEW] Filter for Pali root language
+        # Some structural nodes might not have root_lang, we allow them if they are in whitelisted parents
+        if self.random_only:
+            # Skip if it has a root_lang and it's NOT pali ('pli')
+            if root_lang and root_lang != "pli":
+                return
+            
+            # For leaf/branch nodes that MUST have a root_lang (like actual suttas or books)
+            # we check if they are pali. Structural nodes like 'sutta', 'long' might have root_lang=None.
+            if m_type in ["leaf", "branch"] and uid not in [
+                'sutta', 'vinaya', 'long', 'middle', 'linked', 'numbered', 'minor', 'kn'
+            ]:
+                if root_lang != "pli" and root_lang is not None:
+                    return
 
         # Skip Alias types as they are not suitable for the EPUB structure
         if m_type == "alias":
