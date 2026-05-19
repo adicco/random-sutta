@@ -115,6 +115,13 @@ export function setupParallelsPanel() {
         if (currentEls && !currentEls.popup.classList.contains("hidden") && 
             !currentEls.popup.contains(e.target) && 
             !currentEls.fab.contains(e.target)) {
+            
+            // Ignore clicks inside Quicklook popup to prevent accidental closure
+            const quicklookPopup = document.getElementById("quicklook-popup");
+            if (quicklookPopup && !quicklookPopup.classList.contains("hidden") && quicklookPopup.contains(e.target)) {
+                return;
+            }
+
             ParallelsController.close();
         }
     });
