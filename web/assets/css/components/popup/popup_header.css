@@ -97,7 +97,7 @@
   justify-content: center; /* Center the text */
   align-items: center;
   min-height: 50px;
-  border-top: 1px solid var(--border-light);
+  /* border-top: 1px solid var(--border-light); [REMOVED] Already on .popup-container */
   position: relative;
 }
 
