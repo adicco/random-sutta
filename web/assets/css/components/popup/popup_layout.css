@@ -154,7 +154,7 @@ body.is-resizing .popup-container {
 body.popup-open #quicklook-popup,
 body.parallels-open #quicklook-popup {
   bottom: var(--popup-comment-height) !important;
-  top: auto; /* Let it grow upwards from the bottom constraint */
+  top: var(--popup-quicklook-top) !important; /* Stretch from top to bottom popup */
   max-height: calc(100vh - var(--popup-comment-height) - var(--popup-quicklook-top));
 }
 
