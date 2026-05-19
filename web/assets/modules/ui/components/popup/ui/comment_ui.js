@@ -95,23 +95,36 @@ export const CommentUI = {
     render(text, index, total, contextText = "", isRestoring = false) {
         if (!this.elements.content) return;
         
-        // [NEW] Strip sequence number prepended by backend (e.g., "1. " -> "")
         let cleanText = text || "";
-        if (cleanText.match(/^\d+\.\s/)) {
+        let supTag = "";
+
+        // [UPDATED] Extract sequence number and wrap in <sup> instead of stripping
+        const match = cleanText.match(/^(\d+)\.\s/);
+        if (match) {
+            supTag = `<sup class="comment-sup">${match[1]}</sup> `;
             cleanText = cleanText.replace(/^\d+\.\s/, "");
         }
 
         // [UPDATED] Split by | and wrap in paragraphs
+        let contentHtml = "";
         if (cleanText && cleanText.includes('|')) {
             const paragraphs = cleanText.split('|')
                 .map(p => p.trim())
-                .filter(p => p.length > 0)
+                .filter(p => p.length > 0);
+            
+            // Prepend supTag to the first paragraph
+            if (paragraphs.length > 0) {
+                paragraphs[0] = supTag + paragraphs[0];
+            }
+
+            contentHtml = paragraphs
                 .map(p => `<p class="comment-paragraph">${p}</p>`)
                 .join('');
-            this.elements.content.innerHTML = paragraphs;
         } else {
-            this.elements.content.innerHTML = `<p class="comment-paragraph">${cleanText}</p>`;
+            contentHtml = `<p class="comment-paragraph">${supTag}${cleanText}</p>`;
         }
+        
+        this.elements.content.innerHTML = contentHtml;
         
         if (this.elements.headerContext) {
             // [UPDATED] Remove double quotes

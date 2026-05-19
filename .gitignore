@@ -51,6 +51,8 @@ Thumbs.db
 # Node
 node_modules/
 
+.antigravitycli/
+
 # Capacitor / Android Build artifacts
 android/local.properties
 android/.gradle/
