@@ -93,12 +93,13 @@ class EpubGenerator:
                 safe_uid = m_uid.replace("/", "_").replace(":", "_")
                 self.uid_to_filename[m_uid] = f"{safe_uid}.html"
 
-    def _traverse_tree(self, node: Any, parent_toc_list: List[Dict[str, Any]], depth: int = 1):
+    def _traverse_tree(self, node: Any, parent_toc_list: List[Dict[str, Any]], depth: int = 1, force_allow: bool = False):
         """Recursively traverse the book structure tree."""
         if isinstance(node, dict):
             for uid, children in node.items():
                 # [FILTER] for random_only
-                if self.random_only:
+                new_force_allow = force_allow
+                if self.random_only and not force_allow:
                     # 1. Skip Abhidhamma entirely
                     if uid == "abhidhamma":
                         continue
@@ -120,16 +121,20 @@ class EpubGenerator:
                     # Keep if it's a structural parent, a whitelisted sutta book, or any vinaya book
                     if not (is_allowed_parent or is_allowed_sutta or is_vinaya):
                         continue
+                    
+                    # If we found a target book, force allow all its descendants
+                    if is_allowed_sutta or is_vinaya:
+                        new_force_allow = True
                 
-                self._process_node(uid, children, parent_toc_list, depth)
+                self._process_node(uid, children, parent_toc_list, depth, new_force_allow)
         elif isinstance(node, list):
             for item in node:
                 if isinstance(item, str):
-                    self._process_node(item, None, parent_toc_list, depth)
+                    self._process_node(item, None, parent_toc_list, depth, force_allow)
                 else:
-                    self._traverse_tree(item, parent_toc_list, depth)
+                    self._traverse_tree(item, parent_toc_list, depth, force_allow)
 
-    def _process_node(self, uid: str, children: Any, parent_toc_list: List[Dict[str, Any]], depth: int):
+    def _process_node(self, uid: str, children: Any, parent_toc_list: List[Dict[str, Any]], depth: int, force_allow: bool = False):
         """Process a single node in the tree: generate page, update TOC, and handle children."""
         if uid in self.visited_uids:
             return
@@ -186,7 +191,7 @@ class EpubGenerator:
             parent_toc_list.append(toc_entry)
             
             if children:
-                self._traverse_tree(children, toc_entry["children"], depth + 1)
+                self._traverse_tree(children, toc_entry["children"], depth + 1, force_allow)
             return
 
         # Lazy-load children if not provided (e.g. for sub-books)
@@ -207,7 +212,7 @@ class EpubGenerator:
         if not page_result:
             # If skipping this node (e.g. alias/subleaf), still process its children
             if children:
-                self._traverse_tree(children, parent_toc_list, depth)
+                self._traverse_tree(children, parent_toc_list, depth, force_allow)
             return
 
         filename, collected_headers = page_result
@@ -236,7 +241,7 @@ class EpubGenerator:
         # Process children and update branch links
         child_uids = []
         if children:
-            self._traverse_tree(children, toc_entry["children"], depth + 1)
+            self._traverse_tree(children, toc_entry["children"], depth + 1, force_allow)
             child_uids = self._extract_child_uids(children)
 
         # Post-process branch pages: replace placeholder with actual child links
