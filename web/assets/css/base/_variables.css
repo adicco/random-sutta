@@ -149,7 +149,7 @@
   --bg-rgb: 253, 251, 247; /* Matches paper-50 */
   --bg-hover: rgba(139, 69, 19, 0.06);
   --bg-header-tabs: var(--primitive-ink-100); /* [NEW] Semantic variable for tab headers */
-  --bg-popup: var(--primitive-paper-100); /* [NEW] Darker background for popups */
+  --bg-popup: var(--primitive-paper-200); /* [UPDATED] Darker background for popups */
 
   /* Typography */
   --text-main: var(--primitive-ink-900);
@@ -211,7 +211,7 @@
   --bg-rgb: 26, 25, 24; /* Matches night-900 */
   --bg-hover: rgba(255, 255, 255, 0.12);
   --bg-header-tabs: #000000; /* [NEW] Deep Dark for tabs in Dark Mode */
-  --bg-popup: var(--primitive-night-500); /* [NEW] Deep dark for popups */
+  --bg-popup: var(--primitive-night-900); /* [UPDATED] Even darker for popups in Dark Mode */
 
   /* Text */
   --text-main: var(--primitive-ivory-700);
