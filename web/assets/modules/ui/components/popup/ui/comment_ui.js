@@ -95,40 +95,12 @@ export const CommentUI = {
     render(text, index, total, contextText = "", isRestoring = false) {
         if (!this.elements.content) return;
         
-        let cleanText = text || "";
-        let prefixTag = "";
-
-        // [UPDATED] Extract sequence number and wrap in a prefix span instead of <sup>
-        const match = cleanText.match(/^(\d+)\.\s/);
-        if (match) {
-            prefixTag = `<span class="comment-prefix">${match[1]}.</span> `;
-            cleanText = cleanText.replace(/^\d+\.\s/, "");
-        }
-
-        // [UPDATED] Split by | and wrap in paragraphs
-        let contentHtml = "";
-        if (cleanText && cleanText.includes('|')) {
-            const paragraphs = cleanText.split('|')
-                .map(p => p.trim())
-                .filter(p => p.length > 0);
-            
-            // Prepend prefixTag to the first paragraph
-            if (paragraphs.length > 0) {
-                paragraphs[0] = prefixTag + paragraphs[0];
-            }
-
-            contentHtml = paragraphs
-                .map(p => `<p class="comment-paragraph">${p}</p>`)
-                .join('');
-        } else {
-            contentHtml = `<p class="comment-paragraph">${prefixTag}${cleanText}</p>`;
-        }
-        
-        this.elements.content.innerHTML = contentHtml;
+        this._renderContent(text);
         
         if (this.elements.headerContext) {
-            // [UPDATED] Remove double quotes
+            // [UPDATED] Show context header in manual mode
             this.elements.headerContext.textContent = contextText || "";
+            this.elements.headerContext.classList.remove("auto-mode-header");
             this.elements.headerContext.scrollLeft = 0;
         }
 
@@ -140,7 +112,65 @@ export const CommentUI = {
 
         if (this.elements.popupBody) this.elements.popupBody.scrollTop = 0;
 
+        // Show nav in manual mode
+        if (this.elements.btnPrev) this.elements.btnPrev.style.display = "";
+        if (this.elements.btnNext) this.elements.btnNext.style.display = "";
+        if (this.elements.infoLabel) this.elements.infoLabel.style.display = "";
+
         this._updateNav(index, total);
+    },
+
+    // [NEW] Specialized render for Auto-Switch mode
+    renderAuto(combinedText) {
+        if (!this.elements.content) return;
+
+        this._renderContent(combinedText);
+
+        if (this.elements.headerContext) {
+            this.elements.headerContext.textContent = "Comments";
+            this.elements.headerContext.classList.add("auto-mode-header");
+        }
+
+        // Hide nav in auto mode (no explicit navigation needed)
+        if (this.elements.btnPrev) this.elements.btnPrev.style.display = "none";
+        if (this.elements.btnNext) this.elements.btnNext.style.display = "none";
+        if (this.elements.infoLabel) this.elements.infoLabel.style.display = "none";
+
+        this.elements.popup.classList.remove("hidden");
+        document.body.classList.add("popup-open");
+    },
+
+    _renderContent(text) {
+        const parts = (text || "").split(' | ');
+        let finalHtml = "";
+
+        parts.forEach(part => {
+            let cleanText = part.trim();
+            if (cleanText.length === 0) return;
+
+            let prefixTag = "";
+            const match = cleanText.match(/^(\d+)\.\s/);
+            if (match) {
+                prefixTag = `<span class="comment-prefix">${match[1]}.</span> `;
+                cleanText = cleanText.replace(/^\d+\.\s/, "");
+            }
+
+            if (cleanText.includes('|')) {
+                // Nested pipe (original split char was used in the comment itself)
+                const subParagraphs = cleanText.split('|')
+                    .map(p => p.trim())
+                    .filter(p => p.length > 0);
+                
+                if (subParagraphs.length > 0) {
+                    subParagraphs[0] = prefixTag + subParagraphs[0];
+                }
+                finalHtml += subParagraphs.map(p => `<p class="comment-paragraph">${p}</p>`).join('');
+            } else {
+                finalHtml += `<p class="comment-paragraph">${prefixTag}${cleanText}</p>`;
+            }
+        });
+
+        this.elements.content.innerHTML = finalHtml;
     },
 
     hide() {

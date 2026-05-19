@@ -85,6 +85,18 @@
   padding-right: 5px;
 }
 
+.comment-header-text.auto-mode-header {
+  font-family: var(--font-main);
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--primary-color);
+  opacity: 1;
+  text-align: center;
+  overflow: hidden;
+}
+
 .comment-header-text::-webkit-scrollbar {
   display: none;
 }

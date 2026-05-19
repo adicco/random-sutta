@@ -69,25 +69,35 @@ export const CommentController = {
         const thresholdTopPx = viewportHeight * (PopupState.autoSwitchThresholdTop / 100);
         const thresholdBottomPx = viewportHeight * (1 - (PopupState.autoSwitchThresholdBottom / 100));
 
-        let bestIndex = -1;
-        let minTopDistance = Infinity;
+        const inRangeComments = [];
+        const inRangeIndices = [];
 
         markers.forEach((marker, index) => {
             const rect = marker.getBoundingClientRect();
             
-            // [REFINED] Must be within the user-defined Top and Bottom boundaries.
+            // [UPDATED] Collect all comments within the user-defined boundaries
             if (rect.top >= thresholdTopPx && rect.top < thresholdBottomPx) {
-                // Pick the one closest to the Top Boundary
-                const distance = rect.top - thresholdTopPx;
-                if (distance < minTopDistance) {
-                    minTopDistance = distance;
-                    bestIndex = index;
+                const commentText = marker.dataset.comment;
+                if (commentText) {
+                    inRangeComments.push(commentText);
+                    inRangeIndices.push(index);
                 }
             }
         });
 
-        if (bestIndex !== -1 && bestIndex !== PopupState.activeIndex) {
-            this.activate(bestIndex);
+        if (inRangeComments.length > 0) {
+            // Join all comments with a separator if multiple are present
+            const combinedText = inRangeComments.join(' | ');
+            CommentUI.renderAuto(combinedText);
+            
+            // Highlight the first one in range if not already active
+            if (inRangeIndices.length > 0 && inRangeIndices[0] !== PopupState.activeIndex) {
+                PopupState.setCommentActive(inRangeIndices[0]);
+                const item = comments[inRangeIndices[0]];
+                if (item && item.id) {
+                    Scroller.highlightElement(item.id);
+                }
+            }
         }
     },
 
