@@ -86,10 +86,6 @@ body.is-resizing .popup-container {
     transition: none !important;
 }
 
-.popup-container.no-transition {
-    transition: none !important;
-}
-
 .popup-container.hidden {
   opacity: 0;
   transform: translate(-50%, 100%); /* Slide down fully */

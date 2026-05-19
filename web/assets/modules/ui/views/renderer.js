@@ -114,7 +114,7 @@ export async function renderSutta(suttaId, data, options = {}) {
     // [UPDATED] Generate Parallels Panel for both Leaf and Branch views
     if (data.type !== 'search_results') {
         if (!parallelsInstance) parallelsInstance = setupParallelsPanel();
-        await parallelsInstance.generate(data.uid);
+        parallelsInstance.generate(data.uid);
     }
 
     return true;

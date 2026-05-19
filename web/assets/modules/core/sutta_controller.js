@@ -107,8 +107,6 @@ export const SuttaController = {
             } catch (e) {}
         }
 
-        // 2. Clear UI/State
-        PopupAPI.hideAll(!shouldUpdateUrl);
         this._stopTTS();
 
         logger.info('loadSutta', `Request: ${suttaId} (URL: ${shouldUpdateUrl}, Buffered: ${!!preFetchedData})`);
@@ -117,6 +115,9 @@ export const SuttaController = {
         const performRender = async () => {
             const result = preFetchedData || await SuttaService.loadSutta(suttaId);
             
+            // 2. Clear UI/State only after new data is ready
+            PopupAPI.hideAll(!shouldUpdateUrl);
+
             if (result && result.uid && result.uid !== suttaId && !result.isAlias && shouldUpdateUrl) {
                 try {
                     const bookParam = FilterComponent.generateBookParam();

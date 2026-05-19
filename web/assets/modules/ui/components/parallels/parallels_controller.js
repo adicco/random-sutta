@@ -12,23 +12,12 @@ let currentEls = null;
 export const ParallelsController = {
     open(skipSnapshot = false, isRestoring = false) {
         if (!currentEls) return;
-        if (isRestoring) {
-            currentEls.popup.classList.add("no-transition");
-        }
         currentEls.popup.classList.remove("hidden");
         currentEls.fab.classList.add("active");
         document.body.classList.add("parallels-open");
         ZIndexManager.bringToFront(currentEls.popup);
         PopupState.parallelsOpen = true;
         if (!skipSnapshot) PopupState.saveSnapshot();
-
-        if (isRestoring) {
-            // Force layout recalculation then remove no-transition
-            currentEls.popup.offsetHeight;
-            requestAnimationFrame(() => {
-                currentEls.popup.classList.remove("no-transition");
-            });
-        }
     },
 
     close(skipSnapshot = false) {

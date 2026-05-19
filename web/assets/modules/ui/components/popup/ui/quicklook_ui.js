@@ -61,10 +61,6 @@ export const QuicklookUI = {
         // Store URL for footer interaction
         this.currentSourceUrl = sourceUrl;
 
-        if (isRestoring) {
-            this.elements.popup.classList.add("no-transition");
-        }
-        
         this.elements.popup.classList.remove("hidden");
         document.body.classList.add("quicklook-open");
         
@@ -72,13 +68,6 @@ export const QuicklookUI = {
         ZIndexManager.bringToFront(this.elements.popup);
         
         if (this.elements.popupBody) this.elements.popupBody.scrollTop = 0;
-
-        if (isRestoring) {
-            this.elements.popup.offsetHeight;
-            requestAnimationFrame(() => {
-                this.elements.popup.classList.remove("no-transition");
-            });
-        }
     },
 
     showLoading(title = "Loading...", isRestoring = false) {
