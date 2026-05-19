@@ -22,4 +22,9 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Generate an English-only version of the EPUB (no Pali)"
     )
+    parser.add_argument(
+        "--random-only",
+        action="store_true",
+        help="Only include books that are part of the default random selection (DN, MN, SN, AN, and select KN books)"
+    )
     return parser.parse_args()

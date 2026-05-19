@@ -17,12 +17,14 @@ class HtmlBuilder:
         uid_to_filename,
         use_apk_links: bool = False,
         eng_only: bool = False,
+        pali_only_filter: bool = False,
     ):
         self.db = db
         self.all_meta = all_meta
         self.uid_to_filename = uid_to_filename
         self.use_apk_links = use_apk_links
         self.eng_only = eng_only
+        self.pali_only_filter = pali_only_filter
 
     def get_title(self, uid: str, meta: Dict[str, Any]) -> str:
         translated = meta.get("translated_title")
@@ -72,6 +74,10 @@ class HtmlBuilder:
         pli = segment.get("pli") or ""
         eng = segment.get("eng") or ""
         html_tag = segment.get("html", "")
+
+        # [NEW] Filter for Pali
+        if self.pali_only_filter and not pli:
+            return ""
 
         if self.eng_only:
             pli = ""
@@ -263,6 +269,9 @@ class HtmlBuilder:
                 )
 
             if not content_html.strip():
+                # [NEW] If no content after filtering, we don't want this page
+                if self.pali_only_filter:
+                    return None
                 content_html = "<p><i>[No content available]</i></p>"
 
             page_html = PAGE_HTML_TEMPLATE.format(

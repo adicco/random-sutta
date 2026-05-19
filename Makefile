@@ -151,10 +151,10 @@ view:
 	npm run preview -- --port 8001
 
 epub:
-	@echo "📚 Building Standard EPUB Book..."
-	$(PYTHON) -m src.epub_builder
+	@echo "📚 Building Standard EPUB Book (Random-only with Pali)..."
+	$(PYTHON) -m src.epub_builder --random-only
 	@echo "📚 Building English-only EPUB Book..."
-	$(PYTHON) -m src.epub_builder --eng-only --output dist/epub/random_sutta_eng.epub
+	$(PYTHON) -m src.epub_builder --eng-only --random-only --output dist/epub/random_sutta_eng.epub
 
 calibre: epub
 	@echo "🚚 Copying Standard EPUB to Calibre Library..."

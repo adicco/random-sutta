@@ -17,12 +17,19 @@ class EpubGenerator:
     Main orchestrator for EPUB generation.
     Coordinates database reading, tree traversal, HTML building, and packaging.
     """
-    def __init__(self, output_path: Path, db_dir: Path, eng_only: bool = False):
+    def __init__(self, output_path: Path, db_dir: Path, eng_only: bool = False, random_only: bool = False):
         self.output_path = output_path
         self.db_dir = db_dir
         self.eng_only = eng_only
+        self.random_only = random_only
         self.epub_uuid = str(uuid.uuid4())
         self.date_str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        
+        # [NEW] Primary books for random selection
+        self.primary_books = [
+            "dn", "mn", "sn", "an", 
+            "kp", "dhp", "ud", "iti", "snp", "thag", "thig"
+        ]
         
         # Build state
         self.pages: List[Dict[str, Any]] = []
@@ -58,7 +65,13 @@ class EpubGenerator:
             tpk_tree = StructureProcessor.flatten_single_chains(tpk_tree, self.all_meta)
 
             # 2. Generate Content
-            self.html_builder = HtmlBuilder(self.db, self.all_meta, self.uid_to_filename, eng_only=self.eng_only)
+            self.html_builder = HtmlBuilder(
+                self.db, 
+                self.all_meta, 
+                self.uid_to_filename, 
+                eng_only=self.eng_only,
+                pali_only_filter=True # Custom directive to filter for Pali
+            )
             logger.info("🌳 Processing TPK tree...")
             self._traverse_tree(tpk_tree, self.toc_entries)
 
@@ -82,6 +95,11 @@ class EpubGenerator:
         """Recursively traverse the book structure tree."""
         if isinstance(node, dict):
             for uid, children in node.items():
+                # [NEW] Filter for random_only
+                if self.random_only and depth == 2: # Root is level 0, Category (sutta) is 1, Book is 2
+                    if uid not in self.primary_books:
+                        continue
+                
                 self._process_node(uid, children, parent_toc_list, depth)
         elif isinstance(node, list):
             for item in node:
