@@ -152,8 +152,17 @@ export const CommentController = {
         
         if (index >= 0 && index < total) {
             const item = comments[index];
-            const context = PopupScanner.getContextText(comments, index);
-            CommentUI.render(item.text, index, total, context, isRestoring);
+
+            if (PopupState.isAutoSwitch) {
+                // [FIXED] If Auto mode is on, ensure we use the Auto UI even when clicking a marker
+                if (!CommentUI.isVisible()) {
+                    CommentUI.renderAuto(""); // Show popup to allow handleAutoSwitch to run
+                }
+                this.handleAutoSwitch();
+            } else {
+                const context = PopupScanner.getContextText(comments, index);
+                CommentUI.render(item.text, index, total, context, isRestoring);
+            }
 
             // [FIXED] Ensure segment highlight matches the currently active comment
             if (item && item.id) {
