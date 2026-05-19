@@ -91,23 +91,27 @@ class EpubGenerator:
             for uid, children in node.items():
                 # [FILTER] for random_only
                 if self.random_only:
-                    # Level 1: Categories (sutta, vinaya, abhidhamma)
-                    if depth == 1:
-                        if uid == "abhidhamma":
-                            continue
+                    # 1. Skip Abhidhamma entirely
+                    if uid == "abhidhamma":
+                        continue
                     
-                    # Level 2: Books (dn, mn, pli-tv-kd, etc.)
-                    if depth == 2:
-                        # Sutta Filtering: Only primary random books
-                        is_random_sutta = uid in [
-                            "dn", "mn", "sn", "an", 
-                            "kp", "dhp", "ud", "iti", "snp", "thag", "thig"
-                        ]
-                        # Vinaya Inclusion: All Vinaya
-                        is_vinaya = uid.startswith('pli-tv-')
-                        
-                        if not (is_random_sutta or is_vinaya):
-                            continue
+                    # 2. Whitelists for navigation and inclusion
+                    allowed_parents = {
+                        'tpk', 'sutta', 'vinaya', 
+                        'long', 'middle', 'linked', 'numbered', 'minor', 'kn'
+                    }
+                    allowed_sutta_books = {
+                        'dn', 'mn', 'sn', 'an', 
+                        'kp', 'dhp', 'ud', 'iti', 'snp', 'thag', 'thig'
+                    }
+                    
+                    is_allowed_parent = uid in allowed_parents
+                    is_allowed_sutta = uid in allowed_sutta_books
+                    is_vinaya = uid.startswith('pli-tv-')
+                    
+                    # Keep if it's a structural parent, a whitelisted sutta book, or any vinaya book
+                    if not (is_allowed_parent or is_allowed_sutta or is_vinaya):
+                        continue
                 
                 self._process_node(uid, children, parent_toc_list, depth)
         elif isinstance(node, list):
