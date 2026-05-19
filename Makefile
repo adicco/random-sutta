@@ -38,8 +38,6 @@ help:
 	@echo "  make app            - Build MacOS App & Install to /Applications"
 	@echo "  make dev            - Vite Dev Server with HMR"
 	@echo "  make view           - Preview Vite Production Build"
-	@echo "  make epub           - Generate EPUB Book"
-	@echo "  make calibre        - Build and Copy EPUB to Calibre Library"
 	@echo ""
 	@echo "🚀 RELEASE & DEPLOY:"
 	@echo "  make deploy         - Build & Deploy Web to GH-Pages"
@@ -149,21 +147,6 @@ dev:
 view:
 	@echo "🌍 Starting Vite Preview Server on port 8001..."
 	npm run preview -- --port 8001
-
-epub:
-	@echo "📚 Building Standard EPUB Book (Random-only with Pali)..."
-	$(PYTHON) -m src.epub_builder --random-only
-	@echo "📚 Building English-only EPUB Book..."
-	$(PYTHON) -m src.epub_builder --eng-only --random-only --output dist/epub/random_sutta_eng.epub
-
-calibre: epub
-	@echo "🚚 Copying Standard EPUB to Calibre Library..."
-	@mkdir -p "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)"
-	cp dist/epub/random_sutta.epub "../../My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka (3564)/SuttaCentral Tipitaka - Random Sutta.epub"
-	@echo "🚚 Copying English-only EPUB to Calibre Library..."
-	@mkdir -p "/Users/hieucao/My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka [Eng] (4195)"
-	cp dist/epub/random_sutta_eng.epub "/Users/hieucao/My Drive/Calibre Library/Random Sutta/SuttaCentral Tipitaka [Eng] (4195)/SuttaCentral Tipitaka [Eng] - Random Sutta.epub"
-	@echo "✅ All EPUBs copied to Calibre Library."
 
 # ==============================================================================
 # 🚀 RELEASE ACTIONS
