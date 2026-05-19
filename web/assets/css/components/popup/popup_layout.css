@@ -192,13 +192,14 @@ body.parallels-open #quicklook-popup {
 
 .comment-divider {
     display: inline-block;
-    margin: 0 8px;
+    margin: 0 6px;
     color: var(--text-muted);
     opacity: 0.4;
     font-weight: 300;
     font-style: normal;
     vertical-align: middle;
-    line-height: 1;
+    position: relative;
+    top: -0.05em; /* Lift slightly to center visually */
 }
 
 /* [NEW] Quicklook Specific: Add extra breathing room at bottom for comfortable scrolling *g/
