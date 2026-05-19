@@ -139,7 +139,6 @@ export const CommentUI = {
         this.elements.popup.classList.remove("hidden");
         document.body.classList.add("popup-open");
     },
-
     _renderContent(text) {
         if (!text) {
             this.elements.content.innerHTML = "";
@@ -147,32 +146,40 @@ export const CommentUI = {
         }
 
         // 1. Clean up spacing around pipes to ensure consistent divider styling
-        let processedText = text.replace(/\s*\|\s*/g, ' | ');
+        let processedText = text.replace(/\s*\|\s*/g, ' | ').trim();
 
-        // 2. Split into paragraphs ONLY by numbered prefixes (e.g., "1. ", "2. ")
-        const paragraphs = processedText.split(/(?=\d+\.\s)/);
-        
+        // 2. Split into segments ONLY by numbered prefixes (e.g., "1. ", "2. ")
+        // Use a lookahead to split before each number-dot-space sequence.
+        const segments = processedText.split(/(?=\d+\.\s)/)
+            .map(s => s.trim().replace(/\|\s*$/, '').trim())
+            .filter(s => s);
+
+        // 3. [FIX] Merge "prefix-only" segments (e.g., "1.") with the following segment
+        // This handles cases like "1. 0. Comment" where backend prepends "1." to a "0." comment.
+        const mergedSegments = [];
+        for (let i = 0; i < segments.length; i++) {
+            let current = segments[i];
+            // If current is just a number (with or without dot) and there is more to follow
+            if (current.match(/^\d+\.?$/) && i + 1 < segments.length) {
+                segments[i+1] = current + (current.endsWith('.') ? ' ' : '. ') + segments[i+1];
+            } else {
+                mergedSegments.push(current);
+            }
+        }
+
         let finalHtml = "";
-        paragraphs.forEach(p => {
-            let subText = p.trim();
-            if (!subText) return;
-
-            // [NEW] Remove trailing divider if it was followed by a numbered paragraph
-            subText = subText.replace(/\|\s*$/, '').trim();
-            if (!subText) return;
-
-            // Style the prefix (e.g., "1. ")
-            subText = subText.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
+        mergedSegments.forEach(seg => {
+            // Style all numbered prefixes within the paragraph
+            let html = seg.replace(/(\d+)\.\s/g, '<span class="comment-prefix">$1.</span> ');
 
             // Style all dividers (|) within this paragraph
-            subText = subText.replace(/\|/g, '<span class="comment-divider">|</span>');
+            html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
 
-            finalHtml += `<p class="comment-paragraph">${subText}</p>`;
+            finalHtml += `<p class="comment-paragraph">${html}</p>`;
         });
 
         this.elements.content.innerHTML = finalHtml;
     },
-
     hide() {
         this.elements.popup?.classList.add("hidden");
         document.body.classList.remove("popup-open"); // [NEW] Remove class from body
