@@ -184,10 +184,10 @@ body.parallels-open #quicklook-popup {
     margin-bottom: 0;
 }
 
-.comment-sup {
+.comment-prefix {
     color: var(--primary-color);
     font-weight: 700;
-    margin-right: 4px;
+    margin-right: 6px;
 }
 
 /* [NEW] Quicklook Specific: Add extra breathing room at bottom for comfortable scrolling *g/

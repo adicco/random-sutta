@@ -96,12 +96,12 @@ export const CommentUI = {
         if (!this.elements.content) return;
         
         let cleanText = text || "";
-        let supTag = "";
+        let prefixTag = "";
 
-        // [UPDATED] Extract sequence number and wrap in <sup> instead of stripping
+        // [UPDATED] Extract sequence number and wrap in a prefix span instead of <sup>
         const match = cleanText.match(/^(\d+)\.\s/);
         if (match) {
-            supTag = `<sup class="comment-sup">${match[1]}</sup> `;
+            prefixTag = `<span class="comment-prefix">${match[1]}.</span> `;
             cleanText = cleanText.replace(/^\d+\.\s/, "");
         }
 
@@ -112,16 +112,16 @@ export const CommentUI = {
                 .map(p => p.trim())
                 .filter(p => p.length > 0);
             
-            // Prepend supTag to the first paragraph
+            // Prepend prefixTag to the first paragraph
             if (paragraphs.length > 0) {
-                paragraphs[0] = supTag + paragraphs[0];
+                paragraphs[0] = prefixTag + paragraphs[0];
             }
 
             contentHtml = paragraphs
                 .map(p => `<p class="comment-paragraph">${p}</p>`)
                 .join('');
         } else {
-            contentHtml = `<p class="comment-paragraph">${supTag}${cleanText}</p>`;
+            contentHtml = `<p class="comment-paragraph">${prefixTag}${cleanText}</p>`;
         }
         
         this.elements.content.innerHTML = contentHtml;
