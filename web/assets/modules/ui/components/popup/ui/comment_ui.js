@@ -145,25 +145,15 @@ export const CommentUI = {
             return;
         }
 
-        // 1. Split by the standard joiner " | " (Auto mode or multiple notes)
-        const segments = text.split(' | ');
-        let finalHtml = "";
+        // 1. Style all numbered prefixes globally (e.g., "1. ", "11. ")
+        // This ensures prefixes are highlighted even when displayed seamlessly.
+        let html = text.trim().replace(/(\d+)\.\s/g, '<span class="comment-prefix">$1.</span> ');
 
-        segments.forEach(seg => {
-            let cleanSeg = seg.trim();
-            if (!cleanSeg) return;
+        // 2. Style all dividers (|) globally for consistent visual separation
+        html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
 
-            // 2. Wrap the leading numbered prefix (e.g., "11. ") for styling
-            // This matches the number at the very start of the segment
-            let html = cleanSeg.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
-
-            // 3. Style internal dividers (|) if any remain inside the text
-            html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
-
-            finalHtml += `<p class="comment-paragraph">${html}</p>`;
-        });
-
-        this.elements.content.innerHTML = finalHtml;
+        // 3. Wrap everything in a single paragraph for "seamless" display as requested
+        this.elements.content.innerHTML = `<p class="comment-paragraph">${html}</p>`;
     },
     hide() {
         this.elements.popup?.classList.add("hidden");
