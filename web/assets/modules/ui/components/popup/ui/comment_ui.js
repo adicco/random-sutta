@@ -145,34 +145,19 @@ export const CommentUI = {
             return;
         }
 
-        // 1. Clean up spacing around pipes to ensure consistent divider styling
-        let processedText = text.replace(/\s*\|\s*/g, ' | ').trim();
-
-        // 2. Split into segments ONLY by numbered prefixes (e.g., "1. ", "2. ")
-        // Use a lookahead to split before each number-dot-space sequence.
-        const segments = processedText.split(/(?=\d+\.\s)/)
-            .map(s => s.trim().replace(/\|\s*$/, '').trim())
-            .filter(s => s);
-
-        // 3. [FIX] Merge "prefix-only" segments (e.g., "1.") with the following segment
-        // This handles cases like "1. 0. Comment" where backend prepends "1." to a "0." comment.
-        const mergedSegments = [];
-        for (let i = 0; i < segments.length; i++) {
-            let current = segments[i];
-            // If current is just a number (with or without dot) and there is more to follow
-            if (current.match(/^\d+\.?$/) && i + 1 < segments.length) {
-                segments[i+1] = current + (current.endsWith('.') ? ' ' : '. ') + segments[i+1];
-            } else {
-                mergedSegments.push(current);
-            }
-        }
-
+        // 1. Split by the standard joiner " | " (Auto mode or multiple notes)
+        const segments = text.split(' | ');
         let finalHtml = "";
-        mergedSegments.forEach(seg => {
-            // Style all numbered prefixes within the paragraph
-            let html = seg.replace(/(\d+)\.\s/g, '<span class="comment-prefix">$1.</span> ');
 
-            // Style all dividers (|) within this paragraph
+        segments.forEach(seg => {
+            let cleanSeg = seg.trim();
+            if (!cleanSeg) return;
+
+            // 2. Wrap the leading numbered prefix (e.g., "11. ") for styling
+            // This matches the number at the very start of the segment
+            let html = cleanSeg.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
+
+            // 3. Style internal dividers (|) if any remain inside the text
             html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
 
             finalHtml += `<p class="comment-paragraph">${html}</p>`;
