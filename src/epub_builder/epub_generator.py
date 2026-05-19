@@ -66,8 +66,16 @@ class EpubGenerator:
                 eng_only=self.eng_only,
                 pali_only_filter=True # Custom directive to filter for Pali
             )
-            logger.info("🌳 Processing TPK tree...")
-            self._traverse_tree(tpk_tree, self.toc_entries)
+            logger.info("🌳 Processing tree (Promoting sutta/vinaya to root)...")
+            
+            # [FLATTEN ROOT] Instead of processing 'tpk' node, process its children directly
+            if isinstance(tpk_tree, dict) and "tpk" in tpk_tree:
+                root_children = tpk_tree["tpk"]
+                # Skip 'tpk' itself by calling _traverse_tree on its children
+                # Depth 1 will now be 'sutta' and 'vinaya'
+                self._traverse_tree(root_children, self.toc_entries, depth=1)
+            else:
+                self._traverse_tree(tpk_tree, self.toc_entries)
 
             # 3. Package EPUB
             packager = EpubPackager(self.output_path, self.epub_uuid, self.date_str, eng_only=self.eng_only)
