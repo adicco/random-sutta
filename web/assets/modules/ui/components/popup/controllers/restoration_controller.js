@@ -2,6 +2,7 @@
 import { PopupState } from '../state/popup_state.js';
 import { CommentController } from './comment_controller.js';
 import { QuicklookController } from './quicklook_controller.js';
+import { ParallelsController } from 'ui/components/parallels/parallels_controller.js';
 import { Scroller } from 'ui/common/scroller.js';
 import { getLogger } from 'utils/logger.js';
 
@@ -47,6 +48,13 @@ export const RestorationController = {
         if (snapshot.quicklookUrl) {
             logger.info("Restore", `Restoring Quicklook: ${snapshot.quicklookUrl}`);
             QuicklookController.handleLinkRequest(snapshot.quicklookUrl, true);
+            restoredAnything = true;
+        }
+
+        // 3. Phục hồi Parallels
+        if (snapshot.parallelsOpen) {
+            logger.info("Restore", `Restoring Parallels Panel`);
+            ParallelsController.open();
             restoredAnything = true;
         }
 

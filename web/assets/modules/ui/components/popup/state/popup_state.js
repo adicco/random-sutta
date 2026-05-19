@@ -15,6 +15,9 @@ export const PopupState = {
     nestedActiveIndex: -1,
     nestedActiveText: null,
 
+    // Parallels State
+    parallelsOpen: false,
+
     isAutoSwitch: localStorage.getItem("comment_auto_switch") === "true",
     autoSwitchThresholdBottom: parseInt(localStorage.getItem("comment_auto_switch_threshold_bottom")) || 40,
     autoSwitchThresholdTop: parseInt(localStorage.getItem("comment_auto_switch_threshold_top")) || 10,
@@ -62,7 +65,8 @@ export const PopupState = {
             const snapshot = {
                 type: this.activeType,
                 commentIndex: this.activeIndex,
-                quicklookUrl: this.activeUrl
+                quicklookUrl: this.activeUrl,
+                parallelsOpen: this.parallelsOpen
             };
             logger.info("Snapshot", `Saved: ${snapshot.type}`, snapshot);
             

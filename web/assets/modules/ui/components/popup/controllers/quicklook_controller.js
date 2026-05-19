@@ -25,7 +25,7 @@ export const QuicklookController = {
                 }
             },
             onDeepLink: (href) => {
-                NavigationController.navigateToMain(href, () => window.dispatchEvent(new CustomEvent('popup:close-all')));
+                NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all')));
             },
             onOpenOriginal: (href) => {
                 NavigationController.handleFullPageNavigation(href, () => window.dispatchEvent(new CustomEvent('popup:close-all')));

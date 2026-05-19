@@ -2,8 +2,42 @@
 import { ParallelsData } from './parallels_data.js';
 import { ResizeHandler } from 'ui/common/resize_handler.js';
 import { ParallelsScroll } from './parallels_scroll.js';
-import { QuicklookController } from '../popup/controllers/quicklook_controller.js';
+import { QuicklookController } from 'ui/components/popup/controllers/quicklook_controller.js';
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
+import { PopupState } from 'ui/components/popup/state/popup_state.js';
+
+let currentEls = null;
+
+export const ParallelsController = {
+    open() {
+        if (!currentEls) return;
+        currentEls.popup.classList.remove("hidden");
+        currentEls.fab.classList.add("active");
+        document.body.classList.add("parallels-open");
+        ZIndexManager.bringToFront(currentEls.popup);
+        PopupState.parallelsOpen = true;
+        PopupState.saveSnapshot();
+    },
+
+    close() {
+        if (!currentEls) return;
+        currentEls.popup.classList.add("hidden");
+        currentEls.fab.classList.remove("active");
+        document.body.classList.remove("parallels-open");
+        PopupState.parallelsOpen = false;
+        PopupState.saveSnapshot();
+    },
+
+    toggle() {
+        if (!currentEls) return;
+        const isHidden = currentEls.popup.classList.contains("hidden");
+        if (isHidden) {
+            this.open();
+        } else {
+            this.close();
+        }
+    }
+};
 
 export function setupParallelsPanel() {
     const els = {
@@ -19,6 +53,8 @@ export function setupParallelsPanel() {
         return { generate: () => {} };
     }
 
+    currentEls = els;
+
     // [Z-INDEX] Register popup
     ZIndexManager.register(els.popup);
 
@@ -32,30 +68,15 @@ export function setupParallelsPanel() {
     }
 
     // --- Event Handlers ---
-    const closePopup = () => {
-        els.popup.classList.add("hidden");
-        els.fab.classList.remove("active");
-        document.body.classList.remove("parallels-open");
-    };
-
-    const togglePopup = (e) => {
-        const isHidden = els.popup.classList.contains("hidden");
-        if (isHidden) {
-            els.popup.classList.remove("hidden");
-            els.fab.classList.add("active");
-            document.body.classList.add("parallels-open");
-            ZIndexManager.bringToFront(els.popup);
-        } else {
-            closePopup();
-        }
+    els.fab.onclick = (e) => {
+        ParallelsController.toggle();
         e.stopPropagation();
     };
 
-    els.fab.onclick = togglePopup;
     if (els.closeBtn) {
         els.closeBtn.onclick = (e) => {
             e.stopPropagation();
-            closePopup();
+            ParallelsController.close();
         };
     }
 
@@ -78,17 +99,16 @@ export function setupParallelsPanel() {
 
     // Click outside to close (optional, depending on preference)
     document.addEventListener("click", (e) => {
-        if (!els.popup.classList.contains("hidden") && 
-            !els.popup.contains(e.target) && 
-            !els.fab.contains(e.target)) {
-            closePopup();
+        if (currentEls && !currentEls.popup.classList.contains("hidden") && 
+            !currentEls.popup.contains(e.target) && 
+            !currentEls.fab.contains(e.target)) {
+            ParallelsController.close();
         }
     });
 
     async function generate(suttaId) {
         // Reset State
         els.list.innerHTML = "";
-        closePopup();
         
         // Hide FAB initially while loading
         els.fab.classList.add("hidden");
