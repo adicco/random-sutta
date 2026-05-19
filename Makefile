@@ -174,12 +174,12 @@ deploy: re
 	npm run deploy
 
 # Publish Pre-release
-beta: apk epub macos
+beta: apk macos
 	@echo "🚀 PUBLISHING BETA..."
 	$(PYTHON) -m src.release_system --publish
 
 # Publish Official
-official: apk epub app
+official: apk app
 	@echo "🚀 PUBLISHING OFFICIAL..."
 	$(PYTHON) -m src.release_system --official
 
