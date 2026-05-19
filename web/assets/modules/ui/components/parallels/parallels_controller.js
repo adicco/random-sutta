@@ -10,14 +10,14 @@ import { PopupState } from 'ui/components/popup/state/popup_state.js';
 let currentEls = null;
 
 export const ParallelsController = {
-    open() {
+    open(skipSnapshot = false) {
         if (!currentEls) return;
         currentEls.popup.classList.remove("hidden");
         currentEls.fab.classList.add("active");
         document.body.classList.add("parallels-open");
         ZIndexManager.bringToFront(currentEls.popup);
         PopupState.parallelsOpen = true;
-        PopupState.saveSnapshot();
+        if (!skipSnapshot) PopupState.saveSnapshot();
     },
 
     close(skipSnapshot = false) {

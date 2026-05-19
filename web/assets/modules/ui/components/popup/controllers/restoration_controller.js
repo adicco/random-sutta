@@ -54,7 +54,7 @@ export const RestorationController = {
         // 3. Phục hồi Parallels
         if (snapshot.parallelsOpen) {
             logger.info("Restore", `Restoring Parallels Panel`);
-            ParallelsController.open();
+            ParallelsController.open(true);
             restoredAnything = true;
         }
 

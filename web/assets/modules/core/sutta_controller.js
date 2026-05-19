@@ -108,7 +108,7 @@ export const SuttaController = {
         }
 
         // 2. Clear UI/State
-        PopupAPI.hideAll();
+        PopupAPI.hideAll(!shouldUpdateUrl);
         this._stopTTS();
 
         logger.info('loadSutta', `Request: ${suttaId} (URL: ${shouldUpdateUrl}, Buffered: ${!!preFetchedData})`);

@@ -3,7 +3,7 @@ import { PopupOrchestrator } from './popup_orchestrator.js';
 
 export const PopupAPI = {
     scan: () => PopupOrchestrator.scanComments(),
-    hideAll: () => PopupOrchestrator.closeAll(),
+    hideAll: (skipSnapshot = false) => PopupOrchestrator.closeAll(skipSnapshot),
     restore: () => PopupOrchestrator.restoreState(),
     init: () => PopupOrchestrator.init()
 };
