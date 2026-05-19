@@ -11,6 +11,7 @@ from ..shared.app_config import (
     RAW_ROOT_DIRS, 
     RAW_HTML_DIRS, 
     RAW_TRANS_DIRS, 
+    RAW_COMMENT_DIRS,
     RAW_VARIANT_DIRS, 
     RAW_REFERENCE_DIRS
 )
@@ -69,12 +70,12 @@ def _build_file_indices() -> Tuple[Dict[str, Path], Dict[str, Dict[str, Path]], 
                     html_index[sutta_id] = file_path
 
     # 4. Index Comment Files
-    comment_dir = RAW_BILARA_DIR / "comment"
-    if comment_dir.exists():
-        for file_path in comment_dir.rglob("*_comment-*.json"):
-            if file_path.is_file():
-                sutta_id = file_path.name.split("_")[0]
-                comment_index[sutta_id] = file_path
+    for d in RAW_COMMENT_DIRS:
+        if d.exists():
+            for file_path in d.rglob("*_comment-*.json"):
+                if file_path.is_file():
+                    sutta_id = file_path.name.split("_")[0]
+                    comment_index[sutta_id] = file_path
 
     # 5. Index Variant Files
     for d in RAW_VARIANT_DIRS:

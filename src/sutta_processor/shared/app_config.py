@@ -27,6 +27,9 @@ RAW_HTML_DIRS = [
 RAW_TRANS_DIRS = [
     RAW_BILARA_DIR / "translation/en"
 ]
+RAW_COMMENT_DIRS = [
+    RAW_BILARA_DIR / "comment/en"
+]
 RAW_VARIANT_DIRS = [
     RAW_BILARA_DIR / "variant/pli/ms",
     RAW_BILARA_DIR / "variant/lzh/sct"
