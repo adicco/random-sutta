@@ -124,18 +124,24 @@ export const ParallelsData = {
             if (hasSuttaContent) {
                 // Determine heading based on whether we are in a subleaf
                 const isSubleaf = effectiveUid !== suttaId;
-                const parentMeta = await SuttaRepository.fetchMetaList([effectiveUid]);
-                const parentAcronym = parentMeta[effectiveUid]?.acronym || effectiveUid.toUpperCase();
-                const suttaHeading = isSubleaf ? `${parentAcronym} Parallels (Full)` : 'Sutta Parallels';
+                
+                if (isSubleaf) {
+                    const parentMeta = await SuttaRepository.fetchMetaList([effectiveUid]);
+                    const parentAcronym = parentMeta[effectiveUid]?.acronym || effectiveUid.toUpperCase();
+                    const suttaHeading = `${parentAcronym} Parallels (Full)`;
 
-                suttaHtml = `
-                    <li class="parallels-item" style="margin-top: 25px;">
-                        <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">${suttaHeading}</h4>
-                        <ul style="list-style: none; padding: 0; margin: 0;">
-                            ${tempSuttaHtml}
-                        </ul>
-                    </li>
-                `;
+                    suttaHtml = `
+                        <li class="parallels-item" style="margin-top: 25px;">
+                            <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">${suttaHeading}</h4>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                ${tempSuttaHtml}
+                            </ul>
+                        </li>
+                    `;
+                } else {
+                    // For leaves, just show relations directly without the redundant "Sutta Parallels" header
+                    suttaHtml = tempSuttaHtml;
+                }
             }
         }
 
@@ -194,8 +200,11 @@ export const ParallelsData = {
             });
 
             if (hasSegmentContent) {
+                const isSubleaf = effectiveUid !== suttaId;
+                const topMargin = isSubleaf ? "" : "margin-top: 25px;";
+
                 segmentsHtml = `
-                    <li class="parallels-item">
+                    <li class="parallels-item" style="${topMargin}">
                         <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center; border-bottom: 2px solid var(--border-light);">By Segment</h4>
                         <ul style="list-style: none; padding: 0; margin: 0;">
                             ${tempSegmentsHtml}
