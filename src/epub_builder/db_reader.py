@@ -47,7 +47,9 @@ class DbReader:
         rows = cursor.fetchall()
         return {row["uid"]: dict(row) for row in rows}
 
-    def _get_category(self, book_id: str) -> str:
+    def _get_category(self, book_id: Optional[str]) -> str:
+        if not book_id:
+            return "minor"
         if book_id in ['dn', 'mn', 'sn', 'an']: return "major"
         if book_id.startswith('pli-tv-'): return "vinaya"
         if book_id in ['ds', 'dt', 'kv', 'pp', 'vb', 'ya', 'patthana']: return "abhidhamma"

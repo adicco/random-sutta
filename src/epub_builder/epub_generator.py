@@ -25,12 +25,6 @@ class EpubGenerator:
         self.epub_uuid = str(uuid.uuid4())
         self.date_str = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
         
-        # [NEW] Primary books for random selection
-        self.primary_books = [
-            "dn", "mn", "sn", "an", 
-            "kp", "dhp", "ud", "iti", "snp", "thag", "thig"
-        ]
-        
         # Build state
         self.pages: List[Dict[str, Any]] = []
         self.toc_entries: List[Dict[str, Any]] = []
@@ -95,10 +89,25 @@ class EpubGenerator:
         """Recursively traverse the book structure tree."""
         if isinstance(node, dict):
             for uid, children in node.items():
-                # [NEW] Filter for random_only
-                if self.random_only and depth == 2: # Root is level 0, Category (sutta) is 1, Book is 2
-                    if uid not in self.primary_books:
-                        continue
+                # [FILTER] for random_only
+                if self.random_only:
+                    # Level 1: Categories (sutta, vinaya, abhidhamma)
+                    if depth == 1:
+                        if uid == "abhidhamma":
+                            continue
+                    
+                    # Level 2: Books (dn, mn, pli-tv-kd, etc.)
+                    if depth == 2:
+                        # Sutta Filtering: Only primary random books
+                        is_random_sutta = uid in [
+                            "dn", "mn", "sn", "an", 
+                            "kp", "dhp", "ud", "iti", "snp", "thag", "thig"
+                        ]
+                        # Vinaya Inclusion: All Vinaya
+                        is_vinaya = uid.startswith('pli-tv-')
+                        
+                        if not (is_random_sutta or is_vinaya):
+                            continue
                 
                 self._process_node(uid, children, parent_toc_list, depth)
         elif isinstance(node, list):
