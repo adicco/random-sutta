@@ -10,12 +10,14 @@ function getChevronSvg(rotateDeg, className = "") {
 
 export const UIFactory = {
   createErrorHtml: function (suttaId) {
-    const scLink = `https://suttacentral.net/${suttaId}/en/sujato`;
+    const scLink = `https://suttacentral.net/${suttaId}`;
     return `
         <div class="error-message">
-            <p style="color: #d35400; font-weight: bold; font-size: 1.2rem;">Sutta ID "${suttaId}" not found.</p>
-            <p>You can try checking on SuttaCentral:</p>
-            <p><a href="${scLink}" target="_blank" rel="noopener noreferrer" class="sc-link">SuttaCentral ➜</a></p>
+            <p style="color: var(--text-muted); font-weight: 500; font-size: 1.1rem; margin-bottom: 10px;">
+                Content for <strong>${suttaId.toUpperCase()}</strong> is not available locally.
+            </p>
+            <p style="margin-bottom: 20px;">You can view the full text on SuttaCentral:</p>
+            <a href="${scLink}" target="_blank" rel="noopener noreferrer" class="sc-link">SuttaCentral ➜</a>
         </div>`;
   },
 

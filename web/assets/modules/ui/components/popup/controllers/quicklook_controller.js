@@ -5,6 +5,7 @@ import { CommentUI } from '../ui/comment_ui.js';
 import { NavigationController } from './navigation_controller.js';
 import { SuttaService } from 'services/sutta_service.js';
 import { LeafRenderer } from 'ui/views/renderers/leaf_renderer.js';
+import { UIFactory } from 'ui/common/ui_factory.js';
 import { getLogger } from 'utils/logger.js';
 
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
@@ -83,6 +84,7 @@ export const QuicklookController = {
         try {
             const data = await SuttaService.loadSutta(uid, { prefetchNav: false });
             if (loadingTimer) clearTimeout(loadingTimer);
+
             if (data && data.content) {
                 const renderRes = LeafRenderer.render(data);
                 const displayTitle = this._buildTitle(data.meta, uid);
@@ -94,16 +96,21 @@ export const QuicklookController = {
                 
                 if (hash) {
                     // 2. Gọi hàm cuộn ĐỒNG BỘ (Synchronous) ngay lập tức
-                    // Không dùng setTimeout, không dùng opacity hack
                     this._scrollToAnchorSync(hash, uid);
                 }
             } else {
-                QuicklookUI.showError("Content not available.");
+                // [NEW] Khéo léo hơn: Vẫn hiện footer nếu có meta, content báo link SC
+                const displayTitle = data ? this._buildTitle(data.meta, uid) : `<span class="ql-uid-badge">${uid.toUpperCase()}</span>`;
+                const errorHtml = UIFactory.createErrorHtml(uid);
+                
+                QuicklookUI.render(errorHtml, displayTitle, href, isRestoring);
+                PopupState.setQuicklookActive(href);
             }
         } catch (e) {
             clearTimeout(loadingTimer);
             logger.error("Load", e);
-            QuicklookUI.showError("Failed to load.");
+            const displayTitle = `<span class="ql-uid-badge">${uid.toUpperCase()}</span>`;
+            QuicklookUI.showError("Failed to load content.", displayTitle);
         } finally {
             PopupState.loadingUid = null;
         }

@@ -75,8 +75,8 @@ export const QuicklookUI = {
         this.render('<div style="text-align:center; padding: 20px;">Loading...</div>', title, null, isRestoring);
     },
 
-    showError(msg) {
-        this.render(`<p class="error-message">${msg}</p>`, "Error");
+    showError(msg, title = "Error") {
+        this.render(`<p class="error-message">${msg}</p>`, title);
     },
 
     hide() {
