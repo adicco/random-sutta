@@ -141,36 +141,21 @@ export const CommentUI = {
     },
 
     _renderContent(text) {
-        const parts = (text || "").split(' | ');
-        let finalHtml = "";
+        if (!text) {
+            this.elements.content.innerHTML = "";
+            return;
+        }
 
-        parts.forEach(part => {
-            let cleanText = part.trim();
-            if (cleanText.length === 0) return;
+        // 1. Style sequence numbers (at start or after a pipe)
+        let html = text.trim()
+            .replace(/^(\d+)\.\s/g, '<span class="comment-prefix">$1.</span> ')
+            .replace(/\|\s*(\d+)\.\s/g, '| <span class="comment-prefix">$1.</span> ');
 
-            let prefixTag = "";
-            const match = cleanText.match(/^(\d+)\.\s/);
-            if (match) {
-                prefixTag = `<span class="comment-prefix">${match[1]}.</span> `;
-                cleanText = cleanText.replace(/^\d+\.\s/, "");
-            }
+        // 2. Style the dividers (|)
+        // [UPDATED] No more paragraph splitting, just styling the separator
+        html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
 
-            if (cleanText.includes('|')) {
-                // Nested pipe (original split char was used in the comment itself)
-                const subParagraphs = cleanText.split('|')
-                    .map(p => p.trim())
-                    .filter(p => p.length > 0);
-                
-                if (subParagraphs.length > 0) {
-                    subParagraphs[0] = prefixTag + subParagraphs[0];
-                }
-                finalHtml += subParagraphs.map(p => `<p class="comment-paragraph">${p}</p>`).join('');
-            } else {
-                finalHtml += `<p class="comment-paragraph">${prefixTag}${cleanText}</p>`;
-            }
-        });
-
-        this.elements.content.innerHTML = finalHtml;
+        this.elements.content.innerHTML = `<p class="comment-paragraph">${html}</p>`;
     },
 
     hide() {
