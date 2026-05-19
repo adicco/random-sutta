@@ -3,6 +3,7 @@ import { ParallelsData } from './parallels_data.js';
 import { ResizeHandler } from 'ui/common/resize_handler.js';
 import { ParallelsScroll } from './parallels_scroll.js';
 import { QuicklookController } from 'ui/components/popup/controllers/quicklook_controller.js';
+import { QuicklookUI } from 'ui/components/popup/ui/quicklook_ui.js';
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
 import { PopupState } from 'ui/components/popup/state/popup_state.js';
 
@@ -25,6 +26,18 @@ export const ParallelsController = {
         currentEls.fab.classList.remove("active");
         document.body.classList.remove("parallels-open");
         PopupState.parallelsOpen = false;
+
+        // [NEW] Also close Quicklook when Parallels is closed
+        if (QuicklookUI.isVisible()) {
+            QuicklookUI.hide();
+            if (PopupState.activeIndex !== -1) {
+                PopupState.activeType = 'comment';
+                PopupState.activeUrl = null;
+            } else {
+                PopupState.clearActive();
+            }
+        }
+        
         PopupState.saveSnapshot();
     },
 
