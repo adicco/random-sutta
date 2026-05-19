@@ -48,6 +48,13 @@ export const CommentController = {
         CommentUI.updateAutoButton(newState);
         if (newState) {
             this.handleAutoSwitch();
+        } else {
+            // [NEW] Restore manual view when Auto mode is disabled
+            if (PopupState.activeIndex !== -1) {
+                this.activate(PopupState.activeIndex);
+            } else {
+                CommentUI.hide();
+            }
         }
     },
 

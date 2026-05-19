@@ -146,33 +146,26 @@ export const CommentUI = {
             return;
         }
 
-        // 1. Clean up potential double spacing around pipes if any
-        let normalizedText = text.replace(/\s*\|\s*/g, ' | ');
+        // 1. Clean up spacing around pipes to ensure consistent divider styling
+        let processedText = text.replace(/\s*\|\s*/g, ' | ');
 
-        // 2. Split by " | " first (Auto mode joiner or predefined breaks)
-        const majorParts = normalizedText.split(' | ');
+        // 2. Split into paragraphs ONLY by numbered prefixes (e.g., "1. ", "2. ")
+        // We use a regex that looks ahead for a number followed by a dot and space.
+        // We don't split by " | " anymore to allow the pipe to be visible.
+        const paragraphs = processedText.split(/(?=\d+\.\s)/);
+        
         let finalHtml = "";
+        paragraphs.forEach(p => {
+            let subText = p.trim();
+            if (!subText) return;
 
-        majorParts.forEach(part => {
-            let cleanPart = part.trim();
-            if (!cleanPart) return;
+            // Style the prefix (e.g., "1. ")
+            subText = subText.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
 
-            // 3. Further split if a part contains internal sequence numbers (e.g., "1. text 2. text")
-            // This ensures each numbered comment starts its own paragraph
-            const subParts = cleanPart.split(/(?=\d+\.\s)/);
-            
-            subParts.forEach(sub => {
-                let subText = sub.trim();
-                if (!subText) return;
+            // Style all dividers (|) within this paragraph
+            subText = subText.replace(/\|/g, '<span class="comment-divider">|</span>');
 
-                // Style the prefix (e.g., "1. ")
-                subText = subText.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
-
-                // Handle remaining pipes within the sub-text (if any) as styled dividers
-                subText = subText.replace(/\|/g, '<span class="comment-divider">|</span>');
-
-                finalHtml += `<p class="comment-paragraph">${subText}</p>`;
-            });
+            finalHtml += `<p class="comment-paragraph">${subText}</p>`;
         });
 
         this.elements.content.innerHTML = finalHtml;
