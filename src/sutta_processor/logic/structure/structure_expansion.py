@@ -23,6 +23,7 @@ def expand_structure_with_subleaves(
             payload = raw_content_map[uid]
             parent_meta = meta_map.get(uid, {})
             parent_acronym = parent_meta.get("acronym", "")
+            parent_root_lang = parent_meta.get("root_lang")
             
             expanded_ids, generated_meta = generate_subleaf_shortcuts(
                 root_uid=uid,
@@ -46,12 +47,15 @@ def expand_structure_with_subleaves(
                     # --- Logic tạo Meta cũ ---
                     api_info = meta_map.get(sc_id, {})
                     
+                    # [FIX] Inherit root_lang from parent if not in api_info
+                    root_lang = api_info.get("root_lang") or parent_root_lang
+
                     if sc_data["type"] == "alias":
                         target = sc_data.get("target_uid") or sc_data.get("extract_id") or sc_data.get("parent_uid")
                         entry = { 
                             "type": "alias", 
                             "target_uid": target, 
-                            "root_lang": api_info.get("root_lang")
+                            "root_lang": root_lang
                         }
                         if sc_data.get("hash_id"):
                             entry["hash_id"] = sc_data.get("hash_id")
@@ -62,7 +66,7 @@ def expand_structure_with_subleaves(
                         entry = {
                             "type": sc_data["type"],
                             "parent_uid": sc_data["parent_uid"],
-                            "root_lang": api_info.get("root_lang")
+                            "root_lang": root_lang
                         }
                         if sc_data.get("acronym"):
                              entry["acronym"] = sc_data["acronym"]
