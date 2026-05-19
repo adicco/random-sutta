@@ -52,7 +52,8 @@ def _sanitize_links(text: str, current_sutta_id: str, segment_id: str, missing_a
     if not text or "suttacentral.net" not in text:
         return text
 
-    pattern = r"(<a\b[^>]*href=['\"])(https?://suttacentral\.net/([a-zA-Z0-9\.-]+)([^'\"\s]*))(['\"][^>]*>)(.*?)(</a>)"
+    # [UPDATED] Regex handle space in URL and more characters
+    pattern = r"(<a\b[^>]*href=['\"])(https?://suttacentral\.net/([a-zA-Z0-9\.\s-]+)([^'\"\s]*))(['\"][^>]*>)(.*?)(</a>)"
     
     def repl(match):
         prefix = match.group(1)
@@ -82,7 +83,14 @@ def _sanitize_links(text: str, current_sutta_id: str, segment_id: str, missing_a
                 return f"{prefix}{new_href}{suffix}{new_anchor}{closing}"
         
         # --- 2. Logic Normal ---
-        target_uid = _get_base_uid(uid_raw)
+        target_uid = _get_base_uid(uid_raw).strip()
+        
+        # [NEW] Support Range Fallback (e.g. sn47.14-20 -> sn47.14)
+        if target_uid not in _WORKER_VALID_UIDS and "-" in target_uid:
+            first_part = target_uid.split("-")[0]
+            if first_part in _WORKER_VALID_UIDS:
+                target_uid = first_part
+
         hash_id = ""
         hash_match = re.search(r"#([a-zA-Z0-9\.\:-]+)", url_tail)
         if hash_match:
