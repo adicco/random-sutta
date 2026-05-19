@@ -146,27 +146,29 @@ export const CommentUI = {
             return;
         }
 
-        // 1. Split by " | " first (Auto mode joiner)
-        const majorParts = text.split(' | ');
+        // 1. Clean up potential double spacing around pipes if any
+        let normalizedText = text.replace(/\s*\|\s*/g, ' | ');
+
+        // 2. Split by " | " first (Auto mode joiner or predefined breaks)
+        const majorParts = normalizedText.split(' | ');
         let finalHtml = "";
 
         majorParts.forEach(part => {
             let cleanPart = part.trim();
             if (!cleanPart) return;
 
-            // 2. Further split if a part contains internal sequence numbers (e.g., "1. text 2. text")
-            // This regex matches a position before a number followed by a dot and space, 
-            // but only if it's not at the very beginning.
+            // 3. Further split if a part contains internal sequence numbers (e.g., "1. text 2. text")
+            // This ensures each numbered comment starts its own paragraph
             const subParts = cleanPart.split(/(?=\d+\.\s)/);
             
             subParts.forEach(sub => {
                 let subText = sub.trim();
                 if (!subText) return;
 
-                // Style the prefix
+                // Style the prefix (e.g., "1. ")
                 subText = subText.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
 
-                // Style internal dividers (|) if any
+                // Handle remaining pipes within the sub-text (if any) as styled dividers
                 subText = subText.replace(/\|/g, '<span class="comment-divider">|</span>');
 
                 finalHtml += `<p class="comment-paragraph">${subText}</p>`;
