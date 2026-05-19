@@ -58,18 +58,19 @@ export const PopupOrchestrator = {
         const container = document.getElementById("sutta-container");
         if (container) {
             container.addEventListener("click", (e) => {
-                if (e.target.classList.contains("comment-marker")) {
+                const markerEl = e.target.closest(".comment-marker");
+                if (markerEl) {
                     e.stopPropagation();
                     
                     // [FIXED] Identify exact index of clicked marker to avoid "jumping" on duplicate texts
                     const markers = Array.from(container.querySelectorAll(".comment-marker"));
-                    const index = markers.indexOf(e.target);
+                    const index = markers.indexOf(markerEl);
                     
                     if (index !== -1) {
                         CommentController.openByIndex(index);
                     } else {
                         // Fallback to text if index search fails
-                        CommentController.openByText(e.target.dataset.comment);
+                        CommentController.openByText(markerEl.dataset.comment);
                     }
                 } else {
                     // Click Outside Logic

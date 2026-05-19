@@ -38,10 +38,11 @@ export const QuicklookUI = {
         }
         
         this.elements.content.addEventListener("click", (e) => {
-             if (e.target.classList.contains("comment-marker")) {
+             const markerEl = e.target.closest(".comment-marker");
+             if (markerEl) {
                  e.stopPropagation();
                  if (callbacks.onCommentClick) {
-                     callbacks.onCommentClick(e.target.dataset.comment);
+                     callbacks.onCommentClick(markerEl.dataset.comment);
                  }
                  return;
              }
