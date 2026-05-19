@@ -146,16 +146,34 @@ export const CommentUI = {
             return;
         }
 
-        // 1. Style sequence numbers (at start or after a pipe)
-        let html = text.trim()
-            .replace(/^(\d+)\.\s/g, '<span class="comment-prefix">$1.</span> ')
-            .replace(/\|\s*(\d+)\.\s/g, '| <span class="comment-prefix">$1.</span> ');
+        // 1. Split by " | " first (Auto mode joiner)
+        const majorParts = text.split(' | ');
+        let finalHtml = "";
 
-        // 2. Style the dividers (|)
-        // [UPDATED] No more paragraph splitting, just styling the separator
-        html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
+        majorParts.forEach(part => {
+            let cleanPart = part.trim();
+            if (!cleanPart) return;
 
-        this.elements.content.innerHTML = `<p class="comment-paragraph">${html}</p>`;
+            // 2. Further split if a part contains internal sequence numbers (e.g., "1. text 2. text")
+            // This regex matches a position before a number followed by a dot and space, 
+            // but only if it's not at the very beginning.
+            const subParts = cleanPart.split(/(?=\d+\.\s)/);
+            
+            subParts.forEach(sub => {
+                let subText = sub.trim();
+                if (!subText) return;
+
+                // Style the prefix
+                subText = subText.replace(/^(\d+)\.\s/, '<span class="comment-prefix">$1.</span> ');
+
+                // Style internal dividers (|) if any
+                subText = subText.replace(/\|/g, '<span class="comment-divider">|</span>');
+
+                finalHtml += `<p class="comment-paragraph">${subText}</p>`;
+            });
+        });
+
+        this.elements.content.innerHTML = finalHtml;
     },
 
     hide() {
