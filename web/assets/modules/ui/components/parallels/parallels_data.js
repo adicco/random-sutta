@@ -92,7 +92,7 @@ export const ParallelsData = {
         if (segmentKeys.length > 0) {
             html += `
                 <li class="parallels-item" style="margin-top: 20px;">
-                    <h4 class="parallels-group-header" style="color: var(--primary-color);">By Segment</h4>
+                    <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center;">By Segment</h4>
                     <ul style="list-style: none; padding: 0; margin: 0;">
             `;
             
