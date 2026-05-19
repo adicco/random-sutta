@@ -253,6 +253,7 @@ export const SuttaRepository = {
 
     /**
      * Get parallel relationships for a given sutta UID.
+     * Automatically fallbacks to parent parallels if the UID is a subleaf.
      * @param {string} uid Sutta UID
      * @returns {Promise<Object|null>} Parallels JSON object or null if not found
      */
@@ -260,10 +261,26 @@ export const SuttaRepository = {
         if (!uid) return null;
         
         try {
-            const results = await SuttaDB.query("SELECT relations FROM parallels WHERE src_uid = ?", [uid]);
+            // 1. Try direct lookup
+            let results = await SuttaDB.query("SELECT relations FROM parallels WHERE src_uid = ?", [uid]);
             if (results && results.length > 0) {
                 return JSON.parse(results[0].relations);
             }
+
+            // 2. [FALLBACK] If not found, check if it's a subleaf and try parent
+            const metaResults = await SuttaDB.query("SELECT parent_uid FROM metadata WHERE uid = ? AND type = 'subleaf'", [uid]);
+            if (metaResults && metaResults.length > 0) {
+                const parentUid = metaResults[0].parent_uid;
+                logger.debug('getParallels', `Falling back to parent parallels: ${parentUid} for subleaf ${uid}`);
+                results = await SuttaDB.query("SELECT relations FROM parallels WHERE src_uid = ?", [parentUid]);
+                if (results && results.length > 0) {
+                    const data = JSON.parse(results[0].relations);
+                    // Add mapping info to help frontend identify the original parent key
+                    data._parentUid = parentUid;
+                    return data;
+                }
+            }
+            
             return null;
         } catch (error) {
             logger.error('getParallels', `Error fetching parallels for ${uid}`, error);

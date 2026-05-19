@@ -23,9 +23,14 @@ export const ParallelsData = {
             return false;
         }
 
+        // [NEW] Handle Parent Fallback (for Subleafs)
+        const effectiveUid = parallelsData._parentUid || suttaId;
+
         // Collect all target UIDs (stripping segment IDs) to fetch their titles
         const targetUids = new Set();
-        Object.values(parallelsData).forEach(segmentData => {
+        Object.keys(parallelsData).forEach(key => {
+            if (key.startsWith('_')) return; // Skip metadata like _parentUid
+            const segmentData = parallelsData[key];
             Object.values(segmentData).forEach(list => {
                 list.forEach(target => {
                     const cleanUid = target.split('#')[0];
@@ -93,17 +98,17 @@ export const ParallelsData = {
             `;
         };
 
-        // 1. Render Sutta-level relations first (key == suttaId)
-        if (parallelsData[suttaId]) {
+        // 1. Render Sutta-level relations first (key == effectiveUid)
+        if (parallelsData[effectiveUid]) {
             RELATION_ORDER.forEach(relType => {
-                if (parallelsData[suttaId][relType] && parallelsData[suttaId][relType].length > 0) {
+                if (parallelsData[effectiveUid][relType] && parallelsData[effectiveUid][relType].length > 0) {
                     const sectionTitle = relType.charAt(0).toUpperCase() + relType.slice(1);
                     html += `
                         <li class="parallels-item" style="margin-top: 10px;">
                             <h4 class="parallels-group-header">${sectionTitle}</h4>
                             <ul style="list-style: none; padding: 0; margin: 0;">
                     `;
-                    const sortedTargets = sortTargetsByLang(parallelsData[suttaId][relType]);
+                    const sortedTargets = sortTargetsByLang(parallelsData[effectiveUid][relType]);
                     sortedTargets.forEach(target => {
                         html += createLinkHtml(target);
                     });
@@ -113,7 +118,7 @@ export const ParallelsData = {
         }
 
         // 2. Render Segment-level relations
-        const segmentKeys = Object.keys(parallelsData).filter(k => k !== suttaId);
+        const segmentKeys = Object.keys(parallelsData).filter(k => k !== effectiveUid && !k.startsWith('_'));
         // Sort segment keys (e.g. by order if numeric, otherwise alphabetical)
         segmentKeys.sort((a, b) => {
             const aNum = parseFloat(a.split('#')[1]);
@@ -123,13 +128,25 @@ export const ParallelsData = {
         });
 
         if (segmentKeys.length > 0) {
-            html += `
-                <li class="parallels-item" style="margin-top: 20px;">
-                    <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center;">By Segment</h4>
-                    <ul style="list-style: none; padding: 0; margin: 0;">
-            `;
+            let hasSegmentHeader = false;
             
             segmentKeys.forEach(segKey => {
+                // [NEW] Filter: Only show segments present in current DOM
+                // Segment IDs in DOM use ':' instead of '#' (e.g., dn1:1.1)
+                const domId = segKey.replace('#', ':');
+                if (!document.getElementById(domId)) {
+                    return; // Skip if not on current page
+                }
+
+                if (!hasSegmentHeader) {
+                    html += `
+                        <li class="parallels-item" style="margin-top: 20px;">
+                            <h4 class="parallels-group-header" style="color: var(--primary-color); text-align: center;">By Segment</h4>
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                    `;
+                    hasSegmentHeader = true;
+                }
+
                 // [FIX] Correctly extract range label
                 const hashIndex = segKey.indexOf('#');
                 let segLabel = hashIndex !== -1 ? segKey.substring(hashIndex + 1) : segKey;
@@ -165,7 +182,10 @@ export const ParallelsData = {
                 
                 html += `</ul></li>`;
             });
-            html += `</ul></li>`;
+            
+            if (hasSegmentHeader) {
+                html += `</ul></li>`;
+            }
         }
 
         listElement.innerHTML = html;
