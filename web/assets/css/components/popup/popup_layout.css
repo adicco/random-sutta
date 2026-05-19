@@ -134,6 +134,7 @@ body.is-resizing .popup-container {
   /* border-left: 5px solid var(--primary-color); */
   z-index: 1020;
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
+  background-color: var(--bg-body); /* [UPDATED] Use softer background to reduce brightness */
 }
 
 /* --- QUICKLOOK POPUP (Layer 2) --- */
