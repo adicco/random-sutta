@@ -25,11 +25,14 @@ export const CommentFormatter = {
     },
 
     /**
-     * Formats an array of comments, wrapping each in its own paragraph,
+     * Formats an array of comment objects {text, index}, wrapping each in its own paragraph,
      * and joins them together into a single HTML string.
      */
-    formatMultiple(commentsArray) {
-        if (!Array.isArray(commentsArray) || commentsArray.length === 0) return "";
-        return commentsArray.map(text => this.formatSingle(text)).join("");
+    formatMultiple(items) {
+        if (!Array.isArray(items) || items.length === 0) return "";
+        return items.map(item => {
+            const formattedText = this.formatText(item.text);
+            return `<p class="comment-paragraph" data-index="${item.index}">${formattedText}</p>`;
+        }).join("");
     }
 };

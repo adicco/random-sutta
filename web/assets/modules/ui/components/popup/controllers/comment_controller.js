@@ -46,6 +46,10 @@ export const CommentController = {
         const newState = !PopupState.isAutoSwitch;
         PopupState.setAutoSwitch(newState);
         CommentUI.updateAutoButton(newState);
+        
+        // Reset cache to force fresh render when switching modes
+        CommentUI.lastAutoJson = null;
+
         if (newState) {
             this.handleAutoSwitch();
         } else {
@@ -70,7 +74,7 @@ export const CommentController = {
         const markers = Array.from(container.querySelectorAll(".comment-marker"));
         if (markers.length === 0) return;
 
-        const inRangeComments = [];
+        const inRangeItems = [];
         const inRangeIndices = [];
 
         markers.forEach((marker, index) => {
@@ -89,16 +93,16 @@ export const CommentController = {
                 if (topmostElement && (topmostElement === marker || marker.contains(topmostElement))) {
                     const commentText = marker.dataset.comment;
                     if (commentText) {
-                        inRangeComments.push(commentText);
+                        inRangeItems.push({ text: commentText, index: index });
                         inRangeIndices.push(index);
                     }
                 }
             }
         });
 
-        if (inRangeComments.length > 0) {
-            // Pass the array of comments directly instead of joining them
-            CommentUI.renderAuto(inRangeComments);
+        if (inRangeItems.length > 0) {
+            // Pass the array of items (text + index) for better rendering and anchoring
+            CommentUI.renderAuto(inRangeItems);
             
             // Highlight the first one in range if not already active
             if (inRangeIndices.length > 0 && inRangeIndices[0] !== PopupState.activeIndex) {

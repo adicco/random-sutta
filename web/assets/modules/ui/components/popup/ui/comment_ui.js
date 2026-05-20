@@ -96,6 +96,8 @@ export const CommentUI = {
     render(text, index, total, contextText = "", isRestoring = false) {
         if (!this.elements.content) return;
         
+        this.lastAutoJson = null; // [NEW] Clear cache when manual render is called
+        
         this.elements.content.innerHTML = CommentFormatter.formatSingle(text);
         
         if (this.elements.headerContext) {
@@ -121,11 +123,51 @@ export const CommentUI = {
         this._updateNav(index, total);
     },
 
-    // [NEW] Specialized render for Auto-Switch mode
-    renderAuto(commentsArray) {
-        if (!this.elements.content) return;
+    // [NEW] Cache for Auto-Switch mode to prevent redundant renders and jumps
+    lastAutoJson: null,
 
-        this.elements.content.innerHTML = CommentFormatter.formatMultiple(commentsArray);
+    // [NEW] Specialized render for Auto-Switch mode with Scroll Anchoring
+    renderAuto(items) {
+        if (!this.elements.content || !this.elements.popupBody) return;
+
+        // Optimization: Skip if no change to avoid flickering and scroll resets
+        const currentJson = JSON.stringify(items);
+        if (this.lastAutoJson === currentJson) return;
+        this.lastAutoJson = currentJson;
+
+        const body = this.elements.popupBody;
+        const content = this.elements.content;
+
+        // --- SCROLL ANCHORING: PRE-UPDATE ---
+        // Find which element is currently at the top of the scroll view
+        let anchorIndex = -1;
+        let anchorOffset = 0;
+        
+        if (body.scrollTop > 10) { // Only anchor if user has scrolled a bit
+            const children = Array.from(content.children);
+            const bodyRect = body.getBoundingClientRect();
+            for (const child of children) {
+                const rect = child.getBoundingClientRect();
+                // Find first child that is partially or fully visible
+                if (rect.bottom > bodyRect.top) {
+                    anchorIndex = child.dataset.index;
+                    anchorOffset = rect.top - bodyRect.top; // Relative distance from top of scroll area
+                    break;
+                }
+            }
+        }
+
+        // --- UPDATE CONTENT ---
+        content.innerHTML = CommentFormatter.formatMultiple(items);
+
+        // --- SCROLL ANCHORING: POST-UPDATE ---
+        if (anchorIndex !== -1) {
+            const newAnchor = content.querySelector(`.comment-paragraph[data-index="${anchorIndex}"]`);
+            if (newAnchor) {
+                // Restore relative scroll position
+                body.scrollTop = newAnchor.offsetTop - anchorOffset;
+            }
+        }
 
         if (this.elements.headerContext) {
             this.elements.headerContext.textContent = "Comments";

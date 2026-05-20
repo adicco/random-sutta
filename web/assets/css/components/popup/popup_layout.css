@@ -100,6 +100,7 @@ body.is-resizing .popup-container {
   padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + env(safe-area-inset-bottom, 20px));
   
   overflow-y: auto;
+  overflow-anchor: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
   flex: 1;
