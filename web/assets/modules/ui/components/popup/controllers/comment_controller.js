@@ -97,9 +97,8 @@ export const CommentController = {
         });
 
         if (inRangeComments.length > 0) {
-            // Join all comments with a separator if multiple are present
-            const combinedText = inRangeComments.join(' | ');
-            CommentUI.renderAuto(combinedText);
+            // Pass the array of comments directly instead of joining them
+            CommentUI.renderAuto(inRangeComments);
             
             // Highlight the first one in range if not already active
             if (inRangeIndices.length > 0 && inRangeIndices[0] !== PopupState.activeIndex) {
@@ -160,7 +159,7 @@ export const CommentController = {
             if (PopupState.isAutoSwitch) {
                 // [FIXED] If Auto mode is on, ensure we use the Auto UI even when clicking a marker
                 if (!CommentUI.isVisible()) {
-                    CommentUI.renderAuto(""); // Show popup to allow handleAutoSwitch to run
+                    CommentUI.renderAuto([]); // Show popup to allow handleAutoSwitch to run
                 }
                 this.handleAutoSwitch();
             } else {

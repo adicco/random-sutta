@@ -2,6 +2,7 @@
 import { SwipeHandler } from 'ui/common/swipe_handler.js';
 import { ScrollHandler } from 'ui/common/scroll_handler.js';
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
+import { CommentFormatter } from 'ui/components/popup/formatters/comment_formatter.js';
 
 export const CommentUI = {
     elements: {},
@@ -95,7 +96,7 @@ export const CommentUI = {
     render(text, index, total, contextText = "", isRestoring = false) {
         if (!this.elements.content) return;
         
-        this._renderContent(text);
+        this.elements.content.innerHTML = CommentFormatter.formatSingle(text);
         
         if (this.elements.headerContext) {
             // [UPDATED] Show context header in manual mode
@@ -121,10 +122,10 @@ export const CommentUI = {
     },
 
     // [NEW] Specialized render for Auto-Switch mode
-    renderAuto(combinedText) {
+    renderAuto(commentsArray) {
         if (!this.elements.content) return;
 
-        this._renderContent(combinedText);
+        this.elements.content.innerHTML = CommentFormatter.formatMultiple(commentsArray);
 
         if (this.elements.headerContext) {
             this.elements.headerContext.textContent = "Comments";
@@ -139,22 +140,7 @@ export const CommentUI = {
         this.elements.popup.classList.remove("hidden");
         document.body.classList.add("popup-open");
     },
-    _renderContent(text) {
-        if (!text) {
-            this.elements.content.innerHTML = "";
-            return;
-        }
 
-        // 1. Style all numbered prefixes globally (e.g., "1. ", "11. ")
-        // This ensures prefixes are highlighted even when displayed seamlessly.
-        let html = text.trim().replace(/(\d+)\.\s/g, '<span class="comment-prefix">$1.</span> ');
-
-        // 2. Style all dividers (|) globally for consistent visual separation
-        html = html.replace(/\|/g, '<span class="comment-divider">|</span>');
-
-        // 3. Wrap everything in a single paragraph for "seamless" display as requested
-        this.elements.content.innerHTML = `<p class="comment-paragraph">${html}</p>`;
-    },
     hide() {
         this.elements.popup?.classList.add("hidden");
         document.body.classList.remove("popup-open"); // [NEW] Remove class from body
