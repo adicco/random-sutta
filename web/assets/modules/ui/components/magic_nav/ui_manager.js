@@ -315,7 +315,10 @@ export const UIManager = {
                 const targetId = btn.getAttribute('data-target');
                 if (window.loadSutta) {
                     window.loadSutta(targetId);
-                    this.closeAll(); // Close the navigation bar after loading
+                    
+                    // [FIX] Force close all components immediately and on next tick
+                    this.closeAll();
+                    setTimeout(() => this.closeAll(), 0);
                 }
             }
         }, { capture: true });
