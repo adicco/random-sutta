@@ -5,6 +5,7 @@
 /* Base */
 @import "css/base/_variables.css";
 @import "css/base/_reset.css";
+@import "css/base/_scrollbar.css";
 @import "css/base/_animations.css";
 
 /* Layout */

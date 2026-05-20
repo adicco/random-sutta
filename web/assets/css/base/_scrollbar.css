@@ -1,0 +1,45 @@
+/* Path: web/assets/css/base/_scrollbar.css */
+
+/**
+ * [REFINED SCROLLBAR]
+ * A subtle, modern scrollbar that blends with the theme.
+ * Works across Firefox and Webkit browsers (Chrome, Safari, Edge).
+ */
+
+/* 1. Universal Thin Scrollbar (Firefox) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+/* 2. Webkit Browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 10px; /* Narrower width for a cleaner look */
+  height: 10px; /* For horizontal scrollbars */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* Makes the scrollbar feel like an overlay */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 10px;
+  /* Use a transparent border to create a "floating" effect within the 10px width */
+  border: 3px solid transparent; 
+  background-clip: content-box;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Handle specific scrollable containers to ensure consistency */
+.drawer-content,
+.popup-scroll-container,
+#setting-drawer,
+.magic-tab-content {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}

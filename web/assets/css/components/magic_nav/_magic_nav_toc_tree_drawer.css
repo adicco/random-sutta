@@ -308,8 +308,11 @@
   background: transparent;
 }
 .magic-tab-content::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: var(--scrollbar-thumb);
   border-radius: 10px;
+}
+.magic-tab-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* --- 2. NODE WRAPPER & HEADER --- */
