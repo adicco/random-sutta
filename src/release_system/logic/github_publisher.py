@@ -36,9 +36,10 @@ def publish_release(version_tag: str, is_official: bool = False) -> bool:
 
     artifacts = [str(full_zip_path)]
     
-    # Tìm kiếm các artifact phụ (APK, MacOS)
+    # Tìm kiếm các artifact phụ (APK, MacOS, Alfred)
     optional_artifacts = [
         PROJECT_ROOT / "dist" / "apk" / "randomsutta.apk",
+        PROJECT_ROOT / "dist" / "alfred" / "RandomSutta.alfredworkflow",
     ]
     
     macos_dir = PROJECT_ROOT / "dist" / "macos"
