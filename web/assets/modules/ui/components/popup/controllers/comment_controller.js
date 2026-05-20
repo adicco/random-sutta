@@ -70,24 +70,28 @@ export const CommentController = {
         const markers = Array.from(container.querySelectorAll(".comment-marker"));
         if (markers.length === 0) return;
 
-        const viewportHeight = window.innerHeight;
-        
-        // Boundaries Calculation
-        const thresholdTopPx = viewportHeight * (PopupState.autoSwitchThresholdTop / 100);
-        const thresholdBottomPx = viewportHeight * (1 - (PopupState.autoSwitchThresholdBottom / 100));
-
         const inRangeComments = [];
         const inRangeIndices = [];
 
         markers.forEach((marker, index) => {
             const rect = marker.getBoundingClientRect();
             
-            // [UPDATED] Collect all comments within the user-defined boundaries
-            if (rect.top >= thresholdTopPx && rect.top < thresholdBottomPx) {
-                const commentText = marker.dataset.comment;
-                if (commentText) {
-                    inRangeComments.push(commentText);
-                    inRangeIndices.push(index);
+            // Check if marker is within the viewport vertically and horizontally
+            if (rect.top >= 0 && rect.bottom <= window.innerHeight && rect.left >= 0 && rect.right <= window.innerWidth) {
+                // Get the center point of the marker
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                
+                // Determine the topmost element at this point
+                const topmostElement = document.elementFromPoint(x, y);
+                
+                // If the topmost element is the marker or a descendant (or if marker contains it), it's visible
+                if (topmostElement && (topmostElement === marker || marker.contains(topmostElement))) {
+                    const commentText = marker.dataset.comment;
+                    if (commentText) {
+                        inRangeComments.push(commentText);
+                        inRangeIndices.push(index);
+                    }
                 }
             }
         });
