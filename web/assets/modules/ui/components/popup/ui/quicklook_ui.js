@@ -49,6 +49,15 @@ export const QuicklookUI = {
 
              const link = e.target.closest("a");
              if (link && link.href) {
+                 // [NEW] Bypass local interception for external links or target="_blank"
+                 const isExternal = link.origin !== window.location.origin;
+                 const isNewTab = link.target === "_blank";
+
+                 if (isExternal || isNewTab) {
+                    // Let the browser handle it (don't preventDefault)
+                    return;
+                 }
+
                  e.preventDefault();
                  callbacks.onDeepLink(link.href);
              }
