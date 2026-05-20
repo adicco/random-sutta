@@ -7,6 +7,7 @@ import { SuttaService } from 'services/sutta_service.js';
 import { LeafRenderer } from 'ui/views/renderers/leaf_renderer.js';
 import { UIFactory } from 'ui/common/ui_factory.js';
 import { getLogger } from 'utils/logger.js';
+import { Scroller } from 'ui/common/scroller.js';
 
 import { ZIndexManager } from 'ui/common/z_index_manager.js';
 
@@ -124,10 +125,10 @@ export const QuicklookController = {
         
         if (hashContent.includes('-')) {
             const rangeParts = hashContent.split('-');
-            scrollTarget = rangeParts[0].trim();
-            rangeEnd = rangeParts[1].trim() || null;
+            scrollTarget = rangeParts[0].trim().replace(/^#/, '');
+            rangeEnd = rangeParts[1].trim().replace(/^#/, '') || null;
         } else {
-            scrollTarget = hashContent;
+            scrollTarget = hashContent.replace(/^#/, '');
         }
 
         // Xử lý ID mục tiêu
