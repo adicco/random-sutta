@@ -192,6 +192,12 @@ article.single-language .segment.highlight {
   -webkit-box-decoration-break: clone;
 }
 
+/* [NEW] Suppress inline segment highlights inside Quicklook to prevent double-highlighting UX issues */
+#quicklook-popup .segment.highlight {
+  background-color: transparent !important;
+  padding: 0 !important;
+}
+
 [data-theme="dark"] .highlight,
 [data-theme="dark"] .highlight-container {
     background-color: rgba(255, 255, 255, 0.04);
