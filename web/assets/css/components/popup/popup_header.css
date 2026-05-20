@@ -93,7 +93,7 @@
   letter-spacing: 1px;
   color: var(--primary-color);
   opacity: 1;
-  text-align: center;
+  text-align: left;
   overflow: hidden;
 }
 
