@@ -130,7 +130,7 @@ export const BreadcrumbRenderer = {
             if (isLast) {
                 html += `<li class="bc-item active${markerClass}" title="${finalTooltip}">${finalLabel}</li>`;
             } else {
-                html += `<li><button onclick="window.loadSutta('${targetId}'); MagicNav.closeAll()" class="bc-link${markerClass}" title="${finalTooltip}">${finalLabel}</button></li>`;
+                html += `<li><button data-target="${targetId}" class="bc-link${markerClass}" title="${finalTooltip}">${finalLabel}</button></li>`;
             }
         }
 

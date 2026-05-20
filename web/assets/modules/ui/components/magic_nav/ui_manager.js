@@ -265,33 +265,60 @@ export const UIManager = {
         let isDown = false;
         let startX;
         let scrollLeft;
+        let hasDragged = false;
 
         const getX = (e) => e.clientX - slider.getBoundingClientRect().left;
 
         slider.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Only left click
             isDown = true;
+            hasDragged = false;
             slider.classList.add('active');
             startX = getX(e);
             scrollLeft = slider.scrollLeft;
         });
 
-        slider.addEventListener('mouseleave', () => { 
-            isDown = false; 
-            slider.classList.remove('active'); 
-        });
+        const stopDrag = () => {
+            isDown = false;
+            slider.classList.remove('active');
+        };
 
-        slider.addEventListener('mouseup', () => { 
-            isDown = false; 
-            slider.classList.remove('active'); 
-        });
+        slider.addEventListener('mouseleave', stopDrag);
+        slider.addEventListener('mouseup', stopDrag);
 
         slider.addEventListener('mousemove', (e) => {
             if (!isDown) return;
-            e.preventDefault();
+            
             const x = getX(e);
-            const walk = (x - startX) * 2; 
-            slider.scrollLeft = scrollLeft - walk;
+            const walk = (x - startX) * 2;
+            
+            // [MODIFIED] Threshold: Only start dragging if moved more than 5px
+            if (Math.abs(x - startX) > 5) {
+                hasDragged = true;
+                e.preventDefault(); 
+                slider.scrollLeft = scrollLeft - walk;
+            }
         });
+
+        // [NEW] Event Delegation for breadcrumb clicks
+        slider.addEventListener('click', (e) => {
+            // If we were dragging, suppress the click
+            if (hasDragged) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+            }
+
+            // Check if we clicked a breadcrumb link
+            const btn = e.target.closest('button[data-target]');
+            if (btn) {
+                const targetId = btn.getAttribute('data-target');
+                if (window.loadSutta) {
+                    window.loadSutta(targetId);
+                    this.closeAll(); // Close the navigation bar after loading
+                }
+            }
+        }, { capture: true });
 
         // [MODIFIED] Mouse Wheel: Mapping vertical scroll to horizontal
         slider.addEventListener("wheel", (e) => {
