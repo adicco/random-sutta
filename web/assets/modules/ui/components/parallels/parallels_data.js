@@ -80,10 +80,10 @@ export const ParallelsData = {
                     acronym: r.target, // Fallback
                     // Merge titles if they exist
                     translated_title: (startMeta?.translated_title && endMeta?.translated_title) 
-                        ? `${startMeta.translated_title} – ${endMeta.translated_title}`
+                        ? `${startMeta.translated_title} — ${endMeta.translated_title}`
                         : (startMeta?.translated_title || endMeta?.translated_title || ""),
                     original_title: (startMeta?.original_title && endMeta?.original_title)
-                        ? `${startMeta.original_title} – ${endMeta.original_title}`
+                        ? `${startMeta.original_title} — ${endMeta.original_title}`
                         : (startMeta?.original_title || endMeta?.original_title || "")
                 };
             });
@@ -144,7 +144,7 @@ export const ParallelsData = {
                         <div class="parallels-link-range">
                             ${rootLang ? `<span class="parallels-root-lang">${rootLang}</span>` : ''}
                             <span class="parallels-acronym">
-                                <a class="parallels-link-inline" data-target="${meta.startUid}">${startAcronym}</a> – 
+                                <a class="parallels-link-inline" data-target="${meta.startUid}">${startAcronym}</a> — 
                                 <a class="parallels-link-inline" data-target="${meta.endUid}">${endAcronym}</a>
                                 ${segmentSuffix}
                             </span>
