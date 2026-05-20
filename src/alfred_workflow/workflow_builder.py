@@ -200,7 +200,7 @@ def search(db_path, query):
                 "uid": uid,
                 "title": title,
                 "subtitle": subtitle,
-                "arg": f"randomsutta://{uid}",
+                "arg": f"randomsutta://?q={uid}",
                 "autocomplete": uid,
                 "icon": {"path": "icon.png"}
             })
