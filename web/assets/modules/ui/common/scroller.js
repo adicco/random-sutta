@@ -111,38 +111,39 @@ export const Scroller = {
         this.smoothScrollTo(targetId);
     },
 
-    highlightElement: function(targetId, autoRemove = false, endId = null) {
+    highlightElement: function(targetId, autoRemove = false, endId = null, container = document) {
         if (!targetId) return;
 
         let retries = 0;
         const maxRetries = 40; // Approx 0.6s total
 
         const attemptHighlight = () => {
-            const startEl = document.getElementById(targetId);
-            const endEl = endId ? document.getElementById(endId) : null;
+            // Support searching within a specific container to handle ID collisions in popups
+            const startEl = container === document ? document.getElementById(targetId) : container.querySelector(`[id="${targetId}"]`);
+            const endEl = endId ? (container === document ? document.getElementById(endId) : container.querySelector(`[id="${endId}"]`)) : null;
 
             if (!startEl || (endId && !endEl)) {
                 if (retries < maxRetries) {
                     retries++;
                     requestAnimationFrame(attemptHighlight);
                 } else if (startEl) {
-                    this._executeHighlight(startEl, null, autoRemove, targetId, endId);
+                    this._executeHighlight(startEl, null, autoRemove, targetId, endId, container);
                 }
                 return;
             }
 
-            this._executeHighlight(startEl, endEl, autoRemove, targetId, endId);
+            this._executeHighlight(startEl, endEl, autoRemove, targetId, endId, container);
         };
 
         requestAnimationFrame(attemptHighlight);
     },
 
-    _executeHighlight: function(startEl, endEl, autoRemove, targetId, endId) {
-        document.querySelectorAll('.highlight, .highlight-container, .parent-highlight-bridge').forEach(e => {
+    _executeHighlight: function(startEl, endEl, autoRemove, targetId, endId, container = document) {
+        container.querySelectorAll('.highlight, .highlight-container, .parent-highlight-bridge').forEach(e => {
             e.classList.remove('highlight', 'highlight-container', 'parent-highlight-bridge');
         });
 
-        const allSegments = Array.from(document.querySelectorAll('.segment'));
+        const allSegments = Array.from(container.querySelectorAll('.segment'));
         const startIndex = allSegments.findIndex(s => s.id === targetId || s.contains(startEl));
         let endIndex = endEl ? allSegments.findIndex(s => s.id === endId || s.contains(endEl)) : -1;
 

@@ -117,34 +117,44 @@ export const QuicklookController = {
     },
 
     _scrollToAnchorSync(hash, uid) {
+        let scrollTarget = null;
+        let rangeEnd = null;
+
+        const hashContent = decodeURIComponent(hash.substring(1));
+        
+        if (hashContent.includes('-')) {
+            const rangeParts = hashContent.split('-');
+            scrollTarget = rangeParts[0].trim();
+            rangeEnd = rangeParts[1].trim() || null;
+        } else {
+            scrollTarget = hashContent;
+        }
+
         // Xử lý ID mục tiêu
-        let targetId = hash.substring(1);
-        if (targetId && !targetId.includes(':') && /^[\d\.]+$/.test(targetId)) {
-            targetId = `${uid}:${targetId}`;
+        if (scrollTarget && !scrollTarget.includes(':') && /^[\d\.]+$/.test(scrollTarget)) {
+            scrollTarget = `${uid}:${scrollTarget}`;
+        }
+        if (rangeEnd && !rangeEnd.includes(':') && /^[\d\.]+$/.test(rangeEnd)) {
+            rangeEnd = `${uid}:${rangeEnd}`;
         }
 
         const qBody = QuicklookUI.elements.popupBody;
         if (!qBody) return;
 
+        // Apply highlighting using the shared Scroller logic, passing qBody as container
+        Scroller.highlightElement(scrollTarget, false, rangeEnd, qBody);
+
         // [TELEPORT CORE]
         // Vì chúng ta vừa gọi .innerHTML = ... ở dòng trên, trình duyệt chưa Paint.
         // Ta truy vấn DOM ngay lập tức để lấy phần tử mục tiêu.
-        const targetEl = qBody.querySelector(`[id="${targetId}"]`);
+        const targetEl = qBody.querySelector(`[id="${scrollTarget}"]`);
 
         if (targetEl) {
-            // Highlight ngay lập tức
-            qBody.querySelectorAll('.highlight').forEach(el => el.classList.remove('highlight'));
-            targetEl.classList.add('highlight');
-
             // Tính toán vị trí tương đối
             // Việc gọi offsetTop sẽ ép trình duyệt tính toán Layout (Reflow) ngay lập tức, nhưng CHƯA Paint.
             // Offset này tương đối với offsetParent (chính là qBody nếu nó có position relative/fixed/absolute)
             // Nếu cấu trúc HTML phức tạp, dùng getBoundingClientRect an toàn hơn.
             
-            // Cách 1: Dùng offsetTop (Nhanh nhất nếu cấu trúc đơn giản)
-            // const targetTop = targetEl.offsetTop;
-            // qBody.scrollTop = targetTop - SCROLL_OFFSET;
-
             // Cách 2: Dùng getBoundingClientRect (Chính xác nhất)
             // Lưu ý: Lúc này scrollTop có thể đang là 0
             const containerRect = qBody.getBoundingClientRect();
