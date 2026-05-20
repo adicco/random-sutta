@@ -209,13 +209,14 @@ def search(db_path, query):
             else:
                 subtitle = f"Mở {uid} trong ứng dụng Random Sutta"
 
-            url = f"randomsutta://?q={uid}"
+            url_app = f"randomsutta://?q={uid}"
+            url_web = f"https://vjjda.github.io/random-sutta/?q={uid}"
             items.append({
                 "uid": uid,
                 "title": title,
                 "subtitle": subtitle,
-                "arg": url,
-                "quicklookurl": url,
+                "arg": url_app,
+                "quicklookurl": url_web,
                 "autocomplete": uid,
                 "icon": {"path": "icon.png"}
             })
