@@ -107,15 +107,15 @@ def build_workflow(output_dir="dist/alfred"):
         shutil.copy(icon_src, tmp_dir / "icon.png")
 
     # 4. Tạo script search.py (Standalone version)
-    # Chúng ta copy logic từ search_logic.py vào đây để script độc lập hoàn toàn
-    search_script_content = """import sqlite3
+    search_script_content = """# -*- coding: utf-8 -*-
+import sqlite3
 import json
 import sys
 import os
 import re
 
 def normalize_query(query):
-    return re.sub(r'[.*"\'/:]', ' ', query).strip()
+    return re.sub(r'[.*\\"\\\'/:]', ' ', query).strip()
 
 def get_fts_query(clean_query):
     terms = clean_query.split()
@@ -133,6 +133,7 @@ def search(db_path, query):
     acronym_search = f"%{phrase}%"
     normalized_query = "".join(clean_query.split()).lower()
 
+    # Lưu ý: Join qua uid thay vì rowid để đảm bảo chính xác tuyệt đối
     sql = \"\"\"
         SELECT 
             m.uid, m.type, m.target_uid, m.parent_uid, m.acronym,
@@ -146,7 +147,7 @@ def search(db_path, query):
                 ELSE 3
             END) as match_priority
         FROM metadata_fts f
-        JOIN metadata m ON f.rowid = m.rowid
+        JOIN metadata m ON f.uid = m.uid
         LEFT JOIN metadata t ON m.target_uid = t.uid
         LEFT JOIN metadata p ON m.parent_uid = p.uid
         WHERE f.metadata_fts MATCH ? 
@@ -155,13 +156,19 @@ def search(db_path, query):
     \"\"\"
     items = []
     try:
+        if not os.path.exists(db_path):
+            return {"items": [{"title": "Database not found", "subtitle": f"Checked: {db_path}"}]}
+            
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute(sql, (normalized_query, acronym_search, phrase, phrase, phrase, fts_query))
+        
         for row in cursor.fetchall():
             uid = row['uid']
             m_type = row['type']
+            
+            # Rendering logic
             if m_type in ['alias', 'subleaf']:
                 is_alias = m_type == 'alias'
                 orig = row['target_original_title'] if is_alias else row['parent_original_title']
@@ -178,6 +185,7 @@ def search(db_path, query):
 
             if blurb:
                 clean_blurb = re.sub('<[^<]+?>', '', blurb)
+                clean_blurb = clean_blurb.replace('\\n', ' ').strip()
                 if len(clean_blurb) > 100: clean_blurb = clean_blurb[:97] + "..."
                 subtitle += f" | {clean_blurb}"
 
@@ -191,13 +199,23 @@ def search(db_path, query):
             })
         conn.close()
     except Exception as e:
-        return {"items": [{"title": "Error", "subtitle": str(e)}]}
+        return {"items": [{"title": "Error during search", "subtitle": str(e)}]}
+    
+    if not items:
+        return {"items": [{"title": "No results found", "subtitle": f"No matches for '{query}'"}]}
+        
     return {"items": items}
 
 if __name__ == "__main__":
+    # Alfred passes the query as the first argument
     query = sys.argv[1] if len(sys.argv) > 1 else ""
-    db_path = os.path.join(os.path.dirname(__file__), "sutta_core.db")
-    print(json.dumps(search(db_path, query)))
+    # In Alfred, the working directory is the workflow folder
+    # We use __file__ to get the absolute path to the script folder
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    db_path = os.path.join(script_dir, "sutta_core.db")
+    
+    output = search(db_path, query)
+    sys.stdout.write(json.dumps(output))
 """
     with open(tmp_dir / "search.py", "w") as f:
         f.write(search_script_content)
