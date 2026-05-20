@@ -35,7 +35,9 @@ help:
 	@echo "🏗️  BUILD & PREVIEW:"
 	@echo "  make build          - Run Full Build (Data + Vite)"
 	@echo "  make re             - Quick Re-build (Vite Only)"
+	@echo "  make macos-debug    - Build MacOS App (Debug mode)"
 	@echo "  make app            - Build MacOS App & Install to /Applications"
+	@echo "  make alfred         - Build Alfred Workflow for quick search"
 	@echo "  make dev            - Vite Dev Server with HMR"
 	@echo "  make view           - Preview Vite Production Build"
 	@echo ""
@@ -280,3 +282,9 @@ app-debug: macos-debug
 	@echo "🚀 Đang khởi chạy ứng dụng..."
 	@open -a "Random Sutta"
 	@echo "✅ Đã cài đặt và khởi chạy bản DEBUG thành công!"
+
+# [NEW] Tạo Alfred Workflow để tìm kiếm nhanh
+alfred:
+	@echo "🍎 Đang tạo Alfred Workflow..."
+	$(PYTHON) -m src.alfred_workflow.workflow_builder
+	@echo "✅ XONG! File cài đặt nằm tại: dist/alfred/RandomSutta.alfredworkflow"
