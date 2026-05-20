@@ -131,11 +131,7 @@ export function setupParallelsPanel() {
     async function generate(suttaId) {
         // Reset State
         els.list.innerHTML = "";
-        
-        const popupBody = els.popup.querySelector(".popup-body");
-        if (popupBody) {
-            popupBody.scrollTop = 0;
-        }
+        _needsScrollReset = true;
 
         // [NEW] Update Title Header with Acronym
         if (els.title) {
@@ -149,6 +145,19 @@ export function setupParallelsPanel() {
         
         // Load Parallels
         const hasData = await ParallelsData.load(suttaId, els.list);
+        
+        if (hasData) {
+            // Show panel wrapper and fab
+            els.wrapper.classList.remove("hidden");
+            els.fab.classList.remove("hidden");
+        } else {
+            // Keep fab hidden if no data
+            els.wrapper.classList.remove("hidden");
+        }
+    }
+
+    return { generate };
+}ata.load(suttaId, els.list);
         
         if (hasData) {
             // Show panel wrapper and fab
