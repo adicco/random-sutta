@@ -126,47 +126,27 @@ export const CommentUI = {
     // [NEW] Cache for Auto-Switch mode to prevent redundant renders and jumps
     lastAutoJson: null,
 
-    // [NEW] Specialized render for Auto-Switch mode with Scroll Anchoring
+    // [NEW] Specialized render for Auto-Switch mode with Scroll-to-Top logic
     renderAuto(items) {
         if (!this.elements.content || !this.elements.popupBody) return;
 
-        // Optimization: Skip if no change to avoid flickering and scroll resets
+        // Optimization: Skip if no change to avoid flickering
         const currentJson = JSON.stringify(items);
         if (this.lastAutoJson === currentJson) return;
+        
+        // Check if the leading (top) comment has changed
+        const prevItems = this.lastAutoJson ? JSON.parse(this.lastAutoJson) : [];
+        const topChanged = !prevItems.length || !items.length || prevItems[0].index !== items[0].index;
+
         this.lastAutoJson = currentJson;
 
-        const body = this.elements.popupBody;
-        const content = this.elements.content;
+        // UPDATE CONTENT
+        this.elements.content.innerHTML = CommentFormatter.formatMultiple(items);
 
-        // --- SCROLL ANCHORING: PRE-UPDATE ---
-        // Find which element is currently at the top of the scroll view
-        let anchorIndex = -1;
-        let anchorOffset = 0;
-        
-        if (body.scrollTop > 10) { // Only anchor if user has scrolled a bit
-            const children = Array.from(content.children);
-            const bodyRect = body.getBoundingClientRect();
-            for (const child of children) {
-                const rect = child.getBoundingClientRect();
-                // Find first child that is partially or fully visible
-                if (rect.bottom > bodyRect.top) {
-                    anchorIndex = child.dataset.index;
-                    anchorOffset = rect.top - bodyRect.top; // Relative distance from top of scroll area
-                    break;
-                }
-            }
-        }
-
-        // --- UPDATE CONTENT ---
-        content.innerHTML = CommentFormatter.formatMultiple(items);
-
-        // --- SCROLL ANCHORING: POST-UPDATE ---
-        if (anchorIndex !== -1) {
-            const newAnchor = content.querySelector(`.comment-paragraph[data-index="${anchorIndex}"]`);
-            if (newAnchor) {
-                // Restore relative scroll position
-                body.scrollTop = newAnchor.offsetTop - anchorOffset;
-            }
+        // [UPDATED] If the top comment changed (e.g. old top disappeared), reset scroll to top
+        // This provides a cleaner "next comment" transition as requested.
+        if (topChanged) {
+            this.elements.popupBody.scrollTop = 0;
         }
 
         if (this.elements.headerContext) {
