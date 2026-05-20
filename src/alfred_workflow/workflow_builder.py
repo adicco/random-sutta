@@ -167,27 +167,34 @@ def search(db_path, query):
         for row in cursor.fetchall():
             uid = row['uid']
             m_type = row['type']
+            acronym = row['acronym'] or uid
             
             # Rendering logic
             if m_type in ['alias', 'subleaf']:
                 is_alias = m_type == 'alias'
                 orig = row['target_original_title'] if is_alias else row['parent_original_title']
                 trans = row['target_translated_title'] if is_alias else row['parent_translated_title']
-                title = trans or orig or row['acronym'] or uid
-                subtitle = f"{uid} → {orig if trans else ''}"
                 blurb = (row['target_blurb'] if is_alias else row['parent_blurb']) or row['blurb'] or ""
             else:
                 orig = row['original_title']
                 trans = row['translated_title']
-                title = trans or orig or row['acronym'] or uid
-                subtitle = f"{row['acronym'] or uid} | {orig if trans else ''}"
                 blurb = row['blurb'] or ""
 
+            # Line 1: [Acronym] | [Original Title] | [Translated Title]
+            title_parts = [acronym]
+            if orig: title_parts.append(orig)
+            if trans: title_parts.append(trans)
+            title = " | ".join(title_parts)
+
+            # Line 2: Blurb only
+            subtitle = ""
             if blurb:
                 clean_blurb = re.sub('<[^<]+?>', '', blurb)
-                clean_blurb = clean_blurb.replace('\\n', ' ').strip()
-                if len(clean_blurb) > 100: clean_blurb = clean_blurb[:97] + "..."
-                subtitle += f" | {clean_blurb}"
+                clean_blurb = clean_blurb.replace('\\n', ' ').replace('\\r', ' ').strip()
+                if len(clean_blurb) > 120: clean_blurb = clean_blurb[:117] + "..."
+                subtitle = clean_blurb
+            else:
+                subtitle = f"Mở {acronym} trong ứng dụng Random Sutta"
 
             items.append({
                 "uid": uid,
