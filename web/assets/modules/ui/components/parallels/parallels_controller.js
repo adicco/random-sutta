@@ -132,6 +132,11 @@ export function setupParallelsPanel() {
         // Reset State
         els.list.innerHTML = "";
         
+        const popupBody = els.popup.querySelector(".popup-body");
+        if (popupBody) {
+            popupBody.scrollTop = 0;
+        }
+
         // [NEW] Update Title Header with Acronym
         if (els.title) {
             const currentMeta = await SuttaRepository.fetchMetaList([suttaId]);
