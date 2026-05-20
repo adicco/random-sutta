@@ -157,17 +157,4 @@ export function setupParallelsPanel() {
     }
 
     return { generate };
-}ata.load(suttaId, els.list);
-        
-        if (hasData) {
-            // Show panel wrapper and fab
-            els.wrapper.classList.remove("hidden");
-            els.fab.classList.remove("hidden");
-        } else {
-            // Keep fab hidden if no data
-            els.wrapper.classList.remove("hidden");
-        }
-    }
-
-    return { generate };
 }
