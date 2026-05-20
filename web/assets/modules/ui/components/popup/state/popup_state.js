@@ -17,6 +17,7 @@ export const PopupState = {
 
     // Parallels State
     parallelsOpen: false,
+    parallelsNeedsScrollReset: false,
 
     isAutoSwitch: localStorage.getItem("comment_auto_switch") === "true",
 

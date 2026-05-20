@@ -18,6 +18,13 @@ export const ParallelsController = {
         document.body.classList.add("parallels-open");
         ZIndexManager.bringToFront(currentEls.popup);
         PopupState.parallelsOpen = true;
+
+        if (PopupState.parallelsNeedsScrollReset) {
+            const popupBody = currentEls.popup.querySelector(".popup-body");
+            if (popupBody) popupBody.scrollTop = 0;
+            PopupState.parallelsNeedsScrollReset = false;
+        }
+
         if (!skipSnapshot) PopupState.saveSnapshot();
     },
 
@@ -131,7 +138,7 @@ export function setupParallelsPanel() {
     async function generate(suttaId) {
         // Reset State
         els.list.innerHTML = "";
-        _needsScrollReset = true;
+        PopupState.parallelsNeedsScrollReset = true;
 
         // [NEW] Update Title Header with Acronym
         if (els.title) {
