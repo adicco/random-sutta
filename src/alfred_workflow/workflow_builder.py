@@ -167,24 +167,37 @@ def search(db_path, query):
         for row in cursor.fetchall():
             uid = row['uid']
             m_type = row['type']
-            acronym = row['acronym'] or uid
             
-            # Rendering logic
+            # Rendering logic matching web UI
             if m_type in ['alias', 'subleaf']:
                 is_alias = m_type == 'alias'
                 orig = row['target_original_title'] if is_alias else row['parent_original_title']
                 trans = row['target_translated_title'] if is_alias else row['parent_translated_title']
-                blurb = (row['target_blurb'] if is_alias else row['parent_blurb']) or row['blurb'] or ""
+                
+                disp_trans = trans if trans else (orig or "")
+                disp_orig = orig if trans else ""
+                uid_part = f"{uid} ›"
+                
+                # Blurb logic for subleaf/alias
+                if not is_alias and row['translated_title']:
+                    # Subleaf with its own title
+                    blurb_parts = []
+                    if row['original_title']: blurb_parts.append(row['original_title'])
+                    if row['translated_title']: blurb_parts.append(row['translated_title'])
+                    blurb = " ".join(blurb_parts)
+                else:
+                    blurb = (row['target_blurb'] if is_alias else row['parent_blurb']) or row['blurb'] or ""
             else:
-                orig = row['original_title']
-                trans = row['translated_title']
+                disp_trans = row['translated_title'] if row['translated_title'] else (row['original_title'] or "")
+                disp_orig = row['original_title'] if row['translated_title'] else ""
+                uid_part = uid
                 blurb = row['blurb'] or ""
 
-            # Line 1: [Acronym] | [Original Title] | [Translated Title]
-            title_parts = [acronym]
-            if orig: title_parts.append(orig)
-            if trans: title_parts.append(trans)
-            title = " | ".join(title_parts)
+            # Line 1: [UID] [Orig] [Trans]
+            title_parts = [uid_part]
+            if disp_orig: title_parts.append(disp_orig)
+            if disp_trans: title_parts.append(disp_trans)
+            title = " ".join(title_parts)
 
             # Line 2: Blurb only
             subtitle = ""
@@ -194,7 +207,7 @@ def search(db_path, query):
                 if len(clean_blurb) > 120: clean_blurb = clean_blurb[:117] + "..."
                 subtitle = clean_blurb
             else:
-                subtitle = f"Mở {acronym} trong ứng dụng Random Sutta"
+                subtitle = f"Mở {uid} trong ứng dụng Random Sutta"
 
             items.append({
                 "uid": uid,
