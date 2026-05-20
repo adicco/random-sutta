@@ -146,8 +146,8 @@ body.view-mode-root-only .comment-marker {
 }
 
 .parent-highlight-bridge .segment.highlight {
-    background-color: transparent;
-    border-left: none;
+    background-color: transparent !important;
+    border-left: none !important;
     margin-left: 0;
     padding-left: 0;
     margin-bottom: var(--seg-spacing);
@@ -190,12 +190,6 @@ article.single-language .segment.highlight {
   border-radius: 2px;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
-}
-
-/* [NEW] Suppress inline segment highlights inside Quicklook to prevent double-highlighting UX issues */
-#quicklook-popup .segment.highlight {
-  background-color: transparent !important;
-  padding: 0 !important;
 }
 
 [data-theme="dark"] .highlight,
