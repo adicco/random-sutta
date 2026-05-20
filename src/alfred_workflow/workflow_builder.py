@@ -209,11 +209,13 @@ def search(db_path, query):
             else:
                 subtitle = f"Mở {uid} trong ứng dụng Random Sutta"
 
+            url = f"randomsutta://?q={uid}"
             items.append({
                 "uid": uid,
                 "title": title,
                 "subtitle": subtitle,
-                "arg": f"randomsutta://?q={uid}",
+                "arg": url,
+                "quicklookurl": url,
                 "autocomplete": uid,
                 "icon": {"path": "icon.png"}
             })
