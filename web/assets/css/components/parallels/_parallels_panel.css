@@ -105,6 +105,28 @@
   background-color: var(--bg-hover);
 }
 
+/* [NEW] Range Item Styles */
+.parallels-link-range {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px;
+  border-radius: 6px;
+  min-height: 32px;
+}
+
+.parallels-link-inline {
+  color: var(--primary-color);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.parallels-link-inline:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
 .parallels-root-lang {
   font-size: 0.65em;
   color: var(--text-light);

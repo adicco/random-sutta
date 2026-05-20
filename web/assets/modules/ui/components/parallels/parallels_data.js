@@ -42,6 +42,53 @@ export const ParallelsData = {
         // Fetch metadata for titles
         const metadata = await SuttaRepository.fetchMetaList([...targetUids]);
 
+        // [NEW] Handle Range UIDs (e.g., sa154-163, sn1.1-5)
+        const missingRanges = [];
+        for (const target of targetUids) {
+            if (!metadata[target] && target.includes('-')) {
+                const match = target.match(/^(.+?)(\d+)-(\d+)$/);
+                if (match) {
+                    const prefix = match[1];
+                    const startNum = match[2];
+                    const endNum = match[3];
+                    const startUid = prefix + startNum;
+                    const endUid = prefix + endNum;
+                    missingRanges.push({ target, startUid, endUid });
+                }
+            }
+        }
+
+        if (missingRanges.length > 0) {
+            const extraUids = [];
+            missingRanges.forEach(r => {
+                extraUids.push(r.startUid, r.endUid);
+            });
+            const extraMeta = await SuttaRepository.fetchMetaList(extraUids);
+            
+            missingRanges.forEach(r => {
+                const startMeta = extraMeta[r.startUid];
+                const endMeta = extraMeta[r.endUid];
+                
+                // Construct virtual metadata
+                metadata[r.target] = {
+                    isRange: true,
+                    startUid: r.startUid,
+                    endUid: r.endUid,
+                    startMeta: startMeta,
+                    endMeta: endMeta,
+                    root_lang: startMeta?.root_lang || endMeta?.root_lang || "",
+                    acronym: r.target, // Fallback
+                    // Merge titles if they exist
+                    translated_title: (startMeta?.translated_title && endMeta?.translated_title) 
+                        ? `${startMeta.translated_title} – ${endMeta.translated_title}`
+                        : (startMeta?.translated_title || endMeta?.translated_title || ""),
+                    original_title: (startMeta?.original_title && endMeta?.original_title)
+                        ? `${startMeta.original_title} – ${endMeta.original_title}`
+                        : (startMeta?.original_title || endMeta?.original_title || "")
+                };
+            });
+        }
+
         // Helper to sort targets by language: pli > lzh > others
         const sortTargetsByLang = (targets) => {
             return [...targets].sort((a, b) => {
@@ -84,6 +131,29 @@ export const ParallelsData = {
             const segmentSuffix = hashIndex !== -1 ? target.substring(hashIndex) : '';
             
             const meta = metadata[cleanUid];
+
+            // [NEW] Handle Range Rendering
+            if (meta && meta.isRange) {
+                const startAcronym = meta.startMeta?.acronym || meta.startUid;
+                const endAcronym = meta.endMeta?.acronym || meta.endUid;
+                const title = meta.translated_title || meta.original_title || "";
+                const rootLang = meta.root_lang || "";
+                
+                return `
+                    <li class="parallels-item">
+                        <div class="parallels-link-range">
+                            ${rootLang ? `<span class="parallels-root-lang">${rootLang}</span>` : ''}
+                            <span class="parallels-acronym">
+                                <a class="parallels-link-inline" data-target="${meta.startUid}">${startAcronym}</a> – 
+                                <a class="parallels-link-inline" data-target="${meta.endUid}">${endAcronym}</a>
+                                ${segmentSuffix}
+                            </span>
+                            <span class="parallels-title">${title}</span>
+                        </div>
+                    </li>
+                `;
+            }
+
             const acronym = meta ? meta.acronym : cleanUid;
             const title = meta ? (meta.translated_title || meta.original_title || "") : "";
             const rootLang = meta ? (meta.root_lang || "") : "";

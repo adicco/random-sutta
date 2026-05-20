@@ -104,7 +104,7 @@ export function setupParallelsPanel() {
 
     // Handle link clicks inside parallels list
     els.list.addEventListener("click", (e) => {
-        const link = e.target.closest(".parallels-link");
+        const link = e.target.closest(".parallels-link, .parallels-link-inline");
         if (link) {
             e.preventDefault();
             e.stopPropagation();
