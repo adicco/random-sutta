@@ -159,12 +159,12 @@ deploy: re
 	npm run deploy
 
 # Publish Pre-release
-beta: apk macos alfred
+beta: apk altstore macos alfred
 	@echo "🚀 PUBLISHING BETA..."
 	$(PYTHON) -m src.release_system --publish
 
 # Publish Official
-official: apk app alfred
+official: apk altstore app alfred
 	@echo "🚀 PUBLISHING OFFICIAL..."
 	$(PYTHON) -m src.release_system --official
 
