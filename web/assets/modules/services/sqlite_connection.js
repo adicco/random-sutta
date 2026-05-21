@@ -2,14 +2,13 @@
 import { getLogger } from 'utils/logger.js';
 import { initSQLitePersistent, importToPersistentStorage } from './sqlite_helper.js';
 import { BlobCache } from './blob_cache.js';
-import JSZip from 'jszip';
 
 const logger = getLogger("SqliteConnection");
 
 export class SqliteConnection {
     constructor(dbName, zipUrl) {
         this.dbName = dbName;
-        this.zipUrl = zipUrl; // E.g. assets/db/dictionaries/dpd_mini.db.zip
+        this.zipUrl = zipUrl; // E.g. assets/db/dictionaries/dpd_mini.db.gz
         this.db = null;
         this.isInitializing = false;
     }
@@ -35,10 +34,10 @@ export class SqliteConnection {
 
             if (needsUpdate) {
                 logger.info("Init", hasUpdate ? "Update pending. Re-hydrating storage..." : "Storage empty. Downloading source...");
-                const dbBinary = await this._downloadSource();
-                const dbFile = new File([dbBinary], this.dbName, { type: 'application/x-sqlite3' });
+                const dbStream = await this._downloadSource();
                 
-                await importToPersistentStorage(this.dbName, dbFile);
+                // Trực tiếp truyền ReadableStream vào VFS (importToPersistentStorage đã hỗ trợ Stream)
+                await importToPersistentStorage(this.dbName, dbStream);
                 logger.info("Init", "Database hydrated to persistent storage.");
             }
 
