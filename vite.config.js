@@ -128,7 +128,7 @@ export default defineConfig(({ mode }) => {
                 disable: isNative,
                 registerType: 'autoUpdate',
                 injectRegister: 'inline', 
-                includeManifestIcons: true, 
+                includeManifestIcons: false, 
                 manifestFilename: 'manifest.json',
                 devOptions: {
                     enabled: false
@@ -182,8 +182,8 @@ export default defineConfig(({ mode }) => {
                     cleanupOutdatedCaches: true,
                     directoryIndex: 'index.html',
                     navigateFallback: base + 'index.html', 
-                    globPatterns: isProd ? ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json,webmanifest,manifest.json}'] : [],
-                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js'], 
+                    globPatterns: isProd ? ['**/*.{js,css,html,ico,png,svg,woff2,wasm,json}'] : [],
+                    globIgnores: ['**/node_modules/**/*', 'sw.js', 'workbox-*.js', 'manifest.json'], 
                     maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, 
                     runtimeCaching: [
                         {                            
