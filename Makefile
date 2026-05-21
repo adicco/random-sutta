@@ -246,6 +246,16 @@ ios:
 	npx cap build ios
 	@echo "✅ XONG! Bản build iOS hoàn tất. Bạn có thể mở Xcode để deploy nghiệm thu."
 
+# Build iOS bản IPA cho AltStore (Development signed)
+ios-altstore:
+	@echo "🚀 Đang biên dịch mã nguồn cho iOS (AltStore mode)..."
+	npm run build
+	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
+	npx cap sync ios
+	@echo "📦 Đang tạo bản build IPA cho AltStore..."
+	npx cap build ios --scheme App --configuration Release --export-method development
+	@echo "✅ XONG! File IPA nằm trong thư mục ios/App/App/build/ hoặc tương đương."
+
 # Mở dự án iOS bằng Xcode
 open-ios:
 	npx cap open ios
