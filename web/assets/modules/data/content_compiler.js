@@ -9,7 +9,17 @@ export const ContentCompiler = {
             return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
         });
 
-        let html = '<article>';
+        // [OPTIMIZATION] Pre-scan for translation presence to handle 'single-language' and 'promoted' logic in one pass
+        let isTranslatedPage = false;
+        for (const key of sortedKeys) {
+            const eng = contentMap[key].eng;
+            if (eng && eng.trim().length > 0) {
+                isTranslatedPage = true;
+                break;
+            }
+        }
+
+        let html = `<article class="${isTranslatedPage ? '' : 'single-language'}">`;
         
         sortedKeys.forEach(segmentId => {
             const seg = contentMap[segmentId];
@@ -26,27 +36,60 @@ export const ContentCompiler = {
                 }
             }
 
-            let segmentHtml = `<span id="${segmentId}" class="segment">`;
+            // [NEW] Logic for redundant headings (Root matches Translation in a heading)
+            let hideRoot = false;
+            const isHeading = openTag && (openTag.includes('<h') || openTag.includes('sutta-title'));
+            if (isHeading && pli && eng) {
+                const rootText = pli.trim();
+                const transText = eng.trim();
+                if (rootText === transText && rootText.length > 0) {
+                    hideRoot = true;
+                }
+            }
+
+            // [NEW] Logic for tagging segments and blocks (moved from postProcessHtml for performance)
+            const noRoot = !pli || pli.trim().length === 0;
+            const noTrans = !eng || eng.trim().length === 0;
             
-            // [UPDATED] Reference presentation: hidden anchors + optional visual marker
+            const segmentClasses = ['segment'];
+            if (noRoot) segmentClasses.push('no-root');
+            if (noTrans) segmentClasses.push('no-trans');
+
+            // Add block-level tagging for single-language mode filtering
+            if (openTag) {
+                if (noRoot) {
+                    openTag = openTag.includes('class="') 
+                        ? openTag.replace('class="', 'class="no-root-content ') 
+                        : openTag.replace(/>/, ' class="no-root-content">');
+                }
+                if (noTrans) {
+                    openTag = openTag.includes('class="') 
+                        ? openTag.replace('class="', 'class="no-trans-content ') 
+                        : openTag.replace(/>/, ' class="no-trans-content">');
+                }
+            }
+
+            let segmentHtml = `<span id="${segmentId}" class="${segmentClasses.join(' ')}">`;
+            
             if (reference) {
                 const refs = reference.split(',').map(r => r.trim()).filter(r => r);
                 refs.forEach(ref => {
-                    // Hidden anchor for deep linking
                     segmentHtml += `<a id="${ref}" class="anchor-ref"></a>`;
-                    // Visual marker (hidden by default via CSS as per request)
                     segmentHtml += `<span class="taisho-ref" data-ref="${ref}"></span>`;
                 });
             }
 
-            // [UPDATED] Respect showRoot/showTrans options via CSS (Body Classes)
             const rLang = root_lang || "pi";
             let trailingSpace = "";
 
             if (pli) {
                 const trimmed = pli.replace(/\s+$/, '');
                 trailingSpace = pli.substring(trimmed.length);
-                segmentHtml += `<span class="root lang-${rLang}" lang="${rLang}">${trimmed}</span>`;
+                const rootClasses = ['root', `lang-${rLang}`];
+                if (!isTranslatedPage) rootClasses.push('promoted');
+                if (hideRoot) rootClasses.push('hidden');
+                
+                segmentHtml += `<span class="${rootClasses.join(' ')}" lang="${rLang}">${trimmed}</span>`;
             }
             
             if (eng) {
@@ -58,7 +101,6 @@ export const ContentCompiler = {
             
             if (comm) {
                 const safeComm = comm.replace(/"/g, '&quot;');
-                // [NEW] Extract sequence number (e.g., "1. " -> "1")
                 let marker = "*";
                 const match = comm.match(/^(\d+)\.\s/);
                 if (match) {

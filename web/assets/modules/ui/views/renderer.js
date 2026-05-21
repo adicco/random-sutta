@@ -92,6 +92,11 @@ export async function renderSutta(suttaId, data, options = {}) {
     if (famHeaderContainer) famHeaderContainer.innerHTML = famBarTop;
     container.innerHTML = renderResult.html + famBarBottom + bottomNavHtml;
     
+    // [NEW] Chạy hậu kỳ nếu có (tối ưu hiệu năng so với double parsing)
+    if (renderResult.postProcess) {
+        renderResult.postProcess(container);
+    }
+
     // Bind events for the newly added familiarity buttons
     if (isLeaf) {
         FamiliarityBar.bindEvents();

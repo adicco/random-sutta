@@ -87,7 +87,8 @@ export function setupQuickNav(onSearchCallback) {
   }, { passive: true });
 
   async function triggerSearch(query, isRestore = false) {
-       const results = await SuttaRepository.searchMetadata(query, 1000);
+       // [OPTIMIZED] Limit results to a sensible number for quick nav to prevent DOM bloat
+       const results = await SuttaRepository.searchMetadata(query, 200);
        
        // [FIX] Guard: Only show if search mode is still active and query still matches
        const isActive = document.body.classList.contains("nav-search-active");

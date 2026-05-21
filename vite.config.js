@@ -187,8 +187,8 @@ export default defineConfig(({ mode }) => {
                     maximumFileSizeToCacheInBytes: 50 * 1024 * 1024, 
                     runtimeCaching: [
                         {                            
-                            // [CRITICAL] Sutta Databases (Core + Shards)
-                            urlPattern: ({ url }) => url.pathname.includes('/assets/db/sutta_') && url.pathname.endsWith('.db'),
+                            // [CRITICAL] Sutta Databases (Core + Shards) - Supports .db and .db.gz
+                            urlPattern: ({ url }) => url.pathname.includes('/assets/db/sutta_') && (url.pathname.endsWith('.db') || url.pathname.endsWith('.gz')),
                             handler: 'CacheFirst',
                             options: {
                                 cacheName: 'sutta-database-cache',
@@ -202,8 +202,8 @@ export default defineConfig(({ mode }) => {
                             },
                         },
                         {
-                            // Dictionary Databases
-                            urlPattern: ({ url }) => url.pathname.includes('/assets/db/dictionaries/') && url.pathname.endsWith('.db'),
+                            // Dictionary Databases - Supports .db and .db.gz
+                            urlPattern: ({ url }) => url.pathname.includes('/assets/db/dictionaries/') && (url.pathname.endsWith('.db') || url.pathname.endsWith('.gz')),
                             handler: 'CacheFirst',
                             options: {
                                 cacheName: 'dictionary-cache',

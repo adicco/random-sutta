@@ -45,33 +45,43 @@ document.addEventListener("DOMContentLoaded", async () => {
   window.loadSutta = (id, u, s, o) => SuttaController.loadSutta(id, u, s, o);
   window.triggerRandomSutta = (options = {}) => SuttaController.loadRandomSutta(true, options);
 
-  // Initialize UI Managers
+  // --- Phase 1: Critical UI Managers (Immediate) ---
   AppSettings.init();
-  DrawerManager.init();
   ThemeManager.init();
   FontSizeManager.init();
-  GestureManager.init();
-  BookmarkManager.init();
-  ReadManager.init();
-  SyncUIManager.init();
-  TooltipManager.init();
   DisplaySettingsManager.init();
   ScrollManager.init();
 
-  // Initialize Components
-  FilterComponent.init();
+  // --- Phase 2: Structural UI (Required for interaction) ---
+  DrawerManager.init();
+  GestureManager.init();
   initPopupSystem();
-  ToolbarManager.init();
-  RandomButton.init();
+  FilterComponent.init();
 
-  TTSBootstrap.init({
-    onAutoNext: async () => {
-      logger.info("TTS", "Triggering auto-random...");
-      await SuttaController.loadRandomSutta(true);
-    },
-  });
+  // --- Phase 3: Secondary Components (Deferred to Idle) ---
+  const initSecondary = () => {
+    BookmarkManager.init();
+    ReadManager.init();
+    SyncUIManager.init();
+    TooltipManager.init();
+    ToolbarManager.init();
+    RandomButton.init();
 
-  setupQuickNav((query) => SuttaController.loadSutta(query));
+    TTSBootstrap.init({
+      onAutoNext: async () => {
+        logger.info("TTS", "Triggering auto-random...");
+        await SuttaController.loadRandomSutta(true);
+      },
+    });
+
+    setupQuickNav((query) => SuttaController.loadSutta(query));
+  };
+
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(initSecondary);
+  } else {
+    setTimeout(initSecondary, 200);
+  }
 
   try {
     console.time("📡 Service Init");
@@ -79,8 +89,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.timeEnd("📡 Service Init");
 
     // Deferred heavy initializations to reduce startup concurrency
-    initLookup();
-    OfflineManager.init();
+    if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => {
+            initLookup();
+            OfflineManager.init();
+        });
+    } else {
+        setTimeout(() => {
+            initLookup();
+            OfflineManager.init();
+        }, 500);
+    }
 
     const navHeader = document.getElementById("nav-header");
     if (navHeader) navHeader.classList.remove("hidden");

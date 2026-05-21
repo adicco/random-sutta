@@ -56,8 +56,8 @@ export const SearchHighlight = {
 
     stripHtml(html) {
         if (!html) return "";
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        return doc.body.textContent || "";
+        // [OPTIMIZED] Use regex instead of DOMParser for performance during batch processing
+        return html.replace(/<[^>]*>?/gm, '');
     },
 
     smartSnippet(text, patterns, windowSize = 120) {
