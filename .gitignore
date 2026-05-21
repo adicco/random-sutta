@@ -61,7 +61,23 @@ android/.idea/
 android/app/.cxx/
 android/app/release/
 android/app/debug/
+android/app/src/main/assets/public
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/res/xml/config.xml
 capacitor.config.json.tmp
 android/app/*.apk
 *.apk
+
+# Capacitor iOS
+ios/App/App/public
+ios/App/App/build
+ios/App/App/config.xml
+ios/App/App/capacitor.config.json
+ios/App/Pods
+ios/App/App.xcworkspace
+ios/App/DerivedData
+ios/App/Index
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+ios/capacitor-cordova-ios-plugins
 *.epub/web/index.html
