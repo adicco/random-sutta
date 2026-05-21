@@ -2,11 +2,27 @@
 import sqlite3
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 logger = logging.getLogger("SuttaProcessor.Output.Sqlite")
+
+def _optimize_db_file(path: Path) -> str:
+    """Helper function to optimize a single SQLite file (picklable for multiprocessing)."""
+    if not path.exists():
+        return f"File not found: {path.name}"
+    try:
+        conn = sqlite3.connect(str(path))
+        conn.execute("PRAGMA journal_mode=DELETE")
+        conn.execute("VACUUM")
+        conn.execute("ANALYZE")
+        conn.close()
+        return f"Success: {path.name}"
+    except Exception as e:
+        return f"Failed {path.name}: {e}"
 
 class SqliteGenerator:
     """
@@ -118,7 +134,7 @@ class SqliteGenerator:
         conn.commit()
 
     def finalize(self):
-        """Optimize all databases."""
+        """Optimize all databases in parallel."""
         # Ensure FTS is fully populated and optimized
         try:
             with self._get_core_connection() as conn:
@@ -134,17 +150,16 @@ class SqliteGenerator:
             conn.close()
         self.content_conns.clear()
 
-        for path in db_paths:
-            if not path.exists(): continue
-            try:
-                conn = sqlite3.connect(str(path))
-                conn.execute("PRAGMA journal_mode=DELETE")
-                conn.execute("VACUUM")
-                conn.execute("ANALYZE")
-                conn.close()
-                logger.info(f"   ✅ [SQLite] Optimized: {path.name}")
-            except Exception as e:
-                logger.error(f"❌ [SQLite] Finalization failed for {path.name}: {e}")
+        logger.info(f"   ⚡ [SQLite] Optimizing {len(db_paths)} shards in parallel...")
+        
+        with ProcessPoolExecutor() as executor:
+            futures = [executor.submit(_optimize_db_file, path) for path in db_paths]
+            for future in as_completed(futures):
+                res = future.result()
+                if res.startswith("Success"):
+                    logger.info(f"   ✅ [SQLite] Optimized: {res.split(': ')[1]}")
+                else:
+                    logger.error(f"   ❌ [SQLite] {res}")
 
     def _get_category(self, book_id: str) -> str:
         """Xác định shard dựa trên book_id."""

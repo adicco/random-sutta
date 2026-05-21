@@ -33,6 +33,27 @@ from .optimizer import run_optimizer
 
 logger = logging.getLogger("SuttaProcessor.BuildManager")
 
+def _compress_db_task(db_file: Path, dist_dir: Path) -> str:
+    """Standalone task to copy and compress a single DB file (picklable)."""
+    import gzip
+    import shutil
+    try:
+        target_path = dist_dir / db_file.name
+        shutil.copy2(db_file, target_path)
+        
+        gz_path = dist_dir / f"{db_file.name}.gz"
+        with open(target_path, "rb") as f_in:
+            with gzip.GzipFile(gz_path, "wb", mtime=0) as f_out:
+                shutil.copyfileobj(f_in, f_out)
+        
+        # Remove raw .db to save space
+        if target_path.exists():
+            os.remove(target_path)
+            
+        return f"Compressed: {db_file.name}"
+    except Exception as e:
+        return f"Failed {db_file.name}: {e}"
+
 class BuildManager:
     def __init__(self, dry_run: bool = False):
         self.dry_run = dry_run
@@ -225,31 +246,23 @@ class BuildManager:
         # run_optimizer(dry_run=self.dry_run)
         
         if not self.dry_run:
-            # [UPDATED] Copy SQLite DBs, generate GZIP, and remove raw .db to avoid APK duplicate resource error
-            import gzip
+            # [UPDATED] Parallel Copy & Compress
             DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
             db_files = list(STAGE_PROCESSED_DIR.glob("*.db"))
-            for db_file in db_files:
-                target_path = DIST_DB_DIR / db_file.name
-                shutil.copy2(db_file, target_path)
-                logger.info(f"🚀 Copied {db_file.name} to {DIST_DB_DIR}")
-
-                # Create GZIP version for zero-RAM streaming
-                gz_path = DIST_DB_DIR / f"{db_file.name}.gz"
-                logger.info(f"   🗜️ Compressing {db_file.name} to .gz...")
-                with open(target_path, "rb") as f_in:
-                    with gzip.GzipFile(gz_path, "wb", mtime=0) as f_out:
-                        shutil.copyfileobj(f_in, f_out)
+            
+            logger.info(f"   🗜️ Compressing {len(db_files)} databases in parallel...")
+            with ProcessPoolExecutor() as executor:
+                futures = [executor.submit(_compress_db_task, db_file, DIST_DB_DIR) for db_file in db_files]
+                for future in as_completed(futures):
+                    res = future.result()
+                    if res.startswith("Compressed"):
+                        logger.info(f"   ✅ {res}")
+                    else:
+                        logger.error(f"   ❌ {res}")
 
             # [NEW] Generate manifest based on the copied files (.db)
             generate_db_manifest()
 
-            # [FIX] Remove raw .db files to prevent "Duplicate resources" error in Android APK build
-            for db_file in db_files:
-                target_path = DIST_DB_DIR / db_file.name
-                if target_path.exists():
-                    os.remove(target_path)
-                    logger.info(f"   🗑️ Removed raw {db_file.name} to save APK space.")        
         logger.info("✅ All processing tasks completed.")
         
         if generated_msg:

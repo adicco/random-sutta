@@ -1,5 +1,5 @@
 # Path: Makefile
-.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini app clean-releases
+.PHONY: help setup sync sync-text sync-api sync-dpd dry data d de dv dz da dt df build re dev view deploy beta official publish clean noedit undo mini app clean-releases apk open-apk clean-apk ios open-ios clean-ios macos macos-debug app-debug alfred
 
 # Python command (sử dụng môi trường hiện tại do direnv quản lý)
 PYTHON := python3
@@ -231,6 +231,28 @@ open-apk:
 # Dọn dẹp cache Android
 clean-apk:
 	cd android && ./gradlew clean
+
+# ==============================================================================
+# 🍎 IOS COMMANDS
+# ==============================================================================
+
+# Biên dịch web và đồng bộ với iOS, sau đó build release
+ios:
+	@echo "🚀 Đang biên dịch mã nguồn cho iOS (Offline mode)..."
+	npm run build
+	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
+	npx cap sync ios
+	@echo "📦 Đang tạo bản build iOS..."
+	npx cap build ios
+	@echo "✅ XONG! Bản build iOS hoàn tất. Bạn có thể mở Xcode để deploy nghiệm thu."
+
+# Mở dự án iOS bằng Xcode
+open-ios:
+	npx cap open ios
+
+# Dọn dẹp build folder iOS
+clean-ios:
+	rm -rf ios/App/App/build ios/App/DerivedData
 
 # ==============================================================================
 # 🍏 MACOS / TAURI COMMANDS
