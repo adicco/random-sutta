@@ -97,7 +97,7 @@ export async function initSQLitePersistent(options) {
             // - Content Shards: Sequential segment reads -> Small Cache
             let cacheKb = 2000; // Default 2MB
             if (dbName === 'sutta_core.db') cacheKb = 10000; // 10MB
-            else if (dbName.includes('dict') || dbName.includes('dpd')) cacheKb = 10000; // 10MB
+            else if (dbName.includes('dict') || dbName.includes('dpd')) cacheKb = 50000; // 50MB for Dictionary FTS speed
             
             // Tối ưu RAM cho iOS (Jetsam safe) & Wasm CPU Load
             await run_internal(sqlite, db, "PRAGMA journal_mode = DELETE");
