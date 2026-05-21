@@ -254,7 +254,7 @@ ios-altstore:
 	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
 	npx cap sync ios
 	@echo "📦 Đang tạo bản build IPA cho AltStore..."
-	npx cap build ios --scheme App --configuration Release --export-method development
+	npx cap build ios --scheme App --configuration Release --xcode-export-method debugging
 	@echo "✅ XONG! File IPA nằm trong thư mục ios/App/App/build/ hoặc tương đương."
 
 # Mở dự án iOS bằng Xcode
