@@ -8,6 +8,7 @@ const logger = getLogger("SuttaDB");
 export class SuttaDB {
     static core = null;
     static shards = new Map(); // Category -> DB Instance (Persistent)
+    static SHARD_LIMIT = 2; // Giới hạn RAM cho iOS Jetsam
     static isInitializing = false;
     static loadingPromises = new Map();
 
@@ -38,7 +39,13 @@ export class SuttaDB {
      * Nạp một Content Shard (Sử dụng Persistent Storage để tiết kiệm RAM)
      */
     static async loadShard(category, onProgress) {
-        if (this.shards.has(category)) return this.shards.get(category);
+        if (this.shards.has(category)) {
+            // [LRU Cache] Move to end (most recently used)
+            const instance = this.shards.get(category);
+            this.shards.delete(category);
+            this.shards.set(category, instance);
+            return instance;
+        }
         
         if (this.loadingPromises.has(category)) {
              return await this.loadingPromises.get(category);
@@ -46,6 +53,13 @@ export class SuttaDB {
 
         const loadPromise = (async () => {
             try {
+                // [iOS Jetsam Fix] Enforce Max Shards limit BEFORE opening a new one
+                if (this.shards.size >= this.SHARD_LIMIT) {
+                    const oldestCategory = this.shards.keys().next().value;
+                    logger.info("Storage", `Shard limit reached. Closing oldest shard: ${oldestCategory}`);
+                    await this.closeShard(oldestCategory);
+                }
+
                 const dbName = `sutta_content_${category}.db`;
                 const instance = await this._getOrUpdateDB(dbName, onProgress);
                 this.shards.set(category, instance);

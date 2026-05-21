@@ -92,12 +92,20 @@ export async function initSQLitePersistent(options) {
 
             if (!db) throw new Error(`❌ Failed to open database: ${dbName}`);
 
-            // Tối ưu RAM cho iOS (Jetsam safe)
+            // Dynamic Cache Size Allocation based on DB usage pattern
+            // - Core/Dict DBs: Heavy FTS/Random queries -> Large Cache
+            // - Content Shards: Sequential segment reads -> Small Cache
+            let cacheKb = 2000; // Default 2MB
+            if (dbName === 'sutta_core.db') cacheKb = 10000; // 10MB
+            else if (dbName.includes('dict') || dbName.includes('dpd')) cacheKb = 10000; // 10MB
+            
+            // Tối ưu RAM cho iOS (Jetsam safe) & Wasm CPU Load
             await run_internal(sqlite, db, "PRAGMA journal_mode = DELETE");
             await run_internal(sqlite, db, "PRAGMA synchronous = NORMAL");
-            await run_internal(sqlite, db, "PRAGMA cache_size = -5000"); // 5MB cache per DB
+            await run_internal(sqlite, db, `PRAGMA cache_size = -${cacheKb}`);
             await run_internal(sqlite, db, "PRAGMA temp_store = MEMORY");
-            await run_internal(sqlite, db, "PRAGMA mmap_size = 268435456"); // Mmap 256MB if supported for faster reads
+            // Mmap is generally ignored by OPFSAnyContextVFS, but kept for compatibility
+            await run_internal(sqlite, db, "PRAGMA mmap_size = 268435456");
 
             const core = { db, path: dbName, pointer: db, sqlite, vfs };
             return {
