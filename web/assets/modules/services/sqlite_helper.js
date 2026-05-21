@@ -26,7 +26,7 @@ async function withLock(fn) {
     }
 }
 
-async function getSharedSqlite() {
+export async function getSharedSqlite() {
     if (initPromise) return initPromise;
 
     initPromise = (async () => {

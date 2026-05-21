@@ -1,6 +1,6 @@
 // Path: web/assets/modules/data/sutta_db.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLitePersistent, importToPersistentStorage } from 'services/sqlite_helper.js';
+import { initSQLitePersistent, importToPersistentStorage, getSharedSqlite } from 'services/sqlite_helper.js';
 import { BlobCache } from 'services/blob_cache.js';
 
 const logger = getLogger("SuttaDB");
@@ -21,12 +21,21 @@ export class SuttaDB {
 
         this.isInitializing = true;
         try {
+            // [OPTIMIZED] Pre-warm WASM and VFS in parallel with manifest loading
+            getSharedSqlite().catch(() => {});
+
+            // 1. Load manifest (Cache-first to speed up initialization)
             await this._loadManifest();
 
+            // 2. Load Core DB
             const dbName = "sutta_core.db";
             this.core = await this._getOrUpdateDB(dbName, onProgress);
 
             this.isInitializing = false;
+            
+            // [Background] Check for manifest update if we used cache
+            this._refreshManifestInBackground();
+
             return true;
         } catch (e) {
             logger.error("Init", "Failed to initialize Core DB", e);
@@ -83,38 +92,29 @@ export class SuttaDB {
         const targetHash = this.manifest?.files?.[dbName]?.hash || "dev";
         const currentHash = await this._getStoredHash(dbName);
         
-        // 1. Kiểm tra xem có cần update không (dựa trên hash hoặc DB rỗng)
+        // 1. Kiểm tra xem có cần update không (dựa trên hash)
         let needsUpdate = currentHash !== targetHash;
         
         if (!needsUpdate) {
-            // Check nếu file thực sự tồn tại trong VFS bằng cách mở thử
-            const testInstance = await initSQLitePersistent({ dbName });
-            const empty = await testInstance.isEmpty();
-            
-            // [NEW] Kiểm tra schema FTS nếu là core db
-            let ftsMissing = false;
-            if (dbName === 'sutta_core.db' && !empty) {
-                const tables = await testInstance.run("SELECT name FROM sqlite_master WHERE type='table' AND name='metadata_fts'");
-                if (tables.length === 0) ftsMissing = true;
-            }
-
-            await testInstance.close();
-            if (empty || ftsMissing) {
-                if (ftsMissing) logger.warn("Storage", "Schema update required (FTS missing). forcing update.");
-                needsUpdate = true;
-            }
+            // [OPTIMIZED] Nếu hash khớp, ta tin tưởng file tồn tại trong VFS.
+            // Việc mở thử (isEmpty) tốn ~50-100ms và gây lock SQLite lúc khởi động.
+            // Nếu thực tế file lỗi/mất, lệnh sqlite.open_v2 ở bước sau sẽ lỗi và ta có thể xử lý.
+            logger.debug("Storage", `Hash matches for ${dbName}, skipping integrity check.`);
+            if (onProgress) onProgress(100, 100);
+            return false;
         }
 
         // 2. Nếu cần update, download và import
-        if (needsUpdate) {
-            logger.info("Storage", `Updating ${dbName}: ${currentHash} -> ${targetHash}`);
+        logger.info("Storage", `Updating ${dbName}: ${currentHash} -> ${targetHash}`);
+        try {
             const file = await this._fetchFile(dbName, onProgress);
             await importToPersistentStorage(dbName, file);
             await this._setStoredHash(dbName, targetHash);
             return true;
-        } else {
-            logger.info("Storage", `Using persistent DB: ${dbName} (${targetHash})`);
-            if (onProgress) onProgress(100, 100);
+        } catch (e) {
+            logger.error("Storage", `Failed to update ${dbName}`, e);
+            // Nếu là core db và update lỗi, ta không thể tiếp tục
+            if (dbName === 'sutta_core.db') throw e;
             return false;
         }
     }
@@ -123,9 +123,16 @@ export class SuttaDB {
      * Lấy DB từ Storage, cập nhật nếu cần, rồi mở kết nối.
      */
     static async _getOrUpdateDB(dbName, onProgress) {
-        await this._ensureDbUpdated(dbName, onProgress);
-        // 3. Mở kết nối chính thức
-        return await initSQLitePersistent({ dbName });
+        try {
+            await this._ensureDbUpdated(dbName, onProgress);
+            return await initSQLitePersistent({ dbName });
+        } catch (e) {
+            // Nếu mở lỗi (có thể do file hỏng dù hash khớp), thử xóa hash và nạp lại 1 lần
+            logger.warn("Storage", `Failed to open ${dbName}, attempting re-download...`);
+            await this._setStoredHash(dbName, null);
+            await this._ensureDbUpdated(dbName, onProgress);
+            return await initSQLitePersistent({ dbName });
+        }
     }
 
     /**
@@ -177,21 +184,31 @@ export class SuttaDB {
     }
 
     static async _loadManifest() {
-        // 1. Load from cache first for immediate availability
+        // [OPTIMIZED] Load from cache ONLY if available, then return.
+        // Network update is handled by _refreshManifestInBackground.
         try {
             const cached = await BlobCache.getBlob('db_manifest');
             if (cached) {
                 this.manifest = JSON.parse(new TextDecoder().decode(cached));
                 logger.info("Manifest", "Loaded from cache");
+                return;
             }
         } catch (e) {
             logger.warn("Manifest", "Failed to load from cache", e);
         }
 
-        // 2. Try to update from network with a short timeout
+        // If no cache, we MUST fetch from network
+        await this._refreshManifestInBackground();
+    }
+
+    /**
+     * Cập nhật manifest từ mạng và lưu vào cache.
+     * Có thể chạy ngầm sau khi app đã khởi động xong.
+     */
+    static async _refreshManifestInBackground() {
         const tryFetch = async (url) => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s cho background update
             try {
                 const resp = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -215,11 +232,18 @@ export class SuttaDB {
             if (!data) data = await tryFetch('/assets/db/db_manifest.json');
             
             if (data) {
+                const oldManifest = this.manifest;
                 this.manifest = data;
                 await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
-                logger.info("Manifest", "Updated from network");
+                
+                if (oldManifest) {
+                    logger.info("Manifest", "Updated from network (Background)");
+                    // Optional: Trigger event for update available
+                } else {
+                    logger.info("Manifest", "Loaded from network (First load)");
+                }
             } else {
-                logger.warn("Manifest", "Network fetch failed or returned invalid data, using cache");
+                logger.warn("Manifest", "Network fetch failed or returned invalid data");
             }
         } catch (e) {
             logger.warn("Manifest", "Manifest update process failed", e);
