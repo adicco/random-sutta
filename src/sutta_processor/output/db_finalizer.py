@@ -16,15 +16,32 @@ def _calculate_file_hash(file_path: Path) -> str:
             sha256_hash.update(byte_block)
     return sha256_hash.hexdigest()
 
-def generate_db_manifest() -> None:
+def generate_db_manifest(source_dir: Path = DIST_DB_DIR) -> None:
     """
     Tạo file db_manifest.json chứa hash của TẤT CẢ các file .db để hỗ trợ Offline Update.
+    
+    Args:
+        source_dir: Thư mục chứa các file .db gốc để tính hash (mặc định là DIST_DB_DIR).
     """
     manifest_path = DIST_DB_DIR / "db_manifest.json"
-    db_files = list(DIST_DB_DIR.glob("*.db"))
     
+    # [FIXED] Nếu source_dir không có .db, thử tìm trong STAGE_PROCESSED_DIR 
+    # vì các file trong DIST_DB_DIR có thể đã bị nén thành .gz và xóa file gốc.
+    db_files = list(source_dir.glob("*.db"))
+    
+    if not db_files and source_dir != DIST_DB_DIR:
+        logger.warning(f"⚠️ No .db files found in {source_dir}")
+        return
+        
     if not db_files:
-        logger.warning("⚠️ No .db files found in dist, skipping manifest generation.")
+        # Fallback to STAGE_PROCESSED_DIR if DIST_DB_DIR is empty
+        from ..shared.app_config import STAGE_PROCESSED_DIR
+        db_files = list(STAGE_PROCESSED_DIR.glob("*.db"))
+        if db_files:
+            logger.info(f"🔍 Found {len(db_files)} DB files in STAGE_PROCESSED_DIR for manifest.")
+
+    if not db_files:
+        logger.warning("⚠️ No .db files found for manifest generation.")
         return
 
     try:

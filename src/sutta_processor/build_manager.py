@@ -260,8 +260,9 @@ class BuildManager:
                     else:
                         logger.error(f"   ❌ {res}")
 
-            # [NEW] Generate manifest based on the copied files (.db)
-            generate_db_manifest()
+            # [NEW] Generate manifest based on the source files (.db)
+            # Dùng STAGE_PROCESSED_DIR vì các file trong DIST_DB_DIR đã bị xóa sau khi nén .gz
+            generate_db_manifest(source_dir=STAGE_PROCESSED_DIR)
 
         logger.info("✅ All processing tasks completed.")
         
