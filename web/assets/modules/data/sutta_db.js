@@ -8,7 +8,7 @@ const logger = getLogger("SuttaDB");
 export class SuttaDB {
     static core = null;
     static shards = new Map(); // Category -> DB Instance (Persistent)
-    static SHARD_LIMIT = 2; // Giới hạn RAM cho iOS Jetsam
+    static SHARD_LIMIT = 5; // Tăng giới hạn để switch nhanh hơn giữa các bộ kinh
     static isInitializing = false;
     static loadingPromises = new Map();
 

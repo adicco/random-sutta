@@ -114,19 +114,19 @@ export async function initSQLitePersistent(options) {
 
             if (!db) throw new Error(`❌ Failed to open database: ${dbName}`);
 
-            // Dynamic Cache Size Allocation based on DB usage pattern
-            // - Core/Dict DBs: Heavy FTS/Random queries -> Large Cache
-            // - Content Shards: Sequential segment reads -> Small Cache
-            let cacheKb = 5000; // Default 5MB for Content Shards
-            if (dbName === 'sutta_core.db') cacheKb = 50000; // 50MB for Core DB (Full memory load)
-            else if (dbName.includes('dict') || dbName.includes('dpd')) cacheKb = 50000; // 50MB for Dictionary FTS speed
+            // [OPTIMIZED] Tăng kích thước Cache vì đã có Streaming Gzip giảm tải RAM lúc nạp
+            // - Core/Dict DBs: 64MB (Cho FTS và Metadata cực nhanh)
+            // - Content Shards: 16MB (Đủ cho vài bài kinh dài)
+            let cacheKb = 16384; 
+            if (dbName === 'sutta_core.db') cacheKb = 65536; 
+            else if (dbName.includes('dict') || dbName.includes('dpd')) cacheKb = 65536; 
             
             // Tối ưu RAM cho iOS (Jetsam safe) & Wasm CPU Load
             await run_internal(sqlite, db, "PRAGMA journal_mode = DELETE");
             await run_internal(sqlite, db, "PRAGMA synchronous = NORMAL");
             await run_internal(sqlite, db, `PRAGMA cache_size = -${cacheKb}`);
             await run_internal(sqlite, db, "PRAGMA temp_store = MEMORY");
-            // Mmap is generally ignored by OPFSAnyContextVFS, but kept for compatibility
+            // Mmap helps with performance if supported by the environment
             await run_internal(sqlite, db, "PRAGMA mmap_size = 268435456");
 
             const core = { db, path: dbName, pointer: db, sqlite, vfs };
