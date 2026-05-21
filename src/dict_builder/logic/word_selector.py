@@ -41,8 +41,8 @@ class WordSelector:
             return sorted_ids, None
 
         # MINI / TINY MODE
-        bilara_path = self.config.PROJECT_ROOT / "data/bilara/root/pli/ms"
-        
+        bilara_path = self.config.PROJECT_ROOT / "data/sc-data/sc_bilara_data/root/pli/ms"
+
         if not bilara_path.exists():
             print(f"[red]Bilara data missing at {bilara_path}")
             return [], set()
