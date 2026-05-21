@@ -60,7 +60,7 @@ def main():
 
         processed_modes = set()
         has_mini = "mini" in modes_to_run
-
+        
         # We must build MINI first if TINY is requested to use Smart Build
         if has_mini and "tiny" in modes_to_run:
             logger.info(f"[bold yellow]🚀 Building MINI first to enable Smart Build for TINY...[/bold yellow]")
@@ -87,13 +87,18 @@ def main():
             return mode
 
         if remaining_modes:
-            # Limit concurrent builds to 2 to avoid system overload (especially if "full" is involved)
+            # Limit concurrent builds to 2 to avoid system overload
             with ThreadPoolExecutor(max_workers=2) as executor:
                 results = list(executor.map(build_task, remaining_modes))
                 logger.info(f"✅ Completed builds: {', '.join(results)}")
+        
+        # [IMPORTANT] If we just built and -z was requested, we ALREADY packaged (due to export_flag=True).
+        # We set args.zip to False to prevent STEP 3 from running again.
+        if args.zip:
+            args.zip = False
 
     # --- STEP 3: ZIP PACKAGING (-z WITHOUT Build) ---
-    if args.zip and not should_build:
+    if args.zip:
         logger.info(f"[bold magenta]{'='*60}[/bold magenta]")
         logger.info(f"[bold magenta]📦 ZIP PACKAGING MODE (Parallel, No Build)[/bold magenta]")
         logger.info(f"[bold magenta]{'='*60}[/bold magenta]\n")
