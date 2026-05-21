@@ -174,10 +174,11 @@ export const LookupManager = {
         
         if (cleanText.length > 50 || cleanText.length < 1) return; 
 
-        // Provide visual feedback if loading takes more than 150ms to prevent flickering
+        // Provide visual feedback if loading takes more than 350ms to prevent flickering
+        // Most OPFS SQLite queries return in 50-200ms, so 150ms was causing UI flashes
         const loadingTimer = setTimeout(() => {
             LookupUI.showLoading(cleanText);
-        }, 150);
+        }, 350);
         
         // Ensure Dictionaries are ready
         const isReady = await DictProvider.init();
