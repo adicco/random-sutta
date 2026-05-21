@@ -225,7 +225,7 @@ class BuildManager:
         # run_optimizer(dry_run=self.dry_run)
         
         if not self.dry_run:
-            # [UPDATED] Copy ALL SQLite DBs to public assets and generate GZIP versions
+            # [UPDATED] Copy SQLite DBs, generate GZIP, and remove raw .db to avoid APK duplicate resource error
             import gzip
             DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
             db_files = list(STAGE_PROCESSED_DIR.glob("*.db"))
@@ -241,8 +241,15 @@ class BuildManager:
                     with gzip.GzipFile(gz_path, "wb", mtime=0) as f_out:
                         shutil.copyfileobj(f_in, f_out)
 
-            # [NEW] Generate manifest based on the copied files
-            generate_db_manifest()        
+            # [NEW] Generate manifest based on the copied files (.db)
+            generate_db_manifest()
+
+            # [FIX] Remove raw .db files to prevent "Duplicate resources" error in Android APK build
+            for db_file in db_files:
+                target_path = DIST_DB_DIR / db_file.name
+                if target_path.exists():
+                    os.remove(target_path)
+                    logger.info(f"   🗑️ Removed raw {db_file.name} to save APK space.")        
         logger.info("✅ All processing tasks completed.")
         
         if generated_msg:

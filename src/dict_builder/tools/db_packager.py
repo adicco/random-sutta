@@ -48,11 +48,6 @@ class DbPackager:
         logger.info(f"📦 Packaging {db_filename} -> {destination_dir}...")
 
         try:
-            # 0. Copy Raw DB (for direct fetch support)
-            target_db_path = destination_dir / db_filename
-            shutil.copy2(source_db_path, target_db_path)
-            logger.info(f"   ✅ Copied raw DB: {db_filename}")
-
             # 1. Create GZIP
             # mtime=0 for deterministic output (no timestamp inside the gzip)
             with open(source_db_path, "rb") as f_in:
