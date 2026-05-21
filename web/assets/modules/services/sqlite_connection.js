@@ -74,51 +74,83 @@ export class SqliteConnection {
         const rawDbUrl = cleanUrl.replace(".db.gz", ".db").replace(".db.zip", ".db");
         const currentHash = localStorage.getItem(`${this.dbName}_hash`) || Date.now();
         
-        let finalStream = null;
+        let response = null;
+        let isGzRequest = false;
 
         // 1. Try Compressed (.gz) first
         if (cleanUrl.endsWith('.gz') && 'DecompressionStream' in window) {
             try {
                 logger.info("Download", `Fetching Compressed: ${cleanUrl}`);
-                const response = await fetch(`${cleanUrl}?v=${currentHash}`);
-                if (response.ok) {
-                    const contentType = response.headers.get("content-type");
-                    // Avoid Vite dev server fallback to index.html
+                const res = await fetch(`${cleanUrl}?v=${currentHash}`);
+                if (res.ok) {
+                    const contentType = res.headers.get("content-type");
                     if (!contentType || !contentType.includes("text/html")) {
-                        logger.info("Download", "Using Native DecompressionStream (GZIP)");
-                        finalStream = response.body.pipeThrough(new DecompressionStream('gzip'));
+                        response = res;
+                        isGzRequest = true;
                     }
                 }
-            } catch (e) {
-                logger.warn("Download", "GZIP fetch failed, falling back to raw.");
-            }
+            } catch (e) {}
         }
 
         // 2. Fallback to Raw DB
-        if (!finalStream) {
+        if (!response) {
             try {
                 logger.info("Download", `Trying raw DB: ${rawDbUrl}`);
-                const resp = await fetch(`${rawDbUrl}?v=${currentHash}`);
-                if (resp.ok) {
-                    const contentType = resp.headers.get("content-type");
+                const res = await fetch(`${rawDbUrl}?v=${currentHash}`);
+                if (res.ok) {
+                    const contentType = res.headers.get("content-type");
                     if (!contentType || !contentType.includes("text/html")) {
-                        // Check magic header of SQLite format 3 if possible, but since we are streaming,
-                        // we just assume it's correct if not HTML.
-                        logger.info("Download", "Using raw DB stream.");
-                        finalStream = resp.body;
+                        response = res;
+                        isGzRequest = false;
                     }
                 }
-            } catch (e) {
-                logger.warn("Download", "Raw DB fetch failed.");
-            }
+            } catch (e) {}
         }
 
-        if (!finalStream) {
+        if (!response) {
             throw new Error(`Failed to download valid database file for ${this.dbName}`);
         }
 
-        // Return a ReadableStream
-        return finalStream;
+        // Peek first chunk to check Magic Header
+        const reader = response.body.getReader();
+        const { done, value } = await reader.read();
+        
+        if (done) throw new Error("Empty response body");
+
+        let needsDecompression = false;
+        if (value[0] === 0x1f && value[1] === 0x8b) {
+            needsDecompression = true;
+        } else if (value[0] === 0x53 && value[1] === 0x51) { 
+            // "SQLite format 3" (0x53, 0x51) -> already decompressed or raw DB
+            needsDecompression = false;
+        } else {
+            throw new Error(`Invalid file format received for ${this.dbName}. Expected GZIP or SQLite.`);
+        }
+
+        const combinedStream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(value);
+            },
+            async pull(controller) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    controller.close();
+                } else {
+                    controller.enqueue(value);
+                }
+            },
+            cancel() {
+                reader.cancel();
+            }
+        });
+
+        if (needsDecompression && isGzRequest) {
+            logger.info("Download", "Using Native DecompressionStream (GZIP)");
+            return combinedStream.pipeThrough(new DecompressionStream('gzip'));
+        }
+
+        logger.info("Download", "Using raw DB stream.");
+        return combinedStream;
     }
 
     async _checkAndApplyUpdate() {

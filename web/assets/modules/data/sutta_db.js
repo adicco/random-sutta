@@ -248,10 +248,6 @@ export class SuttaDB {
                         const contentType = response.headers.get("content-type");
                         // Fallback check: Some dev servers return text/html for missing .gz files
                         if (!contentType || !contentType.includes("text/html")) {
-                            // Check magic header of the response to ensure it is actually GZIP [0x1F, 0x8B]
-                            // However, peaking into stream disables direct piping easily. 
-                            // Relying on Content-Type and fetch ok is usually enough, but Vite might return a generic fallback.
-                            // We can use a peek stream or just assume if it's not text/html, it's our file.
                             return { response, isGz: true };
                         }
                     }
@@ -290,8 +286,44 @@ export class SuttaDB {
             }
         });
 
-        let finalStream = response.body.pipeThrough(progressStream);
-        if (isGz) {
+        // Đọc chunk đầu tiên để kiểm tra Magic Header
+        const reader = response.body.getReader();
+        const { done, value } = await reader.read();
+        
+        if (done) throw new Error("Empty response body");
+
+        let needsDecompression = false;
+        // Kiểm tra GZIP magic bytes [0x1F, 0x8B]
+        if (value[0] === 0x1f && value[1] === 0x8b) {
+            needsDecompression = true;
+        } else if (value[0] === 0x53 && value[1] === 0x51) { 
+            // SQLite magic bytes: "SQLite format 3" (0x53, 0x51)
+            // Trình duyệt đã auto-decompress do Content-Encoding: gzip, hoặc là raw DB
+            needsDecompression = false;
+        } else {
+            throw new Error(`Invalid file format received for ${fileName}. Expected GZIP or SQLite.`);
+        }
+
+        // Tạo lại ReadableStream hoàn chỉnh từ chunk đầu tiên và phần còn lại
+        const combinedStream = new ReadableStream({
+            start(controller) {
+                controller.enqueue(value);
+            },
+            async pull(controller) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    controller.close();
+                } else {
+                    controller.enqueue(value);
+                }
+            },
+            cancel() {
+                reader.cancel();
+            }
+        });
+
+        let finalStream = combinedStream.pipeThrough(progressStream);
+        if (needsDecompression && isGz) {
             finalStream = finalStream.pipeThrough(new DecompressionStream('gzip'));
         }
 
