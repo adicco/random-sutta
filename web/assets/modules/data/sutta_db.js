@@ -1,16 +1,28 @@
 // Path: web/assets/modules/data/sutta_db.js
 import { getLogger } from 'utils/logger.js';
-import { initSQLitePersistent, importToPersistentStorage, getSharedSqlite } from 'services/sqlite_helper.js';
-import { BlobCache } from 'services/blob_cache.js';
+import { initSQLitePersistent, getSharedSqlite } from 'services/sqlite_helper.js';
+import { DbManifestManager } from './db_manifest_manager.js';
+import { DbStorageManager } from './db_storage_manager.js';
 
 const logger = getLogger("SuttaDB");
 
+/**
+ * Interface chính để truy cập Sutta Databases.
+ * Đóng vai trò Facade kết nối ManifestManager, StorageManager và Connection Pool.
+ */
 export class SuttaDB {
     static core = null;
     static shards = new Map(); // Category -> DB Instance (Persistent)
-    static SHARD_LIMIT = 5; // Tăng giới hạn để switch nhanh hơn giữa các bộ kinh
+    static SHARD_LIMIT = 5; 
     static isInitializing = false;
     static loadingPromises = new Map();
+
+    /**
+     * Proxy tới manifest thực tế để đảm bảo backward compatibility
+     */
+    static get manifest() {
+        return DbManifestManager.manifest;
+    }
 
     /**
      * Khởi động Core Database (Metadata, Structure, Config)
@@ -21,11 +33,11 @@ export class SuttaDB {
 
         this.isInitializing = true;
         try {
-            // [OPTIMIZED] Pre-warm WASM and VFS in parallel with manifest loading
+            // [OPTIMIZED] Pre-warm WASM and VFS in parallel
             getSharedSqlite().catch(() => {});
 
-            // 1. Load manifest (Cache-first to speed up initialization)
-            await this._loadManifest();
+            // 1. Load manifest (Cache-first)
+            await DbManifestManager.load();
 
             // 2. Load Core DB
             const dbName = "sutta_core.db";
@@ -33,8 +45,8 @@ export class SuttaDB {
 
             this.isInitializing = false;
             
-            // [Background] Check for manifest update if we used cache
-            this._refreshManifestInBackground();
+            // [Background] Check for update
+            DbManifestManager.refreshInBackground();
 
             return true;
         } catch (e) {
@@ -45,11 +57,11 @@ export class SuttaDB {
     }
 
     /**
-     * Nạp một Content Shard (Sử dụng Persistent Storage để tiết kiệm RAM)
+     * Nạp một Content Shard
      */
     static async loadShard(category, onProgress) {
         if (this.shards.has(category)) {
-            // [LRU Cache] Move to end (most recently used)
+            // [LRU] Move to end
             const instance = this.shards.get(category);
             this.shards.delete(category);
             this.shards.set(category, instance);
@@ -62,10 +74,9 @@ export class SuttaDB {
 
         const loadPromise = (async () => {
             try {
-                // [iOS Jetsam Fix] Enforce Max Shards limit BEFORE opening a new one
                 if (this.shards.size >= this.SHARD_LIMIT) {
                     const oldestCategory = this.shards.keys().next().value;
-                    logger.info("Storage", `Shard limit reached. Closing oldest shard: ${oldestCategory}`);
+                    logger.info("Pool", `Shard limit reached. Closing: ${oldestCategory}`);
                     await this.closeShard(oldestCategory);
                 }
 
@@ -74,7 +85,7 @@ export class SuttaDB {
                 this.shards.set(category, instance);
                 return instance;
             } catch (e) {
-                logger.error("LoadShard", `Failed to load shard ${category}`, e);
+                logger.error("LoadShard", `Failed: ${category}`, e);
                 return null;
             } finally {
                 this.loadingPromises.delete(category);
@@ -86,58 +97,23 @@ export class SuttaDB {
     }
 
     /**
-     * Logic trung tâm: Đảm bảo DB được tải về và cập nhật trong Storage.
-     */
-    static async _ensureDbUpdated(dbName, onProgress) {
-        const targetHash = this.manifest?.files?.[dbName]?.hash || "dev";
-        const currentHash = await this._getStoredHash(dbName);
-        
-        // 1. Kiểm tra xem có cần update không (dựa trên hash)
-        let needsUpdate = currentHash !== targetHash;
-        
-        if (!needsUpdate) {
-            // [OPTIMIZED] Nếu hash khớp, ta tin tưởng file tồn tại trong VFS.
-            // Việc mở thử (isEmpty) tốn ~50-100ms và gây lock SQLite lúc khởi động.
-            // Nếu thực tế file lỗi/mất, lệnh sqlite.open_v2 ở bước sau sẽ lỗi và ta có thể xử lý.
-            logger.debug("Storage", `Hash matches for ${dbName}, skipping integrity check.`);
-            if (onProgress) onProgress(100, 100);
-            return false;
-        }
-
-        // 2. Nếu cần update, download và import
-        logger.info("Storage", `Updating ${dbName}: ${currentHash} -> ${targetHash}`);
-        try {
-            const file = await this._fetchFile(dbName, onProgress);
-            await importToPersistentStorage(dbName, file);
-            await this._setStoredHash(dbName, targetHash);
-            return true;
-        } catch (e) {
-            logger.error("Storage", `Failed to update ${dbName}`, e);
-            // Nếu là core db và update lỗi, ta không thể tiếp tục
-            if (dbName === 'sutta_core.db') throw e;
-            return false;
-        }
-    }
-
-    /**
      * Lấy DB từ Storage, cập nhật nếu cần, rồi mở kết nối.
+     * Bao gồm logic retry nếu file hỏng.
      */
     static async _getOrUpdateDB(dbName, onProgress) {
         try {
-            await this._ensureDbUpdated(dbName, onProgress);
+            await DbStorageManager.ensureUpdated(dbName, this.manifest, onProgress);
             return await initSQLitePersistent({ dbName });
         } catch (e) {
-            // Nếu mở lỗi (có thể do file hỏng dù hash khớp), thử xóa hash và nạp lại 1 lần
             logger.warn("Storage", `Failed to open ${dbName}, attempting re-download...`);
-            await this._setStoredHash(dbName, null);
-            await this._ensureDbUpdated(dbName, onProgress);
+            await DbStorageManager.setStoredHash(dbName, null);
+            await DbStorageManager.ensureUpdated(dbName, this.manifest, onProgress);
             return await initSQLitePersistent({ dbName });
         }
     }
 
     /**
-     * Tải Shard về máy (Offline) nhưng KHÔNG mở kết nối giữ chỗ.
-     * Tránh xung đột đóng shard đang dùng.
+     * Tải Shard về máy (Offline) nhưng KHÔNG mở kết nối.
      */
     static async prefetchShard(category, onProgress) {
         if (this.shards.has(category)) {
@@ -151,25 +127,15 @@ export class SuttaDB {
         }
         
         const dbName = `sutta_content_${category}.db`;
-        // ensureDbUpdated chỉ download và lưu vào VFS, không mở connection SQLite
-        const wasUpdated = await this._ensureDbUpdated(dbName, onProgress);
-        
-        if (wasUpdated) {
-            // [OFFLINE FIX] Force a garbage collection cycle hint by nullifying large arrays
-            // Note: JS doesn't have manual GC, but this helps the engine know it's free.
-            logger.info("Storage", `Prefetch completed for ${dbName}`);
-        }
+        await DbStorageManager.ensureUpdated(dbName, this.manifest, onProgress);
+        logger.info("Storage", `Prefetch completed for ${dbName}`);
     }
 
-    /**
-     * Giải phóng bộ nhớ bằng cách đóng Shard không dùng
-     */
     static async closeShard(category) {
         const instance = this.shards.get(category);
         if (instance) {
             await instance.close();
             this.shards.delete(category);
-            logger.info("Storage", `Closed shard ${category} to free RAM`);
         }
     }
 
@@ -181,178 +147,6 @@ export class SuttaDB {
             await this.core.close();
             this.core = null;
         }
-    }
-
-    static async _loadManifest() {
-        // [OPTIMIZED] Load from cache ONLY if available, then return.
-        // Network update is handled by _refreshManifestInBackground.
-        try {
-            const cached = await BlobCache.getBlob('db_manifest');
-            if (cached) {
-                this.manifest = JSON.parse(new TextDecoder().decode(cached));
-                logger.info("Manifest", "Loaded from cache");
-                return;
-            }
-        } catch (e) {
-            logger.warn("Manifest", "Failed to load from cache", e);
-        }
-
-        // If no cache, we MUST fetch from network
-        await this._refreshManifestInBackground();
-    }
-
-    /**
-     * Cập nhật manifest từ mạng và lưu vào cache.
-     * Có thể chạy ngầm sau khi app đã khởi động xong.
-     */
-    static async _refreshManifestInBackground() {
-        const tryFetch = async (url) => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s cho background update
-            try {
-                const resp = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                if (resp.ok) {
-                    const contentType = resp.headers.get("content-type");
-                    if (contentType && contentType.includes("application/json")) {
-                        return await resp.json();
-                    }
-                    // If we got HTML (Vite dev server fallback), it's not our manifest
-                    const text = await resp.text();
-                    if (text.trim().startsWith("<!DOCTYPE")) return null;
-                    return JSON.parse(text);
-                }
-            } catch (e) {}
-            return null;
-        };
-
-        try {
-            // Try paths: relative, root-relative, and app-relative (for dev quirks)
-            let data = await tryFetch('assets/db/db_manifest.json');
-            if (!data) data = await tryFetch('/assets/db/db_manifest.json');
-            
-            if (data) {
-                const oldManifest = this.manifest;
-                this.manifest = data;
-                await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
-                
-                if (oldManifest) {
-                    logger.info("Manifest", "Updated from network (Background)");
-                    // Optional: Trigger event for update available
-                } else {
-                    logger.info("Manifest", "Loaded from network (First load)");
-                }
-            } else {
-                logger.warn("Manifest", "Network fetch failed or returned invalid data");
-            }
-        } catch (e) {
-            logger.warn("Manifest", "Manifest update process failed", e);
-        }
-    }
-
-    // --- Versioning Helpers ---
-    static async _getStoredHash(dbName) {
-        return await BlobCache.getBlob(`hash_${dbName}`) || null;
-    }
-
-    static async _setStoredHash(dbName, hash) {
-        await BlobCache.setBlob(`hash_${dbName}`, hash);
-    }
-
-    static async _fetchFile(fileName, onProgress) {
-        const query = `?v=${this.manifest?.files?.[fileName]?.hash || Date.now()}`;
-        
-        const tryFetchFile = async (basePath) => {
-            // First try .gz for Zero-RAM Streaming
-            if ('DecompressionStream' in window) {
-                try {
-                    const urlGz = `${basePath}${fileName}.gz${query}`;
-                    const response = await fetch(urlGz);
-                    if (response.ok) {
-                        const contentType = response.headers.get("content-type");
-                        // Fallback check: Some dev servers return text/html for missing .gz files
-                        if (!contentType || !contentType.includes("text/html")) {
-                            return { response, isGz: true };
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            // Fallback to raw .db
-            try {
-                const url = `${basePath}${fileName}${query}`;
-                const response = await fetch(url);
-                if (response.ok) {
-                    const contentType = response.headers.get("content-type");
-                    if (!contentType || !contentType.includes("text/html")) {
-                        return { response, isGz: false };
-                    }
-                }
-            } catch (e) {}
-            return null;
-        };
-
-        let result = await tryFetchFile('assets/db/');
-        if (!result) result = await tryFetchFile('/assets/db/');
-        
-        if (!result) throw new Error(`Could not fetch database file: ${fileName}`);
-
-        const { response, isGz } = result;
-        const total = parseInt(response.headers.get('content-length') || "0", 10);
-        let loaded = 0;
-
-        // Tối ưu RAM: Dùng TransformStream để báo cáo tiến độ trên luồng raw
-        const progressStream = new TransformStream({
-            transform(chunk, controller) {
-                loaded += chunk.length;
-                if (onProgress && total > 0) onProgress(loaded, total);
-                controller.enqueue(chunk);
-            }
-        });
-
-        // Đọc chunk đầu tiên để kiểm tra Magic Header
-        const reader = response.body.getReader();
-        const { done, value } = await reader.read();
-        
-        if (done) throw new Error("Empty response body");
-
-        let needsDecompression = false;
-        // Kiểm tra GZIP magic bytes [0x1F, 0x8B]
-        if (value[0] === 0x1f && value[1] === 0x8b) {
-            needsDecompression = true;
-        } else if (value[0] === 0x53 && value[1] === 0x51) { 
-            // SQLite magic bytes: "SQLite format 3" (0x53, 0x51)
-            // Trình duyệt đã auto-decompress do Content-Encoding: gzip, hoặc là raw DB
-            needsDecompression = false;
-        } else {
-            throw new Error(`Invalid file format received for ${fileName}. Expected GZIP or SQLite.`);
-        }
-
-        // Tạo lại ReadableStream hoàn chỉnh từ chunk đầu tiên và phần còn lại
-        const combinedStream = new ReadableStream({
-            start(controller) {
-                controller.enqueue(value);
-            },
-            async pull(controller) {
-                const { done, value } = await reader.read();
-                if (done) {
-                    controller.close();
-                } else {
-                    controller.enqueue(value);
-                }
-            },
-            cancel() {
-                reader.cancel();
-            }
-        });
-
-        let finalStream = combinedStream.pipeThrough(progressStream);
-        if (needsDecompression && isGz) {
-            finalStream = finalStream.pipeThrough(new DecompressionStream('gzip'));
-        }
-
-        // Return a ReadableStream (sqlite_helper now supports streaming directly to OPFS)
-        return finalStream;
     }
 
     static async _waitForInit() {
@@ -369,45 +163,20 @@ export class SuttaDB {
         });
     }
 
-    /**
-     * Query vào Core DB
-     */
     static async query(sql, params) {
         if (!this.core) await this.init();
         return await this.core.run(sql, params);
     }
 
-    /**
-     * Query vào một Content Shard cụ thể
-     */
     static async queryShard(category, sql, params) {
         const shard = await this.loadShard(category);
-        if (!shard) return [];
-        return await shard.run(sql, params);
+        return shard ? await shard.run(sql, params) : [];
     }
 
-    /**
-     * [DEBUG] Chạy thử nghiệm hiệu năng truy vấn
-     */
     static async runBenchmark() {
-        logger.info("Benchmark", "Starting Query Performance Test...");
-        
-        // 1. Core DB Query (Metadata)
-        const startCore = performance.now();
-        await this.query("SELECT * FROM metadata WHERE book_id = 'dn' LIMIT 100");
-        const endCore = performance.now();
-        logger.info("Benchmark", `Core DB (100 rows): ${(endCore - startCore).toFixed(2)}ms`);
-
-        // 2. Random Pool (Counting with index)
-        const startCount = performance.now();
-        await this.query("SELECT COUNT(*) FROM random_pools WHERE book_id IN ('mn', 'dn', 'sn', 'an')");
-        const endCount = performance.now();
-        logger.info("Benchmark", `Random Count (Index): ${(endCount - startCount).toFixed(2)}ms`);
-
-        // 3. Shard DB Query (Content)
-        const startShard = performance.now();
-        await this.queryShard("major", "SELECT * FROM content_segments WHERE sutta_uid = 'dn1' ORDER BY segment_order");
-        const endShard = performance.now();
-        logger.info("Benchmark", `Shard Content (major): ${(endShard - startShard).toFixed(2)}ms`);
+        logger.info("Benchmark", "Starting...");
+        const start = performance.now();
+        await this.query("SELECT * FROM metadata LIMIT 10");
+        logger.info("Benchmark", `Completed in ${(performance.now() - start).toFixed(2)}ms`);
     }
 }
