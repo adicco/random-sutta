@@ -73,6 +73,10 @@ make build
 # Build Android APK
 make apk
 
+# Build iOS (IPA for AltStore)
+make altstore
+# See [iOS Installation Guide](docs/ios_installation.md) for details.
+
 # Build MacOS App
 make app
 ```
