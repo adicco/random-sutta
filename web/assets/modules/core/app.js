@@ -88,19 +88,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     await SuttaService.init();
     console.timeEnd("📡 Service Init");
 
-    // Deferred heavy initializations to reduce startup concurrency
-    if (window.requestIdleCallback) {
-        window.requestIdleCallback(() => {
-            initLookup();
-            OfflineManager.init();
-        });
-    } else {
-        setTimeout(() => {
-            initLookup();
-            OfflineManager.init();
-        }, 500);
-    }
-
     const navHeader = document.getElementById("nav-header");
     if (navHeader) navHeader.classList.remove("hidden");
     
@@ -112,6 +99,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     ViewManager.hideSplashScreen();
     console.timeEnd("🚀 App Start to Ready");
+
+    // [OPTIMIZED] Start heavy background tasks ONLY after the first sutta is loaded and displayed.
+    // This prevents the 77MB Dictionary or Shard Downloads from competing with the initial content.
+    const startBackgroundTasks = () => {
+        initLookup();
+        OfflineManager.init();
+    };
+
+    if (window.requestIdleCallback) {
+        window.requestIdleCallback(startBackgroundTasks);
+    } else {
+        setTimeout(startBackgroundTasks, 500);
+    }
   } catch (err) {
     logger.error("Init", err);
     const statusDiv = document.getElementById("status");

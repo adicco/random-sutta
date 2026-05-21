@@ -40,6 +40,7 @@ export const LookupManager = {
         DictProvider.init().then(success => {
              if (success) logger.info("Init", "Dictionaries ready.");
         });
+
         
         // Click Event (Delegated)
         document.addEventListener("click", (e) => 
