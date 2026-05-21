@@ -95,8 +95,8 @@ export async function initSQLitePersistent(options) {
             // Dynamic Cache Size Allocation based on DB usage pattern
             // - Core/Dict DBs: Heavy FTS/Random queries -> Large Cache
             // - Content Shards: Sequential segment reads -> Small Cache
-            let cacheKb = 2000; // Default 2MB
-            if (dbName === 'sutta_core.db') cacheKb = 10000; // 10MB
+            let cacheKb = 5000; // Default 5MB for Content Shards
+            if (dbName === 'sutta_core.db') cacheKb = 50000; // 50MB for Core DB (Full memory load)
             else if (dbName.includes('dict') || dbName.includes('dpd')) cacheKb = 50000; // 50MB for Dictionary FTS speed
             
             // Tối ưu RAM cho iOS (Jetsam safe) & Wasm CPU Load
