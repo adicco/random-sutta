@@ -1,5 +1,5 @@
 # Path: src/dict_builder/tools/db_packager.py
-import zipfile
+import gzip
 import json
 import hashlib
 import logging
@@ -24,12 +24,12 @@ class DbPackager:
     @staticmethod
     def pack_database(source_db_path: Path, destination_dir: Path) -> bool:
         """
-        Compresses the source .db file into a .db.zip in the destination directory.
+        Compresses the source .db file into a .db.gz in the destination directory.
         Also generates a deterministic .json manifest.
         
         Args:
             source_db_path: Path to the raw .db file (e.g. data/dpd/dpd_mini.db)
-            destination_dir: Directory to save zip and manifest (e.g. web/assets/db/dictionaries)
+            destination_dir: Directory to save gz and manifest (e.g. web/assets/db/dictionaries)
         """
         if not source_db_path.exists():
             logger.error(f"❌ Source DB not found: {source_db_path}")
@@ -39,10 +39,10 @@ class DbPackager:
             destination_dir.mkdir(parents=True, exist_ok=True)
 
         db_filename = source_db_path.name # dpd_mini.db
-        zip_filename = f"{db_filename}.zip" # dpd_mini.db.zip
+        gz_filename = f"{db_filename}.gz" # dpd_mini.db.gz
         manifest_filename = source_db_path.with_suffix(".json").name # dpd_mini.json
         
-        target_zip_path = destination_dir / zip_filename
+        target_gz_path = destination_dir / gz_filename
         target_manifest_path = destination_dir / manifest_filename
         
         logger.info(f"📦 Packaging {db_filename} -> {destination_dir}...")
@@ -53,31 +53,25 @@ class DbPackager:
             shutil.copy2(source_db_path, target_db_path)
             logger.info(f"   ✅ Copied raw DB: {db_filename}")
 
-            # 1. Create Deterministic Zip
-            with zipfile.ZipFile(target_zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-                with open(source_db_path, "rb") as f:
-                    file_data = f.read()
-                
-                # ZipInfo for deterministic output
-                zinfo = zipfile.ZipInfo(filename=db_filename, date_time=FIXED_DATETIME)
-                zinfo.external_attr = 0o644 << 16 # Permissions -rw-r--r--
-                zinfo.compress_type = zipfile.ZIP_DEFLATED
-                
-                zf.writestr(zinfo, file_data)
+            # 1. Create GZIP
+            # mtime=0 for deterministic output (no timestamp inside the gzip)
+            with open(source_db_path, "rb") as f_in:
+                with gzip.GzipFile(target_gz_path, "wb", mtime=0) as f_out:
+                    shutil.copyfileobj(f_in, f_out)
             
             # 2. Generate Hash & Manifest
-            file_hash = DbPackager._calculate_file_hash(target_zip_path)
+            file_hash = DbPackager._calculate_file_hash(target_gz_path)
             
             manifest_data = {
                 "hash": file_hash,
-                "size": target_zip_path.stat().st_size,
+                "size": target_gz_path.stat().st_size,
                 "generated_at": str(FIXED_DATETIME)
             }
             
             with open(target_manifest_path, "w", encoding="utf-8") as f:
                 json.dump(manifest_data, f, indent=2)
 
-            logger.info(f"   ✅ Created Zip: {zip_filename} ({target_zip_path.stat().st_size / 1024 / 1024:.2f} MB)")
+            logger.info(f"   ✅ Created Gzip: {gz_filename} ({target_gz_path.stat().st_size / 1024 / 1024:.2f} MB)")
             logger.info(f"   ✅ Created Manifest: {manifest_filename} (Hash: {file_hash[:8]}...)")
                 
             return True

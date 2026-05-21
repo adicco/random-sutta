@@ -50,12 +50,11 @@ async function getSharedSqlite() {
 
 /**
  * Ghi dữ liệu thô vào VFS mà không cần mở kết nối SQLite.
+ * Hỗ trợ File, Blob, ArrayBuffer, hoặc ReadableStream (Zero-RAM streaming).
  */
-export async function importToPersistentStorage(dbName, file) {
+export async function importToPersistentStorage(dbName, fileOrStream) {
     return withLock(async () => {
         const { vfs } = await getSharedSqlite();
-        const buffer = await file.arrayBuffer();
-        const data = new Uint8Array(buffer);
         
         // Dùng một fileId an toàn (không trùng với pointer của WASM)
         // Trong wa-sqlite, fileId thường là pointer (> 0). 
@@ -66,9 +65,32 @@ export async function importToPersistentStorage(dbName, file) {
         const res = await vfs.jOpen(dbName, fileId, SQLiteConstants.SQLITE_OPEN_CREATE | SQLiteConstants.SQLITE_OPEN_READWRITE | SQLiteConstants.SQLITE_OPEN_MAIN_DB, pOutFlags);
         if (res === SQLiteConstants.SQLITE_OK) {
             await vfs.jTruncate(fileId, 0);
-            await vfs.jWrite(fileId, data, 0);
+            
+            if (fileOrStream instanceof ReadableStream) {
+                // Streaming zero-RAM write
+                const reader = fileOrStream.getReader();
+                let offset = 0;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    await vfs.jWrite(fileId, value, offset);
+                    offset += value.length;
+                }
+                console.log(`✅ [VFS] Stream written: ${dbName} (${Math.round(offset/1024/1024)} MB)`);
+            } else {
+                // In-memory ArrayBuffer or Blob/File
+                let buffer;
+                if (fileOrStream instanceof ArrayBuffer) {
+                    buffer = fileOrStream;
+                } else {
+                    buffer = await fileOrStream.arrayBuffer();
+                }
+                const data = new Uint8Array(buffer);
+                await vfs.jWrite(fileId, data, 0);
+                console.log(`✅ [VFS] Data written: ${dbName} (${Math.round(data.byteLength/1024/1024)} MB)`);
+            }
+            
             await vfs.jClose(fileId);
-            console.log(`✅ [VFS] Data written: ${dbName} (${Math.round(data.byteLength/1024/1024)} MB)`);
             return true;
         }
         return false;

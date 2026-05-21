@@ -69,67 +69,48 @@ export class SqliteConnection {
     }
 
     async _downloadSource() {
-        // [STRATEGY] Try raw .db first, fallback to .zip
+        // [STRATEGY] Try raw .db first, fallback to .gz or .zip
         const cleanUrl = this.zipUrl.startsWith('/') ? this.zipUrl.substring(1) : this.zipUrl;
-        const rawDbUrl = cleanUrl.replace(".db.zip", ".db");
+        const rawDbUrl = cleanUrl.replace(".db.gz", ".db").replace(".db.zip", ".db");
         const currentHash = localStorage.getItem(`${this.dbName}_hash`) || Date.now();
         
-        const cacheKey = `dict_${this.dbName}_${currentHash}`;
-
-        // [OFFLINE FIX] Try to load from BlobCache first to avoid fetch on iOS offline force-close
-        try {
-            const cachedBuffer = await BlobCache.getBlob(cacheKey);
-            if (cachedBuffer) {
-                logger.info("Download", `Loaded ${this.dbName} from local BlobCache (Offline Safe)`);
-                return cachedBuffer;
-            }
-        } catch (e) {
-            logger.warn("Download", "Error reading BlobCache", e);
-        }
-
-        let dbBuffer = null;
+        // [OFFLINE FIX] BlobCache logic is removed for streaming because we write directly to OPFS
+        // BlobCache was only a workaround for old JSZip memory crashes. Now OPFS is persistent and safe.
 
         try {
             logger.info("Download", `Trying raw DB: ${rawDbUrl}`);
             const resp = await fetch(`${rawDbUrl}?v=${currentHash}`);
             if (resp.ok) {
-                const buffer = await resp.arrayBuffer();
-                // [NEW] Verify Magic Header: "SQLite format 3"
-                const header = new Uint8Array(buffer.slice(0, 16));
-                const magic = String.fromCharCode(...header.slice(0, 15));
-                if (magic === "SQLite format 3") {
-                    logger.info("Download", "Raw DB verified. Using direct buffer.");
-                    dbBuffer = buffer;
-                } else {
-                    logger.warn("Download", "Raw DB verification failed (Not a SQLite file). Falling back to ZIP.");
-                }
+                // If it's raw DB, we can just pipe its body directly!
+                return resp.body;
             }
         } catch (e) {
-            logger.warn("Download", "Raw DB fetch failed, falling back to ZIP");
+            logger.warn("Download", "Raw DB fetch failed, falling back to compressed format.");
         }
 
-        if (!dbBuffer) {
-            // Fallback to ZIP
-            logger.info("Download", `Fetching ZIP: ${cleanUrl}`);
-            const response = await fetch(`${cleanUrl}?v=${currentHash}`);
-            if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-            
+        // Fallback to Compressed (.gz)
+        logger.info("Download", `Fetching Compressed: ${cleanUrl}`);
+        const response = await fetch(`${cleanUrl}?v=${currentHash}`);
+        if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+        
+        if (cleanUrl.endsWith('.gz')) {
+            // [NATIVE DECOMPRESSION] Zero-RAM Streaming
+            if (!('DecompressionStream' in window)) {
+                throw new Error("DecompressionStream is not supported in this browser.");
+            }
+            logger.info("Download", "Using Native DecompressionStream (GZIP)");
+            return response.body.pipeThrough(new DecompressionStream('gzip'));
+        } else if (cleanUrl.endsWith('.zip')) {
+            // Legacy ZIP Fallback (if any)
+            logger.info("Download", "Using JSZip (Legacy)");
             const blob = await response.blob();
             const zip = await JSZip.loadAsync(blob);
             const dbFile = zip.file(this.dbName); 
             if (!dbFile) throw new Error(`${this.dbName} not found in zip`);
-            dbBuffer = await dbFile.async("arraybuffer");
+            return await dbFile.async("arraybuffer");
         }
 
-        // [OFFLINE FIX] Cache the buffer in BlobCache for next time
-        try {
-            await BlobCache.setBlob(cacheKey, dbBuffer);
-            logger.info("Download", `Saved ${this.dbName} to BlobCache`);
-        } catch (e) {
-            logger.warn("Download", "Error writing to BlobCache", e);
-        }
-
-        return dbBuffer;
+        throw new Error("Unsupported file format");
     }
 
     async _checkAndApplyUpdate() {
@@ -137,7 +118,7 @@ export class SqliteConnection {
         try {
             // Remove leading slash if present to make it relative
             const cleanUrl = this.zipUrl.startsWith('/') ? this.zipUrl.substring(1) : this.zipUrl;
-            const manifestUrl = cleanUrl.replace(".db.zip", ".json");
+            const manifestUrl = cleanUrl.replace(".db.gz", ".json").replace(".db.zip", ".json");
             const res = await fetch(`${manifestUrl}?t=${Date.now()}`, { cache: "no-store" });
             if (!res.ok) return false; 
             

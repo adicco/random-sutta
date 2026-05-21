@@ -47,7 +47,7 @@ export const AppConfig = {
             "pali_dpd": {
                 enabled: true,
                 name: "dpd_mini.db",
-                path: "assets/db/dictionaries/dpd_mini.db.zip",
+                path: "assets/db/dictionaries/dpd_mini.db.gz",
                 triggerSelectors: [".root.lang-pli", ".root.lang-pi", ".lookup-main-content", ".dpd-deconstruction"] // Active in sutta and internal lookups
             }
             // Future: "en_vi": { ..., triggerSelectors: [".trans", ".en"] }
