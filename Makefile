@@ -255,7 +255,10 @@ ios-altstore:
 	npx cap sync ios
 	@echo "📦 Đang tạo bản build IPA cho AltStore..."
 	npx cap build ios --scheme App --configuration Release --xcode-export-method debugging
-	@echo "✅ XONG! File IPA nằm trong thư mục ios/App/App/build/ hoặc tương đương."
+	@mkdir -p dist/ios
+	@cp ios/App/output/App.ipa dist/ios/randomsutta.ipa
+	@echo "✅ XONG! File IPA của bạn nằm tại:"
+	@echo "📍 dist/ios/randomsutta.ipa"
 
 # Mở dự án iOS bằng Xcode
 open-ios:
