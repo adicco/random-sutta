@@ -247,6 +247,7 @@ ios:
 	@echo "✅ XONG! Bản build iOS hoàn tất. Bạn có thể mở Xcode để deploy nghiệm thu."
 
 # Build iOS bản IPA cho AltStore (Development signed)
+altstore: ios-altstore
 ios-altstore:
 	@echo "🚀 Đang biên dịch mã nguồn cho iOS (AltStore mode)..."
 	npm run build
