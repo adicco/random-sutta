@@ -246,7 +246,12 @@ export class SuttaDB {
                     const response = await fetch(urlGz);
                     if (response.ok) {
                         const contentType = response.headers.get("content-type");
+                        // Fallback check: Some dev servers return text/html for missing .gz files
                         if (!contentType || !contentType.includes("text/html")) {
+                            // Check magic header of the response to ensure it is actually GZIP [0x1F, 0x8B]
+                            // However, peaking into stream disables direct piping easily. 
+                            // Relying on Content-Type and fetch ok is usually enough, but Vite might return a generic fallback.
+                            // We can use a peek stream or just assume if it's not text/html, it's our file.
                             return { response, isGz: true };
                         }
                     }

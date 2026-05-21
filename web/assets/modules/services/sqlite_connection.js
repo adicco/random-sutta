@@ -69,48 +69,56 @@ export class SqliteConnection {
     }
 
     async _downloadSource() {
-        // [STRATEGY] Try raw .db first, fallback to .gz or .zip
+        // [STRATEGY] Try compressed format (.gz) first to save bandwidth
         const cleanUrl = this.zipUrl.startsWith('/') ? this.zipUrl.substring(1) : this.zipUrl;
         const rawDbUrl = cleanUrl.replace(".db.gz", ".db").replace(".db.zip", ".db");
         const currentHash = localStorage.getItem(`${this.dbName}_hash`) || Date.now();
         
-        // [OFFLINE FIX] BlobCache logic is removed for streaming because we write directly to OPFS
-        // BlobCache was only a workaround for old JSZip memory crashes. Now OPFS is persistent and safe.
+        let finalStream = null;
 
-        try {
-            logger.info("Download", `Trying raw DB: ${rawDbUrl}`);
-            const resp = await fetch(`${rawDbUrl}?v=${currentHash}`);
-            if (resp.ok) {
-                // If it's raw DB, we can just pipe its body directly!
-                return resp.body;
+        // 1. Try Compressed (.gz) first
+        if (cleanUrl.endsWith('.gz') && 'DecompressionStream' in window) {
+            try {
+                logger.info("Download", `Fetching Compressed: ${cleanUrl}`);
+                const response = await fetch(`${cleanUrl}?v=${currentHash}`);
+                if (response.ok) {
+                    const contentType = response.headers.get("content-type");
+                    // Avoid Vite dev server fallback to index.html
+                    if (!contentType || !contentType.includes("text/html")) {
+                        logger.info("Download", "Using Native DecompressionStream (GZIP)");
+                        finalStream = response.body.pipeThrough(new DecompressionStream('gzip'));
+                    }
+                }
+            } catch (e) {
+                logger.warn("Download", "GZIP fetch failed, falling back to raw.");
             }
-        } catch (e) {
-            logger.warn("Download", "Raw DB fetch failed, falling back to compressed format.");
         }
 
-        // Fallback to Compressed (.gz)
-        logger.info("Download", `Fetching Compressed: ${cleanUrl}`);
-        const response = await fetch(`${cleanUrl}?v=${currentHash}`);
-        if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-        
-        if (cleanUrl.endsWith('.gz')) {
-            // [NATIVE DECOMPRESSION] Zero-RAM Streaming
-            if (!('DecompressionStream' in window)) {
-                throw new Error("DecompressionStream is not supported in this browser.");
+        // 2. Fallback to Raw DB
+        if (!finalStream) {
+            try {
+                logger.info("Download", `Trying raw DB: ${rawDbUrl}`);
+                const resp = await fetch(`${rawDbUrl}?v=${currentHash}`);
+                if (resp.ok) {
+                    const contentType = resp.headers.get("content-type");
+                    if (!contentType || !contentType.includes("text/html")) {
+                        // Check magic header of SQLite format 3 if possible, but since we are streaming,
+                        // we just assume it's correct if not HTML.
+                        logger.info("Download", "Using raw DB stream.");
+                        finalStream = resp.body;
+                    }
+                }
+            } catch (e) {
+                logger.warn("Download", "Raw DB fetch failed.");
             }
-            logger.info("Download", "Using Native DecompressionStream (GZIP)");
-            return response.body.pipeThrough(new DecompressionStream('gzip'));
-        } else if (cleanUrl.endsWith('.zip')) {
-            // Legacy ZIP Fallback (if any)
-            logger.info("Download", "Using JSZip (Legacy)");
-            const blob = await response.blob();
-            const zip = await JSZip.loadAsync(blob);
-            const dbFile = zip.file(this.dbName); 
-            if (!dbFile) throw new Error(`${this.dbName} not found in zip`);
-            return await dbFile.async("arraybuffer");
         }
 
-        throw new Error("Unsupported file format");
+        if (!finalStream) {
+            throw new Error(`Failed to download valid database file for ${this.dbName}`);
+        }
+
+        // Return a ReadableStream
+        return finalStream;
     }
 
     async _checkAndApplyUpdate() {
