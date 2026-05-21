@@ -54,6 +54,10 @@ def generate_db_manifest() -> None:
         manifest_data["total_size_bytes"] = total_size
         manifest_data["generated_at_ts"] = max_mtime
         
+        # Tạo một hash duy nhất đại diện cho trạng thái của toàn bộ database
+        manifest_string = json.dumps(manifest_data["files"], sort_keys=True)
+        manifest_data["hash"] = hashlib.md5(manifest_string.encode()).hexdigest()
+        
         with open(manifest_path, "w", encoding="utf-8") as f:
             json.dump(manifest_data, f, indent=2)
 
