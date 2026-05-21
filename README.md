@@ -1,27 +1,29 @@
 # Random Sutta Reader
 
-A simple, focus-oriented reader for Early Buddhist Texts (EBT), designed for a seamless reading experience with robust offline capabilities.
-Data is sourced from SuttaCentral's [Bilara](https://github.com/suttacentral/sc-data) project.
+A fast, focus-oriented reader for Early Buddhist Texts (EBT), designed for a seamless reading experience with robust offline capabilities.
+Data is sourced from SuttaCentral's [Bilara](https://github.com/suttacentral/sc-data) project and Digital Pāḷi Dictionary ([DPD](https://digitalpalidictionary.github.io/)).
 
 ## 🌟 Key Features
 
 - **Random Sutta:** Instantly discover a random discourse from the Nikayas.
-- **Smart Hybrid Offline Mode:** - Automatically prioritizes cached data over network requests.
-  - Supports full offline capability via a downloadable "DB Bundle".
-  - Works seamlessly on `localhost` or static hosting.
-- **Magic Navigation:** Integrated Breadcrumbs and Table of Contents (TOC) for easy context awareness.
-- **Bilingual View:** Parallel display of Pāli and English (Bhante Sujato's translation).
-- **Deep Linking:** Support for specific segments (e.g., `dn1:1.2`) and "Quicklook" previews for cross-references.
+- **SQLite Engine:** Powered by `wa-sqlite` (SQLite compiled to WebAssembly) for high-performance searching and filtering in the browser.
+- **Smart PWA Offline:** 
+  - Automatically caches core engine and UI.
+  - Downloadable SQLite "DB Bundles" for 100% offline access to thousands of Suttas.
+- **Magic Navigation:** Integrated Breadcrumbs, Table of Contents (TOC), and "Magic Nav" for seamless context awareness.
+- **Bilingual & Dictionary Support:** 
+  - Parallel display of Pāli and English (Bhante Sujato's translation).
+  - Integrated Pāḷi-English Dictionary (DPD) for instant word lookup.
+- **Cross-Platform:** Available as a Web App (PWA), Android (Capacitor), and MacOS (Tauri) with deep-linking support (`randomsutta://`).
 - **Customization:** Dark Mode, Sepia (Night Shift) mode, and adjustable font sizes.
 
-## 🛠️ System Requirements
+## 🛠️ Tech Stack
 
-For building the data assets from source:
-
-- **Python 3.8+**
-- **Git**
-- **Make** (Optional, but recommended for easy commands)
-- Internet connection (to fetch raw data from SuttaCentral).
+- **Frontend:** Vanilla JS (ES6 Modules), CSS3, HTML5 (with custom Partial Compiler).
+- **Build Tool:** [Vite](https://vitejs.dev/) with [Vite PWA](https://vite-pwa-org.netlify.app/).
+- **Database:** SQLite (via `wa-sqlite`).
+- **Processing:** Python 3.10+ for data ingestion and optimization.
+- **Native Wrappers:** [Capacitor](https://capacitorjs.com/) (Android/iOS) and [Tauri](https://tauri.app/) (MacOS).
 
 ## 🚀 Installation & Build Guide
 
@@ -32,72 +34,75 @@ git clone https://github.com/vjjda/random-sutta.git
 cd random-sutta
 ```
 
-### 2\. Fetch Raw Data
+### 2\. Environment Setup
 
-The project requires raw data (Bilara texts & API metadata). You can sync everything using the provided Makefile:
+We use `direnv` or manual virtual environment for Python tools.
 
 ```bash
-# Installs git hooks and sets up environment
+# Setup Git hooks
 make setup
 
-# Fetches Bilara data and API metadata
+# Install Node dependencies
+npm install
+```
+
+### 3\. Fetch & Process Data
+
+The project requires raw data (Bilara texts, SC API metadata, and DPD dictionary).
+
+```bash
+# Sync ALL data sources (takes time)
 make sync
-```
 
-### 3\. Build Assets (Processor)
-
-Convert raw JSON data into optimized JavaScript assets for the web app.
-
-```bash
-# Runs the Sutta Processor
+# Process JSON into optimized SQLite databases
 make data
+
+# Build Dictionaries
+make da
 ```
 
-### 4\. Run Locally
-
-Start a local development server to preview the app.
+### 4\. Development & Build
 
 ```bash
-# Starts server at http://localhost:8000
+# Start Vite Dev Server (HMR)
 make dev
+
+# Full Production Build (Web)
+make build
+
+# Build Android APK
+make apk
+
+# Build MacOS App
+make app
 ```
-
-## 🐞 Development & Debugging
-
-The application includes a built-in Logger and Performance Timer system.
-
-### Enabling Debug Mode
-
-To view verbose logs, performance metrics (rendering time, fetch latency), and internal state transitions, append `?debug=1` or `?debug=true` to the URL.
-
-**Example:**
-`http://localhost:8000/?q=mn1&debug=1`
-
-### What to look for in Console
-
-- **⏱️ Render:** Time taken to process and render a Sutta.
-- **📥 Data Fetch:** Time taken to retrieve data (helps verify if data is coming from Cache vs. Network).
-- **⚡ Random Process:** Total time for the randomization logic.
-- **[DEBUG] / [INFO]:** Detailed logs from internal modules (`SuttaController`, `SuttaRepository`, `PopupManager`, etc.).
 
 ## 📂 Project Structure
 
 - `src/`: Python source code (Build Tools).
-  - `sutta_fetcher/`: Synchronizes raw data from Bilara Git.
-  - `api_fetcher.py`: Fetches metadata from SuttaCentral API.
-  - `sutta_processor/`: Core logic to convert JSON -\> Optimized JS Assets.
-  - `release_system/`: Handles versioning, bundling, and deployment.
-- `data/`: Raw downloaded data (ignored by Git).
-- `web/`: Frontend Application (HTML/CSS/JS).
-  - `assets/sutta/`: Generated data assets (The App Database).
-  - `assets/modules/`: ES6 Modules for UI and Logic.
-  - `sw.js`: Service Worker for caching and offline support.
+  - `data_fetcher/`: Synchronizes raw data from Bilara & API.
+  - `sutta_processor/`: Core logic to convert JSON -> SQLite Databases.
+  - `dict_builder/`: Builds Digital Pāḷi Dictionary assets.
+  - `release_system/`: Handles versioning and GitHub releases.
+- `web/`: Frontend Application.
+  - `assets/modules/`: Modularized JS logic (`core`, `ui`, `services`).
+  - `assets/libs/`: Third-party libraries like `wa-sqlite`.
+  - `public/assets/db/`: Generated SQLite databases (Ignored by Git).
+  - `partials/`: HTML components used by the internal compiler.
+- `android/`: Capacitor Android project.
+- `src-tauri/`: Tauri MacOS/Desktop project.
 
-## 🤝 Contributing
+## 🐞 Development & Debugging
 
-Contributions are welcome\! Please feel free to submit a Pull Request or open an Issue.
+Append `?debug=1` to the URL to enable verbose logging and performance metrics in the browser console.
+
+**Example:** `http://localhost:8000/?q=mn1&debug=1`
+
+- **⏱️ Render:** UI rendering performance.
+- **📥 Data Fetch:** Cache vs. Network latency.
+- **[DEBUG]:** Internal state transitions and repository queries.
 
 ## 📄 License
 
-- **Content:** SuttaCentral (Creative Commons Zero - CC0).
+- **Content:** SuttaCentral (CC0), DPD (CC BY-NC-SA 4.0).
 - **Source Code:** MIT License.
