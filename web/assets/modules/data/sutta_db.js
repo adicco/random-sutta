@@ -239,39 +239,59 @@ export class SuttaDB {
         const query = `?v=${this.manifest?.files?.[fileName]?.hash || Date.now()}`;
         
         const tryFetchFile = async (basePath) => {
+            // First try .gz for Zero-RAM Streaming
+            if ('DecompressionStream' in window) {
+                try {
+                    const urlGz = `${basePath}${fileName}.gz${query}`;
+                    const response = await fetch(urlGz);
+                    if (response.ok) {
+                        const contentType = response.headers.get("content-type");
+                        if (!contentType || !contentType.includes("text/html")) {
+                            return { response, isGz: true };
+                        }
+                    }
+                } catch (e) {}
+            }
+
+            // Fallback to raw .db
             try {
                 const url = `${basePath}${fileName}${query}`;
                 const response = await fetch(url);
                 if (response.ok) {
                     const contentType = response.headers.get("content-type");
-                    // Check if we got HTML instead of a DB file
-                    if (contentType && contentType.includes("text/html")) return null;
-                    return response;
+                    if (!contentType || !contentType.includes("text/html")) {
+                        return { response, isGz: false };
+                    }
                 }
             } catch (e) {}
             return null;
         };
 
-        let response = await tryFetchFile('assets/db/');
-        if (!response) response = await tryFetchFile('/assets/db/');
+        let result = await tryFetchFile('assets/db/');
+        if (!result) result = await tryFetchFile('/assets/db/');
         
-        if (!response) throw new Error(`Could not fetch database file: ${fileName}`);
+        if (!result) throw new Error(`Could not fetch database file: ${fileName}`);
 
+        const { response, isGz } = result;
         const total = parseInt(response.headers.get('content-length') || "0", 10);
         let loaded = 0;
-        const reader = response.body.getReader();
-        const chunks = [];
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            loaded += value.length;
-            if (onProgress && total > 0) onProgress(loaded, total);
+        // Tối ưu RAM: Dùng TransformStream để báo cáo tiến độ trên luồng raw
+        const progressStream = new TransformStream({
+            transform(chunk, controller) {
+                loaded += chunk.length;
+                if (onProgress && total > 0) onProgress(loaded, total);
+                controller.enqueue(chunk);
+            }
+        });
+
+        let finalStream = response.body.pipeThrough(progressStream);
+        if (isGz) {
+            finalStream = finalStream.pipeThrough(new DecompressionStream('gzip'));
         }
 
-        // Tối ưu RAM: Tạo File trực tiếp từ mảng các chunk thay vì ghép vào Uint8Array mới
-        return new File(chunks, fileName, { type: 'application/x-sqlite3' });
+        // Return a ReadableStream (sqlite_helper now supports streaming directly to OPFS)
+        return finalStream;
     }
 
     static async _waitForInit() {

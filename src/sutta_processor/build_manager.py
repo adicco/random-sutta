@@ -225,16 +225,24 @@ class BuildManager:
         # run_optimizer(dry_run=self.dry_run)
         
         if not self.dry_run:
-            # [UPDATED] Copy ALL SQLite DBs to public assets
+            # [UPDATED] Copy ALL SQLite DBs to public assets and generate GZIP versions
+            import gzip
             DIST_DB_DIR.mkdir(parents=True, exist_ok=True)
             db_files = list(STAGE_PROCESSED_DIR.glob("*.db"))
             for db_file in db_files:
-                shutil.copy2(db_file, DIST_DB_DIR / db_file.name)
+                target_path = DIST_DB_DIR / db_file.name
+                shutil.copy2(db_file, target_path)
                 logger.info(f"🚀 Copied {db_file.name} to {DIST_DB_DIR}")
-            
+
+                # Create GZIP version for zero-RAM streaming
+                gz_path = DIST_DB_DIR / f"{db_file.name}.gz"
+                logger.info(f"   🗜️ Compressing {db_file.name} to .gz...")
+                with open(target_path, "rb") as f_in:
+                    with gzip.GzipFile(gz_path, "wb", mtime=0) as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+
             # [NEW] Generate manifest based on the copied files
-            generate_db_manifest()
-        
+            generate_db_manifest()        
         logger.info("✅ All processing tasks completed.")
         
         if generated_msg:
