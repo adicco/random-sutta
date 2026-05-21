@@ -10,6 +10,13 @@ export const OfflineManager = {
         window.OfflineManager = this;
         const els = OfflineView.init();
 
+        // Listen for Database Update Event
+        window.addEventListener('sutta-db-update', (e) => {
+            logger.info("Update", "Database update available. Notifying user...");
+            // Show a Toast or modify the Update button state
+            this._showUpdateAvailableUI();
+        });
+
         // Auto-download check delay
         setTimeout(() => {
             const runner = () => this.runSmartBackgroundDownload();
@@ -29,6 +36,11 @@ export const OfflineManager = {
         if (els.btnReset) {
             els.btnReset.addEventListener("click", () => this._handleResetClick());
         }
+    },
+
+    // Show a Toast or modify the Update button state
+    _showUpdateAvailableUI() {
+        OfflineView.highlightUpdateAvailable();
     },
 
     async _handleDownloadClick() {

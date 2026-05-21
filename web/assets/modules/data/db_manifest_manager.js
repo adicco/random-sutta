@@ -35,7 +35,7 @@ export const DbManifestManager = {
     async refreshInBackground() {
         const tryFetch = async (url) => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), 8000); 
             try {
                 const resp = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -44,9 +44,7 @@ export const DbManifestManager = {
                     if (contentType && contentType.includes("application/json")) {
                         return await resp.json();
                     }
-                    const text = await resp.text();
-                    if (text.trim().startsWith("<!DOCTYPE")) return null;
-                    return JSON.parse(text);
+                    return null;
                 }
             } catch (e) {}
             return null;
@@ -57,19 +55,45 @@ export const DbManifestManager = {
             if (!data) data = await tryFetch('/assets/db/db_manifest.json');
             
             if (data) {
-                const isFirstLoad = !this.manifest;
+                const oldManifest = this.manifest;
                 this.manifest = data;
                 await BlobCache.setBlob('db_manifest', new TextEncoder().encode(JSON.stringify(this.manifest)).buffer);
                 
-                logger.info("Refresh", isFirstLoad ? "Loaded from network" : "Updated from network (Background)");
+                if (oldManifest) {
+                    // [UPDATE DETECTION] Kiểm tra xem có file nào thay đổi hash không
+                    const hasUpdate = this._checkForChanges(oldManifest, data);
+                    if (hasUpdate) {
+                        logger.info("Refresh", "New database version detected!");
+                        this._notifyUpdate();
+                    }
+                } else {
+                    logger.info("Refresh", "Manifest initialized from network.");
+                }
                 return this.manifest;
-            } else {
-                logger.warn("Refresh", "Network fetch failed or returned invalid data");
             }
         } catch (e) {
-            logger.warn("Refresh", "Manifest update process failed", e);
+            logger.warn("Refresh", "Manifest update failed", e);
         }
         return this.manifest;
+    },
+
+    _checkForChanges(oldM, newM) {
+        if (!oldM || !newM) return false;
+        // Kiểm tra hash của các file quan trọng (core và dictionary)
+        const criticalFiles = ['sutta_core.db', 'dictionaries/dpd_mini.db'];
+        for (const file of criticalFiles) {
+            if (oldM.files[file]?.hash !== newM.files[file]?.hash) return true;
+        }
+        // Kiểm tra xem có bất kỳ shard nào thay đổi không (optional, tùy UX)
+        return false; 
+    },
+
+    _notifyUpdate() {
+        // Gửi Custom Event để UI có thể bắt được và hiển thị thông báo "Update Available"
+        const event = new CustomEvent('sutta-db-update', { 
+            detail: { manifest: this.manifest } 
+        });
+        window.dispatchEvent(event);
     },
 
     getHash(dbName) {

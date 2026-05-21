@@ -117,6 +117,16 @@ export const OfflineView = {
         }
     },
 
+    highlightUpdateAvailable() {
+        const { btnUpdate } = this.elements;
+        if (btnUpdate) {
+            btnUpdate.classList.remove("hidden");
+            btnUpdate.classList.add("update-highlight");
+            btnUpdate.title = "Core Database Update Available! Click to refresh.";
+            // Thêm hiệu ứng rung nhẹ hoặc dot đỏ nếu cần qua CSS
+        }
+    },
+
     flashVersion(versionString) {
         if (!this.elements.btnDownload) return;
         const v = `Version: ${versionString}`;
