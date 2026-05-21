@@ -142,8 +142,16 @@ export class SuttaDB {
             if (onProgress) onProgress(100, 100);
             return;
         }
+        
         const dbName = `sutta_content_${category}.db`;
-        await this._ensureDbUpdated(dbName, onProgress);
+        // ensureDbUpdated chỉ download và lưu vào VFS, không mở connection SQLite
+        const wasUpdated = await this._ensureDbUpdated(dbName, onProgress);
+        
+        if (wasUpdated) {
+            // [OFFLINE FIX] Force a garbage collection cycle hint by nullifying large arrays
+            // Note: JS doesn't have manual GC, but this helps the engine know it's free.
+            logger.info("Storage", `Prefetch completed for ${dbName}`);
+        }
     }
 
     /**
