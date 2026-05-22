@@ -160,12 +160,12 @@ deploy: re ota
 	npm run deploy
 
 # Publish Pre-release
-beta: apk altstore macos alfred
+beta: apk ios macos alfred
 	@echo "🚀 PUBLISHING BETA..."
 	$(PYTHON) -m src.release_system --publish
 
 # Publish Official
-official: apk altstore app alfred
+official: apk ios app alfred
 	@echo "🚀 PUBLISHING OFFICIAL..."
 	$(PYTHON) -m src.release_system --official
 
