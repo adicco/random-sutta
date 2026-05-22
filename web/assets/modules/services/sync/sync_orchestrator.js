@@ -50,7 +50,7 @@ export const SyncOrchestrator = {
         }
     },
 
-    autoSync() {
+    async autoSync() {
         if (this.isSyncing) return;
         this.isSyncing = true;
         window.dispatchEvent(new CustomEvent("sync-start"));
