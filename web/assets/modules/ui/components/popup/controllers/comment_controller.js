@@ -130,7 +130,7 @@ export const CommentController = {
         }
     },
 
-    openByIndex(index) {
+    openByIndex(index, markerEl = null) {
         const comments = PopupState.getComments();
         if (comments.length === 0) {
             this.scanComments();
@@ -140,10 +140,16 @@ export const CommentController = {
         if (index >= 0 && index < currentComments.length) {
             this.activate(index);
             
-            // [FIXED] Highlight segment when marker is clicked directly
+            // [FIXED] Jump & Highlight segment when marker is clicked directly
+            // Use markerEl for precise scrolling if available, otherwise fallback to segment ID
             const item = currentComments[index];
+            const scrollTarget = markerEl || item?.id;
+            
+            if (scrollTarget) {
+                Scroller.jumpTo(scrollTarget);
+            }
+            
             if (item && item.id) {
-                // No need to jump (user is already there), just highlight
                 Scroller.highlightElement(item.id);
             }
 

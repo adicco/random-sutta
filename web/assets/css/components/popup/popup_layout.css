@@ -213,7 +213,6 @@ body.popup-open, body.lookup-open, body.parallels-open {
   /* No special body padding needed for bottom popups if they overlay content */
   /* But if we want to scroll content fully: */
   padding-bottom: 45vh !important;
-  transition: padding-bottom 0.3s ease;
 }
 
 /* [DYNAMIC STACKING] Force active popup to top */

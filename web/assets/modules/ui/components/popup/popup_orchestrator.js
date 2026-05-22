@@ -69,7 +69,7 @@ export const PopupOrchestrator = {
                     const index = markers.indexOf(markerEl);
                     
                     if (index !== -1) {
-                        CommentController.openByIndex(index);
+                        CommentController.openByIndex(index, markerEl);
                     } else {
                         // Fallback to text if index search fails
                         CommentController.openByText(markerEl.dataset.comment);
