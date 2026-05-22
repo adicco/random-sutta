@@ -27,12 +27,16 @@ import { RandomButton } from "ui/components/random_button.js";
 import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
 import { ToolbarManager } from "toolbar/toolbar_manager.js";
+import { PWAManager } from "services/pwa/pwa_manager.js";
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev-mode";
 const logger = getLogger("App");
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.time("🚀 App Start to Ready");
+
+  // Initialize PWA Update Manager
+  PWAManager.init();
 
   // Lock safe area bottom to prevent shifting during scroll
   UIUtils.lockSafeAreaBottom();

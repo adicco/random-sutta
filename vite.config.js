@@ -128,8 +128,8 @@ export default defineConfig(({ mode }) => {
             // [FIX] Only enable PWA for Web builds, disable for Native
             VitePWA({
                 disable: isNative,
-                registerType: 'autoUpdate',
-                injectRegister: 'inline', 
+                registerType: 'prompt', // [CHANGED] From autoUpdate to prompt
+                injectRegister: null, // [CHANGED] From inline to null (we handle it in pwa_manager.js)
                 includeManifestIcons: false, 
                 manifestFilename: 'manifest.json',
                 devOptions: {
