@@ -11,10 +11,24 @@
       "iconURL": "https://vjjda.github.io/random-sutta/assets/icons/apple-touch-icon.png",
       "versions": [
         {
-          "version": "2026.05.22-15.31.44",
+          "version": "2026.05.22-15.37.51",
           "date": "2026-05-22",
-          "downloadURL": "https://github.com/vjjda/random-sutta/releases/download/v2026.05.22-15.31.44/randomsutta.ipa",
-          "localizedDescription": "Release v2026.05.22-15.31.44",
+          "downloadURL": "https://github.com/vjjda/random-sutta/releases/download/v2026.05.22-15.37.51/randomsutta.ipa",
+          "localizedDescription": "Release v2026.05.22-15.37.51",
+          "size": 0
+        },
+        {
+          "version": "2026.05.22-15.39.52",
+          "date": "2026-05-22",
+          "downloadURL": "https://github.com/vjjda/random-sutta/releases/download/v2026.05.22-15.39.52/randomsutta.ipa",
+          "localizedDescription": "Release v2026.05.22-15.39.52",
+          "size": 0
+        },
+        {
+          "version": "2026.05.22-15.23.57",
+          "date": "2026-05-22",
+          "downloadURL": "https://github.com/vjjda/random-sutta/releases/download/v2026.05.22-15.23.57/randomsutta.ipa",
+          "localizedDescription": "Release v2026.05.22-15.23.57",
           "size": 0
         }
       ]

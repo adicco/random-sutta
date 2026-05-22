@@ -2,6 +2,7 @@
 import os
 import json
 import logging
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
@@ -18,7 +19,35 @@ APP_NAME = "Random Sutta"
 DEVELOPER_NAME = "Vijjo"
 ICON_URL = f"https://vjjda.github.io/random-sutta/assets/icons/apple-touch-icon.png"
 
-def update_altstore_source(version_tag: str) -> bool:
+def sync_with_github() -> bool:
+    """
+    Fetches the latest release from GitHub and updates altstore.json.
+    Useful for fixing broken links without a full local release process.
+    """
+    logger.info("📡 Syncing AltStore Source with GitHub Latest Release...")
+    
+    try:
+        # Use gh CLI to get latest release info
+        cmd = ["gh", "release", "view", "--json", "tagName,publishedAt"]
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        data = json.loads(result.stdout)
+        
+        latest_tag = data.get("tagName")
+        # Format date from 2026-05-22T09:41:05Z to 2026-05-22
+        pub_date = data.get("publishedAt", "").split('T')[0]
+        
+        if not latest_tag:
+            logger.error("❌ Could not find latest release tag on GitHub.")
+            return False
+            
+        logger.info(f"   ✨ Found Latest: {latest_tag} ({pub_date})")
+        return update_altstore_source(latest_tag, pub_date)
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to sync with GitHub: {e}")
+        return False
+
+def update_altstore_source(version_tag: str, date_str: str = None) -> bool:
     """
     Updates or creates the AltStore source JSON file.
     Writes to both dist/web (for PWA) and project root (for GitHub Raw).
@@ -48,9 +77,12 @@ def update_altstore_source(version_tag: str) -> bool:
 
     download_url = f"https://github.com/{GITHUB_REPO}/releases/download/{version_tag}/randomsutta.ipa"
     
+    if not date_str:
+        date_str = datetime.now().strftime("%Y-%m-%d")
+
     new_version = {
         "version": version_tag.lstrip('v'),
-        "date": datetime.now().strftime("%Y-%m-%d"),
+        "date": date_str,
         "downloadURL": download_url,
         "localizedDescription": f"Release {version_tag}",
         "size": 0

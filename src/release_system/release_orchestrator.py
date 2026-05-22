@@ -22,7 +22,8 @@ def run_release_process(
     deploy_web: bool = False,
     create_zip: bool = False,
     package_ota: bool = False,
-    update_altstore: bool = False
+    update_altstore: bool = False,
+    sync_altstore: bool = False
 ) -> None:
     
     if is_official:
@@ -38,6 +39,7 @@ def run_release_process(
     mode_label = "OFFICIAL (Latest)" if is_official else "PRE-RELEASE"
     if not publish_gh: mode_label = "LOCAL BUILD (No Publish)"
     if package_ota: mode_label = "OTA PACKAGE"
+    if sync_altstore: mode_label = "ALTSTORE SYNC"
 
     logger.info(f"🚀 STARTING PROCESS: {version_tag} | Mode: {mode_label}")
 
@@ -54,8 +56,12 @@ def run_release_process(
             if not ota_packager.package_lean_ota(version_tag):
                 raise Exception("OTA packaging failed.")
 
-        # 2. AltStore Source Generation
-        if update_altstore:
+        # 2. AltStore Source Sync/Generation
+        if sync_altstore:
+            from .logic import sync_with_github
+            if not sync_with_github():
+                logger.warning("⚠️ AltStore sync failed.")
+        elif update_altstore:
             from .logic import update_altstore_source
             if not update_altstore_source(version_tag):
                 logger.warning("⚠️ AltStore source generation failed, but continuing...")

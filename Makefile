@@ -176,8 +176,14 @@ publish: official deploy
 # [NEW] OTA Update Packaging
 ota: re
 	@echo "📦 Packaging Lean OTA Update..."
-	$(PYTHON) -m src.release_system --ota --altstore
-	@echo "✅ OTA Update & AltStore files are ready in dist/web/ for deployment"
+	$(PYTHON) -m src.release_system --ota
+	@echo "✅ OTA Update files are ready in dist/web/ for deployment"
+
+# Sync AltStore manifest with latest GitHub release
+altstore-sync:
+	@echo "📡 Syncing AltStore with GitHub latest release..."
+	$(PYTHON) -m src.release_system --sync
+	@echo "✅ altstore.json updated. Remember to git push if needed."
 
 # Delete all releases except the latest one
 clean-releases:
