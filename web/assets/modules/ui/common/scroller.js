@@ -1,10 +1,12 @@
 // Path: web/assets/modules/ui/common/scroller.js
 import { getLogger } from 'utils/logger.js';
 import { AppConfig } from 'core/app_config.js';
+
 const logger = getLogger("Scroller");
 
 // Offset context khi jump đến (trừ hao header)
 const SCROLL_OFFSET_CTX = 60;
+
 function getTargetPosition(element) {
     const currentScrollY = window.scrollY || window.pageYOffset;
     const rectTop = element.getBoundingClientRect().top;
@@ -59,7 +61,7 @@ export const Scroller = {
                 
                 // Giữ fixed cho đến khi ổn định
                 setTimeout(() => { 
-                    document.documentElement.style.scrollBehavior = ''; 
+                    document.documentElement.style.scrollBehavior = '';
                     resolve();
                 }, 100);
             };
@@ -112,7 +114,13 @@ export const Scroller = {
     },
 
     highlightElement: function(targetId, autoRemove = false, endId = null, container = document) {
-        if (!targetId) return;
+        // [FIXED] Nếu targetId là null/undefined, dọn dẹp toàn bộ highlight hiện tại
+        if (!targetId) {
+            container.querySelectorAll('.highlight, .highlight-container, .parent-highlight-bridge').forEach(e => {
+                e.classList.remove('highlight', 'highlight-container', 'parent-highlight-bridge');
+            });
+            return;
+        }
 
         let retries = 0;
         const maxRetries = 40; // Approx 0.6s total
@@ -160,7 +168,7 @@ export const Scroller = {
                 seg.classList.add('highlight');
                 if (autoRemove) this._setupAutoRemove(seg, 'highlight');
 
-                // [FIX] Walk up to find the closest block-level container
+                // Walk up to find the closest block-level container
                 let parent = seg.parentElement;
                 while (parent && parent.tagName !== 'ARTICLE' && !BLOCK_TAGS.includes(parent.tagName)) {
                     parent = parent.parentElement;
@@ -192,8 +200,7 @@ export const Scroller = {
         const timerId = setTimeout(() => {
             el.classList.remove(className);
             delete el.dataset.highlightTimer;
-        }, 3500); 
-        
+        }, 3500);
         el.dataset.highlightTimer = timerId;
     },
 
@@ -214,7 +221,7 @@ export const Scroller = {
 
         const executeScroll = (element) => {
             const targetY = positionCalculator(element);
-            
+
             if (behavior === 'instant') {
                 document.documentElement.style.scrollBehavior = 'auto';
             }
@@ -261,3 +268,4 @@ export const Scroller = {
         }
     }
 };
+
