@@ -18,7 +18,9 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: var(--safe-bottom); /* Sử dụng biến đã được chốt giá trị để tránh "nhảy" */
+  padding-bottom: calc(12px + var(--safe-bottom));
+  
+  will-change: bottom;
 }
 
 /* Chấm nhỏ low-profile đại diện cho khu vực nhấp */

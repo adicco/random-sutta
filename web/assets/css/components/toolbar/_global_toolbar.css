@@ -11,17 +11,23 @@
   border-top: 1px solid var(--border-color);
   z-index: 2000;
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.2); /* Đổ bóng mạnh hơn để tạo độ nổi */
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, bottom 0.2s ease; /* Add bottom transition for keyboard smoothness */
   transform: translateY(100%);
   display: flex;
   align-items: center;
   padding: 8px 16px;
   gap: 12px;
-  padding-bottom: calc(8px + var(--safe-bottom));
+  padding-bottom: calc(12px + var(--safe-bottom));
+  
+  /* [NEW] Hardware acceleration local to element */
+  will-change: transform, bottom;
+  -webkit-transform: translate3d(0, 100%, 0);
+  transform: translate3d(0, 100%, 0);
 }
 
 #global-toolbar:not(.hidden) {
-  transform: translateY(0);
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
 }
 
 /* Magic Trigger Button */
@@ -42,7 +48,9 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: var(--safe-bottom); /* Sử dụng biến đã được chốt giá trị để tránh "nhảy" */
+  padding-bottom: calc(12px + var(--safe-bottom));
+  
+  will-change: bottom;
 }
 
 /* Chấm nhỏ low-profile đại diện cho khu vực nhấp */

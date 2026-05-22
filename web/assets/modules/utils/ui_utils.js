@@ -29,14 +29,12 @@ export const UIUtils = {
                 const safeAreaPx = parseInt(computed) || 0;
                 
                 // Hardware safe area (e.g., 34px on iPhone X+)
-                // Reduced base padding from 15px to 5px for a tighter look.
-                // Default minimum is 15px instead of 20px.
-                const finalPadding = Math.max(15, safeAreaPx + 5);
-                
-                document.documentElement.style.setProperty('--safe-bottom', `${finalPadding}px`);
+                // We lock the raw value to --safe-bottom for precise positioning.
+                // On desktop/standard android, this will be 0.
+                document.documentElement.style.setProperty('--safe-bottom', `${safeAreaPx}px`);
                 document.body.removeChild(div);
                 
-                console.log(`[UIUtils] Safe area locked: hardware=${safeAreaPx}px, final=${finalPadding}px`);
+                console.log(`[UIUtils] Safe area locked: hardware=${safeAreaPx}px`);
             });
         };
 
@@ -65,13 +63,13 @@ export const UIUtils = {
 
         const handleViewportChange = () => {
             const viewport = window.visualViewport;
-            // Calculate how much the viewport has shrunk from the bottom
-            let offset = window.innerHeight - viewport.height;
+            const totalHeight = window.innerHeight;
+            let offset = totalHeight - viewport.height;
             
-            // Guard: If offset is very small (e.g. dynamic bars), treat as 0
-            if (offset < 20) offset = 0;
+            // On iOS, a small offset (like 1-5px) can happen due to subpixel rendering or dynamic bars.
+            // If it's less than 30px, it's definitely not the keyboard.
+            if (offset < 30) offset = 0;
 
-            // Adjust bottom-fixed elements
             const fixedBottomElements = [
                 document.getElementById("global-toolbar"),
                 document.getElementById("magic-toolbar-trigger"),
@@ -82,13 +80,11 @@ export const UIUtils = {
 
             fixedBottomElements.forEach(el => {
                 if (el) {
-                    // Push up by the amount the keyboard covers.
-                    // When offset is 0, it snaps back to bottom: 0.
-                    el.style.bottom = `${offset}px`;
+                    // Reset to 0 precisely when offset is 0
+                    el.style.bottom = offset > 0 ? `${offset}px` : '0px';
                 }
             });
 
-            // Ensure visual sync
             if (offset > 0) {
                 window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
             }

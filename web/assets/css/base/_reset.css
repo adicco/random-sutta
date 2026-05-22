@@ -23,28 +23,18 @@ body {
   flex-direction: column;
 }
 
-/* [FIX] Internal Scrolling for Main Containers */
+/* [FIX] View Containers Layout */
 #landing-view, 
 #reader-view {
   position: absolute;
   inset: 0;
-  overflow-y: auto; /* Internal scroll only */
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  max-width: 100%; /* Reset from previous attempts */
 }
 
-/* Inner Centering Wrapper */
-.view-centering-wrapper {
-  max-width: var(--container-width);
-  margin: 0 auto;
-  padding: 0 20px calc(20px + var(--safe-bottom)) 20px;
-  width: 100%;
-}
-
-/* Adjust child containers that need centering */
 #landing-view > div,
-#reader-view > header,
-#reader-view > main {
+#reader-view header,
+#reader-view main {
   max-width: var(--container-width);
   margin-left: auto;
   margin-right: auto;
@@ -52,8 +42,8 @@ body {
   padding-right: 20px;
 }
 
-#reader-view > main {
-  padding-bottom: calc(40px + var(--safe-bottom));
+#reader-view main {
+  padding-bottom: calc(60px + var(--safe-bottom));
 }
 
 #sepia-overlay {
