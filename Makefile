@@ -172,6 +172,12 @@ official: apk altstore app alfred
 publish: official deploy
 	@echo "🌟 PUBLISHED AND DEPLOYED!"
 
+# [NEW] OTA Update Packaging
+ota: re
+	@echo "📦 Packaging Lean OTA Update..."
+	$(PYTHON) scripts/package_ota.py
+	@echo "✅ OTA Update files are ready in dist/ota/"
+
 # Delete all releases except the latest one
 clean-releases:
 	@echo "🧹 Cleaning up old GitHub releases..."
