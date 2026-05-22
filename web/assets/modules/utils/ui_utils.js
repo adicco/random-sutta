@@ -152,13 +152,3 @@ export const UIUtils = {
         });
     }
 };
-
-        window.visualViewport.addEventListener('resize', handleViewportChange);
-        window.visualViewport.addEventListener('scroll', handleViewportChange);
-        
-        // Extra guard: Reset on focusout to catch cases where resize event is missed
-        document.addEventListener('focusout', () => {
-            setTimeout(handleViewportChange, 300);
-        });
-    }
-};
