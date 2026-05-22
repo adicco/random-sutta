@@ -23,7 +23,7 @@ export const AppRouter = {
         logger.info("handleInitialRoute", "Start", { q: initialParams.q, hasProgress: !!progress });
 
         if (initialParams.q) {
-            ViewManager.switchView('reader');
+            await ViewManager.switchView('reader');
             
             let loadId = initialParams.q;
             if (window.location.hash) loadId += window.location.hash;
@@ -42,7 +42,7 @@ export const AppRouter = {
             // Root access -> Try restore last read or go to Landing
             if (progress && progress.id) {
                 logger.info("handleInitialRoute", `Restoring last read: ${progress.id}`);
-                ViewManager.switchView('reader');
+                await ViewManager.switchView('reader');
                 
                 // [FIX] iOS IPA might need a small tick to ensure DOM is ready after switchView
                 await new Promise(r => requestAnimationFrame(r));
