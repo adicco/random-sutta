@@ -73,7 +73,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         await SuttaController.loadRandomSutta(true);
       },
     });
-
     setupQuickNav((query) => SuttaController.loadSutta(query));
   };
 
@@ -91,8 +90,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const navHeader = document.getElementById("nav-header");
     if (navHeader) navHeader.classList.remove("hidden");
     
+    // [FIX]: Bật cả 2 nút Random (Header & Landing)
     const randomBtn = document.getElementById("btn-random");
     if (randomBtn) randomBtn.disabled = false;
+
+    const landingRandomBtn = document.getElementById("btn-landing-random");
+    if (landingRandomBtn) landingRandomBtn.disabled = false;
 
     // Delegate Routing to AppRouter
     await AppRouter.init();
@@ -101,7 +104,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.timeEnd("🚀 App Start to Ready");
 
     // [OPTIMIZED] Start heavy background tasks ONLY after the first sutta is loaded and displayed.
-    // This prevents the 77MB Dictionary or Shard Downloads from competing with the initial content.
     const startBackgroundTasks = () => {
         initLookup();
         OfflineManager.init();
@@ -122,3 +124,4 @@ document.addEventListener("DOMContentLoaded", async () => {
     ViewManager.hideSplashScreen();
   }
 });
+
