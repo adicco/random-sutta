@@ -229,7 +229,7 @@ export const ReadManager = {
                             </div>
                             ${displayTitle ? `<div class="read-title">${displayTitle}</div>` : ''}
                         </div>
-                        <button class="bookmark-del-btn" title="Remove">
+                        <button class="read-del-btn" title="Remove">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>
@@ -245,7 +245,7 @@ export const ReadManager = {
 
             // Click logic
             item.onclick = (e) => {
-                if (e.target.closest(".bookmark-del-btn")) {
+                if (e.target.closest(".read-del-btn")) {
                     e.stopPropagation();
                     this.setFamiliarity(uid, 0, false);
                     if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(uid, 0);

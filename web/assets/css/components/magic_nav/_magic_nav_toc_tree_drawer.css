@@ -104,7 +104,7 @@
   min-width: 0;
 }
 
-.bookmark-del-btn {
+.bookmark-del-btn, .read-del-btn {
   background: transparent;
   border: none;
   color: var(--text-muted);
@@ -122,21 +122,24 @@
 }
 
 @media (hover: none) {
-  .bookmark-del-btn {
+  .bookmark-del-btn, .read-del-btn {
     opacity: 0.7;
   }
 }
 
-.bookmark-item:hover .bookmark-del-btn {
+.bookmark-item:hover .bookmark-del-btn,
+.read-item:hover .read-del-btn {
   opacity: 1;
 }
 
-.bookmark-del-btn:hover {
+.bookmark-del-btn:hover,
+.read-del-btn:hover {
   background-color: var(--bg-hover);
   color: var(--primary-color);
 }
 
-.bookmark-del-btn:active {
+.bookmark-del-btn:active,
+.read-del-btn:active {
   transform: scale(0.9);
 }
 #magic-toc-drawer {
