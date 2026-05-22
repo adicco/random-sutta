@@ -5,7 +5,7 @@ import { AppConfig } from 'core/app_config.js';
 const logger = getLogger("Scroller");
 
 // Offset context khi jump đến (trừ hao header)
-const SCROLL_OFFSET_CTX = 60;
+const SCROLL_OFFSET_CTX = 45;
 
 function getTargetPosition(element) {
     const currentScrollY = window.scrollY || window.pageYOffset;

@@ -256,7 +256,7 @@ export const CommentController = {
         }
 
         const popup = document.getElementById("comment-popup");
-        const headerOffset = 60; // SCROLL_OFFSET_CTX from Scroller.js
+        const headerOffset = 45; // Match SCROLL_OFFSET_CTX from Scroller.js
         const viewportHeight = window.innerHeight;
         
         // Estimate visible area height
