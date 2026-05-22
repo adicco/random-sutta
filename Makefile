@@ -173,6 +173,11 @@ official: apk ios macos alfred
 publish: official deploy
 	@echo "🌟 PUBLISHED AND DEPLOYED!"
 
+# [NEW] Chỉ Release các bản build hiện có trong dist/ (không build lại)
+release-only:
+	@echo "🚀 RELEASING EXISTING ARTIFACTS TO GITHUB..."
+	$(PYTHON) -m src.release_system --publish --altstore --skip-bump
+
 # [NEW] OTA Update Packaging
 ota: re
 	@echo "📦 Packaging Lean OTA Update..."

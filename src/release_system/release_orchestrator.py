@@ -23,7 +23,8 @@ def run_release_process(
     create_zip: bool = False,
     package_ota: bool = False,
     update_altstore: bool = False,
-    sync_altstore: bool = False
+    sync_altstore: bool = False,
+    bump_version: bool = True
 ) -> None:
     
     if is_official:
@@ -45,8 +46,11 @@ def run_release_process(
 
     # [NEW] Auto-update package.json version to match current date
     # This ensures IPA internal version matches AltStore source.
-    clean_version = release_versioning.get_clean_version()
-    release_versioning.update_package_json(PROJECT_ROOT, clean_version)
+    if bump_version:
+        clean_version = release_versioning.get_clean_version()
+        release_versioning.update_package_json(PROJECT_ROOT, clean_version)
+    else:
+        logger.info("ℹ️  Skipping package.json version bump (Using existing).")
 
     if not asset_validator.check_critical_assets(CRITICAL_ASSETS):
         sys.exit(1)

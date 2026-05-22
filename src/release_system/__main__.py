@@ -16,6 +16,8 @@ def main():
     parser.add_argument("--ota", action="store_true", help="Package Lean OTA Update (dist.zip + native_version.json)")
     parser.add_argument("--altstore", action="store_true", help="Generate AltStore Source JSON.")
     parser.add_argument("--sync", action="store_true", help="Sync AltStore with GitHub latest release.")
+    parser.add_argument("--skip-bump", action="store_false", dest="bump", help="Skip updating package.json version.")
+    parser.set_defaults(bump=True)
     
     # [NEW] Thêm cờ zip
     parser.add_argument("-z", "--zip", action="store_true", help="Create ZIP artifact (default: Skip if not publishing).")
@@ -31,7 +33,8 @@ def main():
             create_zip=args.zip,
             package_ota=args.ota,
             update_altstore=args.altstore,
-            sync_altstore=args.sync
+            sync_altstore=args.sync,
+            bump_version=args.bump
         )
     except KeyboardInterrupt:
         print("\n🛑 Stopped by user.")
