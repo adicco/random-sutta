@@ -155,7 +155,8 @@ view:
 # ==============================================================================
 
 # Deploy Web (GH Pages via Vite plugin / npm script)
-deploy: re
+# [UPDATED] Automatically generate OTA package during deploy for native app sync
+deploy: re ota
 	npm run deploy
 
 # Publish Pre-release
