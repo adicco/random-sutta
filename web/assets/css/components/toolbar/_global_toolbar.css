@@ -62,9 +62,10 @@
   background: var(--primary-color);
 }
 
-/* Hide trigger when Popup is open */
+/* Hide trigger when Popup or Toolbar is open */
 body.popup-open #magic-toolbar-trigger,
-body.lookup-open #magic-toolbar-trigger {
+body.lookup-open #magic-toolbar-trigger,
+body.toolbar-open #magic-toolbar-trigger {
   display: none !important;
 }
 

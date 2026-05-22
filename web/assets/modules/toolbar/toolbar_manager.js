@@ -92,6 +92,7 @@ export const ToolbarManager = {
         if (this.isOpen) return;
         this.isOpen = true;
         this.toolbar.classList.remove("hidden");
+        document.body.classList.add("toolbar-open");
         // Update root container dynamically in case it changed or wasn't ready
         this.searchEngine.root = document.getElementById("sutta-container");
         
@@ -115,6 +116,7 @@ export const ToolbarManager = {
         if (!this.isOpen) return;
         this.isOpen = false;
         this.toolbar.classList.add("hidden");
+        document.body.classList.remove("toolbar-open");
         
         this.searchEngine.clear();
         this._updateUI();

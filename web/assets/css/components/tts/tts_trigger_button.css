@@ -43,7 +43,8 @@ body.popup-open #magic-tts-trigger {
   display: none !important;
 }
 
-/* [NEW] Hide trigger when Lookup Popup is open */
-body.lookup-open #magic-tts-trigger {
+/* [NEW] Hide trigger when Lookup Popup or Toolbar is open */
+body.lookup-open #magic-tts-trigger,
+body.toolbar-open #magic-tts-trigger {
   display: none !important;
 }
