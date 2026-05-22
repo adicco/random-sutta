@@ -202,12 +202,13 @@ export const SyncOrchestrator = {
             const localBookmarks = localData.payload.sutta_bookmarks || [];
             const cloudBookmarks = cloudData.payload.sutta_bookmarks;
             
-            // Map by ID and take latest timestamp
+            // Map by ID/UID and take latest timestamp
             const bookmarkMap = new Map();
             [...localBookmarks, ...cloudBookmarks].forEach(b => {
-                const existing = bookmarkMap.get(b.id);
+                const uid = b.uid || b.id;
+                const existing = bookmarkMap.get(uid);
                 if (!existing || b.timestamp > existing.timestamp) {
-                    bookmarkMap.set(b.id, b);
+                    bookmarkMap.set(uid, b);
                 }
             });
             mergedPayload.sutta_bookmarks = Array.from(bookmarkMap.values());

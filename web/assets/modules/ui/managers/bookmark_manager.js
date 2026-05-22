@@ -1,5 +1,6 @@
 // Path: web/assets/modules/ui/managers/bookmark_manager.js
 import { getLogger } from "utils/logger.js";
+import { SuttaRepository } from "data/sutta_repository.js";
 
 const logger = getLogger("BookmarkManager");
 
@@ -63,7 +64,38 @@ export const BookmarkManager = {
     getBookmarks() {
         try {
             const data = localStorage.getItem(this.STORAGE_KEY);
-            return data ? JSON.parse(data) : [];
+            let bookmarks = data ? JSON.parse(data) : [];
+            
+            // [MIGRATION] Handle old format: id -> uid, deleted -> status, remove meta
+            let migrated = false;
+            bookmarks = bookmarks.map(b => {
+                const item = { ...b };
+                if (item.id && !item.uid) {
+                    item.uid = item.id;
+                    delete item.id;
+                    migrated = true;
+                }
+                if (item.deleted !== undefined && item.status === undefined) {
+                    item.status = !item.deleted;
+                    delete item.deleted;
+                    migrated = true;
+                }
+                // Strip redundant metadata
+                if (item.acronym || item.title || item.original) {
+                    delete item.acronym;
+                    delete item.title;
+                    delete item.original;
+                    migrated = true;
+                }
+                return item;
+            });
+
+            if (migrated) {
+                logger.info("Migration", "Migrated bookmarks to new format");
+                this.saveBookmarks(bookmarks);
+            }
+
+            return bookmarks;
         } catch (e) {
             logger.warn("Storage Error", e);
             return [];
@@ -86,49 +118,24 @@ export const BookmarkManager = {
         // Strip hash
         currentId = currentId.split('#')[0];
 
-        // Get info from header
-        const acronymEl = document.getElementById("nav-main-title");
-        const titleEl = document.getElementById("nav-sub-title");
-        const originalEl = document.getElementById("nav-original-title");
-        
-        const acronym = acronymEl ? acronymEl.textContent.trim() : currentId.toUpperCase();
-        const title = titleEl ? titleEl.textContent.trim() : "";
-        const original = originalEl ? originalEl.textContent.trim() : "";
-
         const bookmarks = this.getBookmarks();
         // Check for an ACTIVE bookmark
-        const activeIndex = bookmarks.findIndex(b => b.id === currentId && !b.deleted);
+        const existingIndex = bookmarks.findIndex(b => b.uid === currentId);
 
-        if (activeIndex > -1) {
-            // REMOVE: Soft-delete it
-            bookmarks[activeIndex].deleted = true;
-            bookmarks[activeIndex].timestamp = Date.now();
-            logger.info("Toggle", `Removed (soft-delete): ${currentId}`);
-            if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, false);
+        if (existingIndex > -1) {
+            const newStatus = !bookmarks[existingIndex].status;
+            bookmarks[existingIndex].status = newStatus;
+            bookmarks[existingIndex].timestamp = Date.now();
+            logger.info("Toggle", `${newStatus ? 'Re-activated' : 'Removed'}: ${currentId}`);
+            if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, newStatus);
         } else {
-            // ADD: Check if it exists as deleted, or create new
-            const existingIndex = bookmarks.findIndex(b => b.id === currentId);
-            
-            if (existingIndex > -1) {
-                // Reactivate
-                bookmarks[existingIndex].deleted = false;
-                bookmarks[existingIndex].acronym = acronym;
-                bookmarks[existingIndex].title = title;
-                bookmarks[existingIndex].original = original;
-                bookmarks[existingIndex].timestamp = Date.now();
-                logger.info("Toggle", `Re-activated: ${currentId} (${acronym})`);
-            } else {
-                // Create new
-                bookmarks.push({ 
-                    id: currentId, 
-                    acronym: acronym, 
-                    title: title,
-                    original: original,
-                    timestamp: Date.now(),
-                    deleted: false
-                });
-                logger.info("Toggle", `Added: ${currentId} (${acronym})`);
-            }
+            // Create new
+            bookmarks.push({ 
+                uid: currentId, 
+                status: true,
+                timestamp: Date.now()
+            });
+            logger.info("Toggle", `Added: ${currentId}`);
             if (window.MagicNav) window.MagicNav.updateBookmarkState(currentId, true);
         }
 
@@ -141,7 +148,7 @@ export const BookmarkManager = {
         if (!this.btnSave || !currentId) return;
         const baseId = currentId.split('#')[0];
         const bookmarks = this.getBookmarks();
-        const isSaved = bookmarks.some(b => b.id === baseId && !b.deleted);
+        const isSaved = bookmarks.some(b => b.uid === baseId && b.status);
         
         if (isSaved) {
             this.btnSave.classList.add("saved");
@@ -154,25 +161,32 @@ export const BookmarkManager = {
         }
     },
 
-    renderList() {
+    async renderList() {
         if (!this.listContainer) return;
-        const bookmarks = this.getBookmarks().filter(b => !b.deleted);
         
-        if (bookmarks.length === 0) {
+        const allBookmarks = this.getBookmarks();
+        const activeBookmarks = allBookmarks.filter(b => b.status);
+        
+        if (activeBookmarks.length === 0) {
             this.listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">No bookmarks yet.</div>`;
             return;
         }
 
-        // Sort by newest first
-        bookmarks.sort((a, b) => b.timestamp - a.timestamp);
+        // Fetch metadata for all active bookmarks
+        const uids = activeBookmarks.map(b => b.uid);
+        const metaList = await SuttaRepository.fetchMetaList(uids);
 
-        this.listContainer.innerHTML = bookmarks.map(b => {
-            const displayAcronym = b.acronym || b.id.toUpperCase();
-            const displayTitle = b.title || "";
-            const displayOriginal = b.original || "";
+        // Sort by newest first
+        activeBookmarks.sort((a, b) => b.timestamp - a.timestamp);
+
+        this.listContainer.innerHTML = activeBookmarks.map(b => {
+            const meta = metaList[b.uid] || {};
+            const displayAcronym = meta.acronym || b.uid.toUpperCase();
+            const displayTitle = meta.translated_title || "";
+            const displayOriginal = meta.original_title || "";
 
             return `
-                <div class="bookmark-item" data-id="${b.id}">
+                <div class="bookmark-item" data-id="${b.uid}">
                     <div class="bookmark-info">
                         <div class="bookmark-id">
                             <span class="id-acronym">${displayAcronym}</span>
@@ -190,24 +204,24 @@ export const BookmarkManager = {
         // Add event listeners
         this.listContainer.querySelectorAll(".bookmark-item").forEach(item => {
             item.onclick = (e) => {
-                const id = item.getAttribute("data-id");
+                const uid = item.getAttribute("data-id");
                 
                 if (e.target.closest(".bookmark-del-btn")) {
                     e.stopPropagation();
                     const currentBookmarks = this.getBookmarks();
-                    const bIndex = currentBookmarks.findIndex(b => b.id === id);
+                    const bIndex = currentBookmarks.findIndex(b => b.uid === uid);
                     if (bIndex > -1) {
-                        currentBookmarks[bIndex].deleted = true;
+                        currentBookmarks[bIndex].status = false;
                         currentBookmarks[bIndex].timestamp = Date.now();
                         this.saveBookmarks(currentBookmarks);
                     }
                     this.renderList();
                     
-                    if (window.MagicNav) window.MagicNav.updateBookmarkState(id, false);
+                    if (window.MagicNav) window.MagicNav.updateBookmarkState(uid, false);
 
                     const params = new URLSearchParams(window.location.search);
-                    if (params.get("q") && params.get("q").split('#')[0] === id) {
-                        this.updateButtonState(id);
+                    if (params.get("q") && params.get("q").split('#')[0] === uid) {
+                        this.updateButtonState(uid);
                     }
                     return;
                 }
@@ -221,7 +235,7 @@ export const BookmarkManager = {
                 if (wrapper) wrapper.classList.add("collapsed");
                 
                 if (window.loadSutta) {
-                    window.loadSutta(id, true);
+                    window.loadSutta(uid, true);
                 }
             };
         });

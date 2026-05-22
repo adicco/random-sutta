@@ -1,5 +1,6 @@
 // Path: web/assets/modules/ui/managers/read_manager.js
 import { getLogger } from "utils/logger.js";
+import { SuttaRepository } from "data/sutta_repository.js";
 
 const logger = getLogger("ReadManager");
 
@@ -93,7 +94,27 @@ export const ReadManager = {
     getHistory() {
         try {
             const data = localStorage.getItem(this.STORAGE_KEY);
-            return data ? JSON.parse(data) : {};
+            let history = data ? JSON.parse(data) : {};
+
+            // [MIGRATION] Strip redundant metadata
+            let migrated = false;
+            Object.keys(history).forEach(uid => {
+                const item = history[uid];
+                if (item.acronym || item.title || item.original || item.date) {
+                    delete item.acronym;
+                    delete item.title;
+                    delete item.original;
+                    delete item.date;
+                    migrated = true;
+                }
+            });
+
+            if (migrated) {
+                logger.info("Migration", "Migrated history to new format");
+                this.saveHistory(history);
+            }
+
+            return history;
         } catch (e) {
             logger.warn("Storage Error", e);
             return {};
@@ -114,7 +135,7 @@ export const ReadManager = {
         return this.WEIGHTS[level] !== undefined ? this.WEIGHTS[level] : 1.0;
     },
 
-    setFamiliarity(id, level, acronym, title, skipRender = false, original = "") {
+    setFamiliarity(id, level, skipRender = false) {
         const history = this.getHistory();
         
         if (level === 0) {
@@ -125,14 +146,8 @@ export const ReadManager = {
             }
             logger.info("Familiarity", `Removed (soft-delete): ${id}`);
         } else {
-            // ISO Date string: YYYY-MM-DD
-            const dateStr = new Date().toISOString().split('T')[0];
             history[id] = {
                 level: level,
-                date: dateStr,
-                acronym: acronym || (history[id] ? history[id].acronym : id.toUpperCase()),
-                title: title || (history[id] ? history[id].title : ""),
-                original: original || (history[id] ? history[id].original : ""),
                 timestamp: Date.now(),
                 deleted: false
             };
@@ -161,21 +176,26 @@ export const ReadManager = {
         itemEl.setAttribute("data-level", newLevel);
     },
 
-    renderList() {
+    async renderList() {
         if (!this.listContainer) return;
         const history = this.getHistory();
-        const entries = Object.entries(history).filter(([id, data]) => !data.deleted && data.level > 0);
+        const entries = Object.entries(history).filter(([uid, data]) => !data.deleted && data.level > 0);
         
         if (entries.length === 0) {
             this.listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">No history yet.</div>`;
             return;
         }
 
-        // Group by Date
+        // Fetch metadata for all UIDs
+        const uids = entries.map(([uid]) => uid);
+        const metaList = await SuttaRepository.fetchMetaList(uids);
+
+        // Group by Date extracted from timestamp
         const grouped = {};
-        entries.forEach(([id, data]) => {
-            if (!grouped[data.date]) grouped[data.date] = [];
-            grouped[data.date].push({ id, ...data });
+        entries.forEach(([uid, data]) => {
+            const dateStr = new Date(data.timestamp).toISOString().split('T')[0];
+            if (!grouped[dateStr]) grouped[dateStr] = [];
+            grouped[dateStr].push({ uid, ...data });
         });
 
         // Sort dates descending
@@ -195,14 +215,17 @@ export const ReadManager = {
             html += `<div class="read-date-header">${displayDate}</div>`;
             
             html += items.map(b => {
-                const displayTitle = b.title || "";
-                const displayOriginal = b.original || "";
+                const meta = metaList[b.uid] || {};
+                const displayAcronym = meta.acronym || b.uid.toUpperCase();
+                const displayTitle = meta.translated_title || "";
+                const displayOriginal = meta.original_title || "";
+                
                 return `
-                    <div class="read-item fam-level-${b.level}" data-id="${b.id}" data-level="${b.level}" data-acronym="${b.acronym}" data-title="${displayTitle.replace(/"/g, '&quot;')}" data-original="${displayOriginal.replace(/"/g, '&quot;')}">
+                    <div class="read-item fam-level-${b.level}" data-id="${b.uid}" data-level="${b.level}">
                         <div class="read-indicator"></div>
                         <div class="read-info">
                             <div class="read-id">
-                                <span class="id-acronym">${b.acronym}</span>
+                                <span class="id-acronym">${displayAcronym}</span>
                                 ${displayOriginal ? `<span class="id-original">${displayOriginal}</span>` : ''}
                             </div>
                             ${displayTitle ? `<div class="read-title">${displayTitle}</div>` : ''}
@@ -224,11 +247,7 @@ export const ReadManager = {
 
         // Add event listeners
         this.listContainer.querySelectorAll(".read-item").forEach(item => {
-            const id = item.getAttribute("data-id");
-            const currentLevel = parseInt(item.getAttribute("data-level"), 10);
-            const acronym = item.getAttribute("data-acronym");
-            const title = item.getAttribute("data-title");
-            const original = item.getAttribute("data-original");
+            const uid = item.getAttribute("data-id");
 
             // Swipe logic
             let startX = 0;
@@ -265,9 +284,9 @@ export const ReadManager = {
                     }
 
                     if (newLevel !== latestLevel) {
-                        this.setFamiliarity(id, newLevel, acronym, title, true, original); // skipRender = true
+                        this.setFamiliarity(uid, newLevel, true); // skipRender = true
                         this._updateItemDOM(item, newLevel);
-                        if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(id, newLevel);
+                        if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(uid, newLevel);
                     }
                 }
             });
@@ -285,10 +304,10 @@ export const ReadManager = {
                     if (decBtn && latestLevel > 0) newLevel--;
                     
                     if (newLevel !== latestLevel) {
-                        this.setFamiliarity(id, newLevel, acronym, title, true, original); // skipRender = true
+                        this.setFamiliarity(uid, newLevel, true); // skipRender = true
                         this._updateItemDOM(item, newLevel);
                         
-                        const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${id}"]`);
+                        const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${uid}"]`);
                         barContainers.forEach(container => {
                             const buttons = container.querySelectorAll('.fam-btn');
                             buttons.forEach(btn => {
@@ -312,7 +331,7 @@ export const ReadManager = {
                 if (wrapper) wrapper.classList.add("collapsed");
                 
                 if (window.loadSutta) {
-                    window.loadSutta(id, true);
+                    window.loadSutta(uid, true);
                 }
             };
         });
