@@ -1,55 +1,65 @@
-# Hướng dẫn cài đặt Random Sutta trên iOS/iPadOS (via AltStore/Sideloadly)
+# iOS Installation Guide (AltStore & Sideloading)
 
-Vì ứng dụng hiện chưa có trên App Store chính thức, bạn có thể cài đặt thông qua file `.ipa` (Sideloading). Dưới đây là 2 cách phổ biến và ổn định nhất.
+This guide provides instructions on how to install and update **Random Sutta** on your iPhone or iPad using AltStore.
 
-## 📋 Yêu cầu chuẩn bị
-- File `randomsutta.ipa` (Tải từ phần [Releases](https://github.com/hieucao/random_sutta/releases) của dự án).
-- Một máy tính (Windows hoặc macOS).
-- Cáp kết nối iPhone/iPad với máy tính.
+## 1. What is AltStore?
+AltStore is an alternative app store for iOS that allows you to install apps (Sideloading) without using the official App Store. It is widely used by developers and enthusiasts to share apps directly.
 
----
-
-## Cách 1: Sử dụng AltStore (Khuyên dùng - Không cần máy tính sau khi cài)
-
-AltStore cho phép bạn "làm mới" (refresh) ứng dụng ngay trên điện thoại thông qua Wi-Fi mà không cần cắm vào máy tính mỗi tuần.
-
-### Bước 1: Cài đặt AltServer trên máy tính
-1. Truy cập [altstore.io](https://altstore.io/) và tải về **AltServer**.
-2. Cài đặt và chạy AltServer.
-3. Kết nối iPhone/iPad với máy tính.
-4. (Trên macOS) Click biểu tượng AltServer ở thanh menu -> **Install AltStore** -> Chọn thiết bị của bạn.
-5. Nhập Apple ID và Password (đây là yêu cầu của Apple để ký ứng dụng cá nhân).
-
-### Bước 2: Cài đặt App
-1. Trên iPhone, mở ứng dụng **AltStore** vừa cài.
-2. Chuyển sang tab **My Apps**.
-3. Nhấn nút **[+]** ở góc trên bên trái.
-4. Chọn file `randomsutta.ipa` bạn đã tải về.
-5. Đợi quá trình cài đặt hoàn tất.
+## 2. Prerequisites
+- An iPhone or iPad running iOS 12.2 or later.
+- A Mac or Windows PC (for the initial setup of AltServer).
+- An Apple ID (we recommend using a secondary/burner Apple ID for safety).
 
 ---
 
-## Cách 2: Sử dụng Sideloadly (Nhanh, đơn giản)
+## 3. Installation Steps
 
-Sideloadly phù hợp nếu bạn muốn cài đặt nhanh mà không cần thiết lập server Wi-Fi.
+### Step 1: Install AltStore on your Device
+If you haven't installed AltStore yet, follow the official guide:
+- **Official Website:** [altstore.io](https://altstore.io)
+- **Basic Steps:**
+  1. Download AltServer for Mac or Windows.
+  2. Connect your iPhone to your computer via USB.
+  3. Click the AltServer icon in the menu bar/system tray and select **"Install AltStore"**.
+  4. Enter your Apple ID and password to sign the app.
 
-1. Tải và cài đặt [Sideloadly](https://sideloadly.io/).
-2. Kết nối iPhone/iPad với máy tính.
-3. Kéo file `randomsutta.ipa` vào cửa sổ Sideloadly.
-4. Nhập Apple ID của bạn.
-5. Nhấn **Start** và đợi thông báo "Done".
+### Step 2: Add Random Sutta Source
+Adding our official source allows you to receive update notifications and install the app with a single tap.
+
+1. Open the **AltStore** app on your iPhone.
+2. Go to the **"Sources"** tab.
+3. Tap the **"+"** button in the top right corner.
+4. Copy and paste the following URL:
+   ```text
+   https://vjjda.github.io/random-sutta/altstore.json
+   ```
+5. Tap **"Add Source"**. You should now see **"Random Sutta Source"** in your list.
+
+### Step 3: Install the App
+1. Go to the **"Browse"** tab in AltStore.
+2. Locate **"Random Sutta"** under the newly added source.
+3. Tap the **"FREE"** or **"GET"** button to download and install.
+4. Once installed, the app will appear on your Home Screen.
 
 ---
 
-## ⚠️ Lưu ý quan trọng (BẮT BUỘC)
-
-1. **Tin cậy nhà phát triển:** Sau khi cài xong, nếu mở app báo "Untrusted Developer", hãy vào:
-   `Cài đặt (Settings) -> Cài đặt chung (General) -> Quản lý thiết bị (VPN & Device Management) -> Chọn Apple ID của bạn -> Nhấn Tin cậy (Trust)`.
-2. **Hạn dùng 7 ngày:** Với tài khoản Apple miễn phí, ứng dụng sẽ hết hạn sau mỗi 7 ngày.
-   - Nếu dùng AltStore: Bạn chỉ cần mở AltStore khi đang ở cùng mạng Wi-Fi với máy tính và nhấn "Refresh All".
-   - Nếu dùng Sideloadly: Bạn cần cắm máy tính và thực hiện lại các bước cài đặt.
-3. **Bật Chế độ nhà phát triển (iOS 16+):**
-   `Cài đặt -> Quyền riêng tư & Bảo mật -> Chế độ nhà phát triển (Developer Mode) -> Bật`.
+## 4. How to Update
+One of the best features of using the AltStore Source is easy updates:
+1. When a new version is released (and we've deployed it), you will see an **"Update"** badge in AltStore.
+2. Go to the **"My Apps"** tab.
+3. Tap **"Update All"** or the update button next to Random Sutta.
+4. *Note: You must be on the same Wi-Fi as your computer running AltServer to refresh or update apps.*
 
 ---
-*Chúc bạn có những giây phút đọc Sutta an lạc!*
+
+## 5. Important Notes (7-Day Limit)
+- **App Refreshing:** Apps installed via AltStore expire every **7 days** due to Apple's free developer account limitations.
+- **Auto-Refresh:** AltStore will attempt to refresh your apps automatically in the background when you are on the same Wi-Fi as AltServer.
+- **Manual Refresh:** You can manually refresh anytime by going to the "My Apps" tab in AltStore and tapping **"Refresh All"**.
+
+## 6. Troubleshooting
+- **"App Not Available":** Ensure your iPhone and PC are on the same Wi-Fi network and AltServer is running.
+- **Untrusted Developer:** After first install, go to *Settings > General > VPN & Device Management* on your iPhone and tap **"Trust"** on your Apple ID.
+
+---
+*May you be happy, may you be free from suffering.*
