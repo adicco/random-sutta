@@ -41,21 +41,28 @@ export const QuicklookController = {
     openNestedComment(text) {
         // 1. Scan markers specifically inside Quicklook content
         const qlContent = QuicklookUI.elements.content;
-        if (!qlContent) return;
+        const qBody = QuicklookUI.elements.popupBody;
+        if (!qlContent || !qBody) return;
 
         const markers = Array.from(qlContent.querySelectorAll(".comment-marker"));
         const index = markers.findIndex(m => m.dataset.comment === text);
 
         if (index !== -1) {
+            const marker = markers[index];
+            const segment = marker.closest('.segment');
+
             // Store nested state
             PopupState.nestedActiveIndex = index;
             PopupState.nestedActiveText = text;
 
             // Activate Comment UI with this content
-            // We use a helper to render without affecting the main 'activeIndex' in PopupState if possible,
-            // but for simplicity, let's just render. 
-            // NOTE: This will overlay the existing comment popup if one is open.
             CommentUI.render(text, index, markers.length, "Note from Preview");
+
+            // [NEW] Scroll and Highlight inside Quicklook
+            marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (segment && segment.id) {
+                Scroller.highlightElement(segment.id, false, null, qBody);
+            }
 
             // [CRITICAL] Manage stacking: Comment must be above Quicklook
             const commentEl = document.getElementById("comment-popup");

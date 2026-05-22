@@ -192,18 +192,24 @@ export const CommentController = {
         // [NEW] Nested Comment Navigation (Inside Quicklook)
         if (QuicklookUI.isVisible() && PopupState.nestedActiveIndex !== -1) {
             const qlContent = QuicklookUI.elements.content;
+            const qBody = QuicklookUI.elements.popupBody;
             const markers = Array.from(qlContent.querySelectorAll(".comment-marker"));
             
             const nextIdx = PopupState.nestedActiveIndex + dir;
             if (nextIdx >= 0 && nextIdx < markers.length) {
                 const marker = markers[nextIdx];
+                const segment = marker.closest('.segment');
+                
                 PopupState.nestedActiveIndex = nextIdx;
                 PopupState.nestedActiveText = marker.dataset.comment;
                 
                 CommentUI.render(marker.dataset.comment, nextIdx, markers.length, "Note from Preview");
                 
-                // Scroll Quicklook to the marker
+                // [NEW] Scroll and Highlight inside Quicklook
                 marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (segment && segment.id && qBody) {
+                    Scroller.highlightElement(segment.id, false, null, qBody);
+                }
             }
             return;
         }
