@@ -28,6 +28,22 @@ export const SyncOrchestrator = {
             }
         });
 
+        // [STRATEGY] Sync Unification on App Focus or Periodically
+        // This ensures that if you change data on another device, this device notices it
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && GithubAuthManager.isAuthenticated()) {
+                logger.info("Focus", "App became visible, checking for updates...");
+                this.autoSync();
+            }
+        });
+
+        // Heartbeat check every 5 minutes while open
+        setInterval(() => {
+            if (GithubAuthManager.isAuthenticated() && !this.isSyncing) {
+                this.autoSync();
+            }
+        }, 5 * 60 * 1000);
+
         // Initial Sync if already authenticated
         if (GithubAuthManager.isAuthenticated()) {
             this.autoSync();
