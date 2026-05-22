@@ -76,6 +76,7 @@ export const SyncOrchestrator = {
                     if (localUpdateTimestamp > lastSyncTimestamp) {
                         logger.info("AutoSync", "Local has changed too. Triggering Unification UI.");
                         this.isSyncing = false; // Release lock for UI interaction
+                        const localData = this.packData();
                         SyncUnificationUI.show(localData, cloudData, async (choice) => {
                             this.isSyncing = true;
                             if (choice === 'merge') {
