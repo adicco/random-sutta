@@ -212,9 +212,18 @@ export const CommentController = {
             this.activate(nextIdx);
             
             // [FIXED] Instant Jump & Highlight Sync for Navigation
+            // Find the specific marker in the main container to ensure it's not obscured
             const item = comments[nextIdx];
+            const container = document.getElementById("sutta-container");
+            const markers = container ? Array.from(container.querySelectorAll(".comment-marker")) : [];
+            const markerEl = markers[nextIdx];
+            
+            const scrollTarget = markerEl || item?.id;
+            if (scrollTarget) {
+                Scroller.jumpTo(scrollTarget);
+            }
+
             if (item && item.id) {
-                Scroller.jumpTo(item.id);
                 Scroller.highlightElement(item.id);
             }
             
