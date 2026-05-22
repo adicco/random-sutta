@@ -61,6 +61,35 @@ export const UIUtils = {
      * Sets up ongoing listeners to keep the viewport stable.
      */
     initViewportLock() {
-        // Redundant in Fixed Shell architecture
+        if (!window.visualViewport) return;
+
+        const handleViewportChange = () => {
+            const viewport = window.visualViewport;
+            const offset = window.innerHeight - viewport.height;
+            
+            // Adjust bottom-fixed elements
+            const fixedBottomElements = [
+                document.getElementById("global-toolbar"),
+                document.getElementById("magic-toolbar-trigger"),
+                document.getElementById("magic-tts-trigger"),
+                document.querySelector(".popup-container:not(.hidden)"),
+                document.getElementById("lookup-popup:not(.hidden)")
+            ];
+
+            fixedBottomElements.forEach(el => {
+                if (el) {
+                    // Push up by the amount the keyboard covers
+                    el.style.bottom = `${offset}px`;
+                }
+            });
+
+            // Also ensure we are scrolled to the right visual spot
+            if (offset > 0) {
+                window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
+            }
+        };
+
+        window.visualViewport.addEventListener('resize', handleViewportChange);
+        window.visualViewport.addEventListener('scroll', handleViewportChange);
     }
 };
