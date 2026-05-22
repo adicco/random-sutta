@@ -242,10 +242,13 @@ export const SyncOrchestrator = {
 
         // Special logic for last_read_sutta
         if (cloudData.payload.last_read_sutta) {
-            const localLastRead = localData.payload.last_read_sutta || {};
-            const cloudLastRead = cloudData.payload.last_read_sutta;
+            let localLastRead = localData.payload.last_read_sutta || {};
+            let cloudLastRead = cloudData.payload.last_read_sutta;
             
-            // Normalize cloud data (handle legacy 'id')
+            // Normalize data (handle legacy 'id')
+            if (localLastRead.id && !localLastRead.uid) {
+                localLastRead.uid = localLastRead.id;
+            }
             if (cloudLastRead.id && !cloudLastRead.uid) {
                 cloudLastRead.uid = cloudLastRead.id;
             }
@@ -256,14 +259,18 @@ export const SyncOrchestrator = {
             if (isSameContent) {
                 // If content is same, just adopt the cloud timestamp to align, no need to push back
                 mergedPayload.last_read_sutta = {
-                    ...localLastRead,
+                    uid: localLastRead.uid,
+                    scrollY: localLastRead.scrollY,
                     timestamp: cloudLastRead.timestamp
                 };
             } else if (!localLastRead.timestamp || cloudLastRead.timestamp > localLastRead.timestamp) {
                 // Cloud is newer and different
-                mergedPayload.last_read_sutta = cloudLastRead;
+                mergedPayload.last_read_sutta = {
+                    uid: cloudLastRead.uid,
+                    scrollY: cloudLastRead.scrollY,
+                    timestamp: cloudLastRead.timestamp
+                };
             }
-            // else: local is newer and different, already in mergedPayload from the spread at start
         }
 
         // For other keys, just take the one with the newest overall timestamp

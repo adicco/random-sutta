@@ -56,6 +56,8 @@ export const SuttaPersistence = {
       if (data && data.id && !data.uid) {
           data.uid = data.id;
           delete data.id;
+          // Save back migrated format
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       }
       
       return data;

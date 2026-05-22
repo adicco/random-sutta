@@ -1,7 +1,10 @@
 // Path: web/assets/modules/ui/managers/view_manager.js
 
 export const ViewManager = {
+    currentView: 'landing', // Initial state
+
     switchView: function(viewName) {
+        this.currentView = viewName;
         return new Promise((resolve) => {
             const landing = document.getElementById("landing-view");
             const reader = document.getElementById("reader-view");

@@ -12,6 +12,7 @@ export const AppRouter = {
     init: async function() {
         this.setupPopStateListener();
         this.setupNativeDeepLinks();
+        this.setupSyncListener();
         await this.handleInitialRoute();
     },
 
@@ -31,7 +32,7 @@ export const AppRouter = {
             if (initialParams.hl) options.hl = initialParams.hl;
 
             let restoreScroll = 0;
-            if (progress && progress.id === loadId.split('#')[0]) {
+            if (progress && progress.uid === loadId.split('#')[0]) {
                 restoreScroll = progress.scrollY;
             }
 
@@ -39,15 +40,15 @@ export const AppRouter = {
             RandomBuffer.startBackgroundWork();
         } else {
             // Root access -> Try restore last read or go to Landing
-            if (progress && progress.id) {
-                logger.info("handleInitialRoute", `Restoring last read: ${progress.id}`);
+            if (progress && progress.uid) {
+                logger.info("handleInitialRoute", `Restoring last read: ${progress.uid}`);
                 await ViewManager.switchView('reader');
                 
                 // [FIX] iOS IPA might need a small tick to ensure DOM is ready after switchView
                 await new Promise(r => requestAnimationFrame(r));
                 
                 try {
-                    await SuttaController.loadSutta(progress.id, true, progress.scrollY);
+                    await SuttaController.loadSutta(progress.uid, true, progress.scrollY);
                 } catch (e) {
                     logger.error("handleInitialRoute", "Restoration failed, falling back to landing", e);
                     ViewManager.switchView('landing');
@@ -59,6 +60,20 @@ export const AppRouter = {
             
             RandomBuffer.startBackgroundWork();
         }
+    },
+
+    setupSyncListener: function() {
+        window.addEventListener("sync-data-applied", () => {
+            const currentParams = Router.getParams();
+            // Only auto-restore if we are on landing and no query param is present
+            if (!currentParams.q && ViewManager.currentView === 'landing') {
+                const progress = SuttaPersistence.load();
+                if (progress && progress.uid) {
+                    logger.info("SyncListener", `Auto-restoring from sync: ${progress.uid}`);
+                    this.handleInitialRoute();
+                }
+            }
+        });
     },
 
     setupPopStateListener: function() {
