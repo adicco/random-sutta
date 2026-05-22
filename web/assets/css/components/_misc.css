@@ -1,10 +1,38 @@
 /* Path: web/assets/css/components/_misc.css */
-.error-message {
+.error-message, .reader-placeholder {
   text-align: center;
   padding: 40px 20px;
   border-radius: 8px;
   border: none;
   background-color: var(--bg-card); /* [NEW] */
+}
+
+.reader-placeholder .placeholder {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+#btn-restore-last {
+  padding: 10px 24px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-soft);
+}
+
+#btn-restore-last:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+#btn-restore-last:active {
+  transform: translateY(0);
 }
 
 /* Center error message in Quicklook when no content */

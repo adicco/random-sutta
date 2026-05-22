@@ -219,6 +219,7 @@ export const SuttaController = {
         logger.error("loadSutta", "Error loading sutta", e);
     } finally {
         SuttaLoaderUI.hide();
+        this._checkRestoreButton();
         const container = document.getElementById("sutta-container");
         if (container && container.style.visibility === 'hidden') {
             container.style.visibility = '';
@@ -258,6 +259,32 @@ export const SuttaController = {
   },
 
   // --- INTERNAL HELPERS ---
+
+  /**
+   * Checks if the placeholder is visible and shows the manual restore button if progress exists.
+   */
+  _checkRestoreButton: function() {
+    const container = document.getElementById("sutta-container");
+    const restoreBtn = document.getElementById("btn-restore-last");
+    if (!container || !restoreBtn) return;
+
+    // The placeholder is visible if we have the specific <p> and container isn't full of sutta content
+    const hasPlaceholder = container.querySelector(".placeholder");
+    const progress = SuttaPersistence.load();
+
+    if (hasPlaceholder && progress && progress.id) {
+        restoreBtn.classList.remove("hidden");
+        // Bind once
+        if (!restoreBtn._bound) {
+            restoreBtn._bound = true;
+            restoreBtn.addEventListener("click", () => {
+                this.loadSutta(progress.id, true, progress.scrollY);
+            });
+        }
+    } else {
+        restoreBtn.classList.add("hidden");
+    }
+  },
 
   _stopTTS: function() {
     const wasActive = TTSOrchestrator.isSessionActive();
