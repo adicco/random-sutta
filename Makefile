@@ -260,18 +260,17 @@ ios:
 # Chỉ thực hiện copy IPA vào iPhone (yêu cầu đã build trước đó)
 ios-copy:
 	@if command -v idevice_id >/dev/null 2>&1 && [ "$$(idevice_id -l)" != "" ]; then \
-		echo "📲 Phát hiện iPhone đang kết nối. Đang tìm nơi gửi file..."; \
+		echo "📲 Phát hiện iPhone đang kết nối. Đang gửi file vào máy..."; \
+		afcclient put dist/ios/randomsutta.ipa Downloads/randomsutta.ipa >/dev/null 2>&1 && \
+		echo "✅ Đã copy vào thư mục Downloads hệ thống!" || echo "⚠️ Không thể copy vào Downloads hệ thống."; \
 		READDLE_ID=$$(ideviceinstaller list | grep "com.readdle.ReaddleDocs" | head -n 1 | cut -d, -f1 | tr -d ' '); \
 		if [ "$$READDLE_ID" != "" ]; then \
-			echo "📥 Đang copy trực tiếp IPA vào ứng dụng Documents ($$READDLE_ID)..."; \
-			afcclient --documents "$$READDLE_ID" put dist/ios/randomsutta.ipa /Documents/randomsutta.ipa || true; \
+			echo "📥 Đang copy dự phòng vào ứng dụng Documents ($$READDLE_ID)..."; \
+			afcclient --documents "$$READDLE_ID" put dist/ios/randomsutta.ipa /Documents/randomsutta.ipa >/dev/null 2>&1 && \
 			echo "✅ Đã copy vào ứng dụng Documents thành công!"; \
-			echo "📍 Vị trí: Mở app Documents -> 'My Files' (Tệp của tôi) -> Bạn sẽ thấy 'randomsutta.ipa'"; \
-		else \
-			echo "📥 Không thấy app Readdle, đang thử copy vào thư mục Downloads hệ thống..."; \
-			afcclient put dist/ios/randomsutta.ipa Downloads/randomsutta.ipa || true; \
-			echo "✅ Đã copy vào máy. Hãy kiểm tra trong app Files -> Trên iPhone -> Downloads."; \
-		fi \
+		fi; \
+		echo "📍 Vị trí 1: Mở app 'Tệp' (Files) -> 'Trên iPhone' -> 'Downloads' -> 'randomsutta.ipa'"; \
+		echo "📍 Vị trí 2 (nếu có): Mở app Documents -> 'My Files' -> 'randomsutta.ipa'"; \
 	else \
 		echo "❌ Không tìm thấy iPhone qua USB. Hãy cắm máy và thử lại."; \
 		exit 1; \
