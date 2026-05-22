@@ -56,13 +56,28 @@ export const UIUtils = {
     stabilizeViewport() {
         if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
         
-        // Slight delay to allow the keyboard hide animation to finish
+        // 1. Force immediate scroll sync
+        window.scrollTo(window.pageXOffset, window.pageYOffset);
+
+        // 2. Aggressive reflow after a short delay
         setTimeout(() => {
-            window.scrollTo(window.scrollX, window.scrollY);
-            // Force a layout reflow
+            // Restore visual viewport offset if it's shifted
+            if (window.visualViewport) {
+                window.scrollTo(window.visualViewport.offsetLeft, window.visualViewport.offsetTop);
+            }
+
+            const scrollY = window.scrollY;
+            // Force a layout reflow by temporarily changing height and triggering a scroll
             document.documentElement.style.height = '100.1%';
+            
             requestAnimationFrame(() => {
                 document.documentElement.style.height = '100%';
+                window.scrollTo(0, scrollY);
+                
+                // Final "nudge" to ensure fixed elements are correctly placed
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 50);
             });
         }, 300);
     }

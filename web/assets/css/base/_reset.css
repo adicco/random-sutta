@@ -20,10 +20,45 @@ html {
   overscroll-behavior-y: none;
 }
 
-/* [FIX] View Containers */
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-body);
+  color: var(--text-main);
+  width: 100%;
+  min-height: 100dvh; /* [FIXED] Use dvh for dynamic viewport height */
+  margin: 0;
+  padding: 0;
+  line-height: 1.6;
+  
+  /* [NEW] Prevent rubber-banding pull-to-refresh effect on mobile.
+     Keeps fixed elements stable. */
+  overscroll-behavior-y: none;
+  
+  /* [GLOBAL FIX] Hardware acceleration for all fixed elements to prevent jitter on iOS */
+  --ios-fixed-fix: translate3d(0, 0, 0);
+}
+
+/* [FIX] View Containers Centering */
 #landing-view, 
 #reader-view {
   position: relative;
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 20px calc(20px + var(--safe-bottom)) 20px;
+}
+
+/* [FIX] Hardware accelerate all critical fixed elements */
+#global-toolbar,
+.popup-container,
+#lookup-popup,
+#magic-toolbar-trigger,
+#magic-tts-trigger,
+.edge-nav-zone,
+.nav-search-preview,
+#splash-screen {
+  will-change: transform;
+  -webkit-transform: var(--ios-fixed-fix);
+  transform: var(--ios-fixed-fix);
 }
 
 /* [FIX] Apply Filter to Content Bodies ONLY, not the container shells.
@@ -39,21 +74,6 @@ html {
     saturate(var(--sepia-saturate));
   
   transition: filter 0.2s ease;
-}
-
-body {
-  font-family: var(--font-main);
-  background-color: var(--bg-body);
-  color: var(--text-main);
-  max-width: var(--container-width);
-  min-height: 100dvh; /* [FIXED] Use dvh for dynamic viewport height */
-  margin: 0 auto;
-  padding: 0 20px calc(20px + var(--safe-bottom)) 20px;
-  line-height: 1.6;
-  
-  /* [NEW] Prevent rubber-banding pull-to-refresh effect on mobile.
-     Keeps fixed elements stable. */
-  overscroll-behavior-y: none;
 }
 
 button {
