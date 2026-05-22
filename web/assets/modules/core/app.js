@@ -14,6 +14,7 @@ import {
   OfflineManager,
   ThemeManager,
   FontSizeManager,
+  MarginManager,
   GestureManager,
   BookmarkManager,
   ReadManager,
@@ -60,6 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   AppSettings.init();
   ThemeManager.init();
   FontSizeManager.init();
+  MarginManager.init();
   DisplaySettingsManager.init();
   ScrollManager.init();
 

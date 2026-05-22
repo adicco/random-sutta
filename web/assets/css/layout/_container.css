@@ -2,6 +2,7 @@
 :root {
   /* Giá trị này sẽ được JS cập nhật từ AppConfig (vd: 300px) */
   --tts-bottom-padding: 120px; 
+  --reader-margin: 40px;
 }
 
 /* [UPDATED] Add transition to header for smooth push-down */
@@ -15,6 +16,10 @@ body.tts-open #reader-view > header {
 }
 
 @media (max-width: 600px) {
+  :root {
+    --reader-margin: 35px;
+  }
+
   body.tts-open #reader-view > header {
       padding-top: var(--tts-bottom-padding);
   }
@@ -25,7 +30,7 @@ body.tts-open #reader-view > header {
   box-shadow: none;
   
   /* [MẶC ĐỊNH] Padding khi KHÔNG bật TTS */
-  padding: 10px 40px 20px 40px; 
+  padding: 10px var(--reader-margin) 20px var(--reader-margin); 
   
   min-height: 300px;
   
@@ -44,7 +49,7 @@ body.tts-open #sutta-container {
     padding: 0;
   }
   #sutta-container {
-    padding: 15px 35px 30px 35px;
+    padding: 15px var(--reader-margin) 30px var(--reader-margin);
   }
   
   body.tts-open #sutta-container {
