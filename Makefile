@@ -162,10 +162,10 @@ deploy: re ota
 # Publish Pre-release
 beta: apk ios macos alfred
 	@echo "🚀 PUBLISHING BETA..."
-	$(PYTHON) -m src.release_system --publish
+	$(PYTHON) -m src.release_system --publish --altstore
 
 # Publish Official
-official: apk ios app alfred
+official: apk ios macos alfred
 	@echo "🚀 PUBLISHING OFFICIAL..."
 	$(PYTHON) -m src.release_system --official
 

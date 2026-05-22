@@ -14,6 +14,7 @@ def main():
     parser.add_argument("-o", "--official", action="store_true", help="Mark as Official/Latest release.")
     parser.add_argument("-w", "--web", action="store_true", help="Deploy web/ to GitHub Pages (Ghost Folder method).")
     parser.add_argument("--ota", action="store_true", help="Package Lean OTA Update (dist.zip + native_version.json)")
+    parser.add_argument("--altstore", action="store_true", help="Generate AltStore Source JSON.")
     
     # [NEW] Thêm cờ zip
     parser.add_argument("-z", "--zip", action="store_true", help="Create ZIP artifact (default: Skip if not publishing).")
@@ -27,7 +28,8 @@ def main():
             is_official=args.official,
             deploy_web=args.web,
             create_zip=args.zip,
-            package_ota=args.ota
+            package_ota=args.ota,
+            update_altstore=args.altstore
         )
     except KeyboardInterrupt:
         print("\n🛑 Stopped by user.")

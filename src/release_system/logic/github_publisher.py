@@ -39,6 +39,7 @@ def publish_release(version_tag: str, is_official: bool = False) -> bool:
     # Tìm kiếm các artifact phụ (APK, MacOS, Alfred)
     optional_artifacts = [
         PROJECT_ROOT / "dist" / "apk" / "randomsutta.apk",
+        PROJECT_ROOT / "dist" / "ios" / "randomsutta.ipa",
         PROJECT_ROOT / "dist" / "alfred" / "RandomSutta.alfredworkflow",
     ]
     

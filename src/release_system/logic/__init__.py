@@ -5,6 +5,7 @@ from .git_automator import commit_source_changes, push_changes
 from .github_publisher import publish_release
 from .artifact_packer import create_release_artifact
 from .ota_packager import package_lean_ota
+from .altstore_generator import update_altstore_source
 
 __all__ = [
     "generate_version_tag",
@@ -14,4 +15,5 @@ __all__ = [
     "publish_release",
     "create_release_artifact",
     "package_lean_ota",
+    "update_altstore_source",
 ]

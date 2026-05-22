@@ -21,12 +21,14 @@ def run_release_process(
     is_official: bool = False,
     deploy_web: bool = False,
     create_zip: bool = False,
-    package_ota: bool = False 
+    package_ota: bool = False,
+    update_altstore: bool = False
 ) -> None:
     
     if is_official:
         logger.info("🌟 Mode: OFFICIAL RELEASE (Auto-enabling Publish & Git)")
         publish_gh = True
+        update_altstore = True # Auto-enable for official
 
     if publish_gh: 
         enable_git = True
@@ -52,7 +54,13 @@ def run_release_process(
             if not ota_packager.package_lean_ota(version_tag):
                 raise Exception("OTA packaging failed.")
 
-        # 2. Create Artifact if requested or publishing
+        # 2. AltStore Source Generation
+        if update_altstore:
+            from .logic import update_altstore_source
+            if not update_altstore_source(version_tag):
+                logger.warning("⚠️ AltStore source generation failed, but continuing...")
+
+        # 3. Create Artifact if requested or publishing
         if create_zip or publish_gh:
             if not artifact_packer.create_release_artifact(version_tag):
                 raise Exception("Artifact creation failed.")
