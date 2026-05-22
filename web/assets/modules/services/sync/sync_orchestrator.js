@@ -76,7 +76,7 @@ export const SyncOrchestrator = {
                     if (localUpdateTimestamp > lastSyncTimestamp) {
                         logger.info("AutoSync", "Local has changed too. Triggering Unification UI.");
                         this.isSyncing = false; // Release lock for UI interaction
-                        SyncUnificationUI.show(this.packData(), cloudData, async (choice) => {
+                        SyncUnificationUI.show(localData, cloudData, async (choice) => {
                             this.isSyncing = true;
                             if (choice === 'merge') {
                                 await this.smartMerge(cloudData, cloudSha);
@@ -86,6 +86,15 @@ export const SyncOrchestrator = {
                                 localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
                             } else if (choice === 'local') {
                                 await this._doPush(cloudSha);
+                            } else if (choice === 'latest') {
+                                // Latest logic
+                                if (cloudData.timestamp > localData.timestamp) {
+                                    this.unpackAndApply(cloudData);
+                                    localStorage.setItem("sync_github_sha", cloudSha);
+                                } else {
+                                    await this._doPush(cloudSha);
+                                }
+                                localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
                             }
                             window.dispatchEvent(new CustomEvent("sync-end"));
                         });
