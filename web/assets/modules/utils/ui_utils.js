@@ -61,14 +61,27 @@ export const UIUtils = {
     initViewportLock() {
         if (!window.visualViewport) return;
 
+        let resetTimer = null;
+
         const handleViewportChange = () => {
+            if (resetTimer) clearTimeout(resetTimer);
+
             requestAnimationFrame(() => {
                 const viewport = window.visualViewport;
-                // Calculate actual offset from bottom
+                const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+                
+                // Calculate raw keyboard offset
                 let offset = window.innerHeight - viewport.height;
                 
-                // [iOS Fix] If offset is small, it's likely browser UI or rounding error, not keyboard
-                if (offset < 40) offset = 0;
+                // [iOS Fix] If offset is small (e.g. < 45px), it's likely just the Done/Accessory bar 
+                // or dynamic UI, but we want a clean reset to 0 if it's below a threshold.
+                if (offset < 45) {
+                    offset = 0;
+                } else {
+                    // [UX Fix] Since the keyboard covers the physical safe area (Home Indicator), 
+                    // we subtract safeArea from the push offset to prevent the UI from being "too high".
+                    offset = Math.max(0, offset - safeArea);
+                }
 
                 const fixedBottomElements = [
                     document.getElementById("global-toolbar"),
@@ -80,13 +93,17 @@ export const UIUtils = {
 
                 fixedBottomElements.forEach(el => {
                     if (el) {
-                        // Apply precise offset or clear it to let CSS take over
                         if (offset > 0) {
                             el.style.bottom = `${offset}px`;
                         } else {
+                            // Immediate snap to bottom
                             el.style.bottom = "0px";
-                            // Use empty string after a tick to let CSS defaults fully restore if needed
-                            setTimeout(() => { if (offset === 0) el.style.bottom = ""; }, 100);
+                            
+                            // [CRITICAL] Secondary reset to catch the "Accessory Bar" lag (V ^ Done bar)
+                            // This bar on iOS disappears ~300ms after the main keyboard.
+                            resetTimer = setTimeout(() => {
+                                el.style.bottom = ""; // Restore CSS defaults (Safe Area)
+                            }, 500);
                         }
                     }
                 });
