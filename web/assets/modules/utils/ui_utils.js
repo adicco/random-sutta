@@ -54,29 +54,59 @@ export const UIUtils = {
     stabilizeViewport() {
         if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
         
-        // Brute force sync: Scroll the OUTER window and scrollers to 0,0
-        // In Fixed Shell, the outer window should NEVER have a scroll.
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
+        // Brute force sync: many times to fight iOS animation
+        const performReset = () => {
+            window.scrollTo(0, 0);
+            if (document.body) document.body.scrollTop = 0;
+            if (document.documentElement) document.documentElement.scrollTop = 0;
+        };
+
+        performReset();
         
-        // Force a layout reflow
+        // Force a layout reflow by toggling a property
         const doc = document.documentElement;
         const prevH = doc.style.height;
         doc.style.height = '100.1%';
         
-        // Use a timeout to allow iOS animation to settle
-        setTimeout(() => {
-            doc.style.height = prevH || '100dvh';
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-            
-            // One more check after another frame
-            requestAnimationFrame(() => {
-                if (window.scrollY !== 0) window.scrollTo(0, 0);
-            });
-        }, 300);
+        // Series of resets to catch different phases of keyboard dismissal
+        [50, 150, 300, 500].forEach(delay => {
+            setTimeout(() => {
+                if (delay === 300) doc.style.height = prevH || '100dvh';
+                performReset();
+                
+                // Final check for fixed elements
+                if (delay === 500) {
+                    this._forceFixedElementsReflow();
+                }
+            }, delay);
+        });
+    },
+
+    /**
+     * Toggles position of fixed elements to force iOS to re-anchor them correctly.
+     */
+    _forceFixedElementsReflow() {
+        const fixedElements = [
+            document.getElementById("global-toolbar"),
+            document.getElementById("magic-toolbar-trigger"),
+            document.getElementById("magic-tts-trigger"),
+            document.querySelector(".popup-container:not(.hidden)"),
+            document.getElementById("lookup-popup")
+        ];
+
+        fixedElements.forEach(el => {
+            if (el) {
+                const originalPos = getComputedStyle(el).position;
+                if (originalPos === 'fixed') {
+                    el.style.position = 'absolute';
+                    // Force layout
+                    el.offsetHeight;
+                    requestAnimationFrame(() => {
+                        el.style.position = 'fixed';
+                    });
+                }
+            }
+        });
     },
 
     /**
@@ -86,9 +116,12 @@ export const UIUtils = {
         if (!window.visualViewport) return;
 
         let pollingTimer = null;
-        const pollCount = 20; // Poll for 2 seconds
+        const pollCount = 30; // Poll for 3 seconds
 
         const updateElements = (offset) => {
+            // Apply offset via CSS variable for better performance and consistency
+            document.documentElement.style.setProperty('--keyboard-offset', `${offset}px`);
+
             const fixedBottomElements = [
                 document.getElementById("global-toolbar"),
                 document.getElementById("magic-toolbar-trigger"),
@@ -101,12 +134,19 @@ export const UIUtils = {
                 if (el) {
                     if (offset > 0) {
                         el.style.bottom = `${offset}px`;
+                        el.classList.add('keyboard-pushed');
                     } else {
-                        // Clear inline style to let CSS take over (Safe Area)
                         el.style.bottom = "";
+                        el.classList.remove('keyboard-pushed');
                     }
                 }
             });
+            
+            if (offset > 0) {
+                document.body.classList.add('keyboard-visible');
+            } else {
+                document.body.classList.remove('keyboard-visible');
+            }
         };
 
         const handleViewportChange = () => {
@@ -114,12 +154,9 @@ export const UIUtils = {
             const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
             
             // Calculate keyboard offset
-            // We use Math.round to avoid sub-pixel jitter
             let offset = Math.round(window.innerHeight - viewport.height);
             
-            // Substract safe area when keyboard is active to prevent "too high"
-            // Note: On some iOS versions, the keyboard covers the safe area,
-            // so we subtract it because our elements already have padding-bottom: safeArea.
+            // Substract safe area when keyboard is active
             if (offset > 45) {
                 offset = Math.max(0, offset - safeArea);
             } else {
@@ -131,11 +168,8 @@ export const UIUtils = {
             // Sync visual viewport scroll
             if (offset > 0 || viewport.offsetTop > 0) {
                 window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
-            } else {
-                // Ensure layout viewport is at 0 when keyboard is closed
-                if (window.scrollY !== 0) {
-                    window.scrollTo(0, 0);
-                }
+            } else if (window.scrollY !== 0) {
+                window.scrollTo(0, 0);
             }
         };
 
@@ -145,7 +179,8 @@ export const UIUtils = {
             pollingTimer = setInterval(() => {
                 handleViewportChange();
                 
-                const isDismissed = window.visualViewport.height >= window.innerHeight - 40;
+                // If keyboard is likely closed, force scroll reset
+                const isDismissed = window.visualViewport.height >= window.innerHeight - 10;
                 if (isDismissed) {
                     window.scrollTo(0, 0);
                     document.body.scrollTop = 0;
@@ -154,7 +189,6 @@ export const UIUtils = {
                 
                 if (++count >= pollCount) {
                     clearInterval(pollingTimer);
-                    // Final stabilization
                     this.stabilizeViewport();
                 }
             }, 100);
@@ -166,12 +200,11 @@ export const UIUtils = {
         // Detect keyboard dismissal via focusout
         document.addEventListener('focusout', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                this.stabilizeViewport();
                 startAggressivePolling();
             }
         });
 
-        // Also poll on focusin to catch the "Done" bar appearance
+        // Also poll on focusin to catch appearance
         document.addEventListener('focusin', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                 startAggressivePolling();

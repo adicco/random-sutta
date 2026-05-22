@@ -13,7 +13,6 @@ html {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  position: fixed; /* Lock the primary shell */
   -webkit-text-size-adjust: 100%;
   
   /* Fallback values phòng khi JS chưa kịp load */
@@ -34,6 +33,8 @@ body {
   width: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  position: fixed; /* Lock the primary shell here instead of html */
 }
 
 /* [FIX] View Containers Layout */
