@@ -80,7 +80,7 @@ export const BookmarkManager = {
                     }
                 });
                 rawData = migratedData;
-                this.saveBookmarks(rawData);
+                this.saveBookmarks(rawData, true); // Silent
             }
 
             // [MIGRATION] Ensure no redundant metadata in object values
@@ -99,7 +99,7 @@ export const BookmarkManager = {
 
             if (migratedMeta) {
                 logger.info("Migration", "Stripped redundant metadata from bookmark objects");
-                this.saveBookmarks(rawData);
+                this.saveBookmarks(rawData, true); // Silent
             }
 
             return rawData;
@@ -109,9 +109,11 @@ export const BookmarkManager = {
         }
     },
 
-    saveBookmarks(bookmarks) {
+    saveBookmarks(bookmarks, silent = false) {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(bookmarks));
-        window.dispatchEvent(new CustomEvent("local-data-changed"));
+        if (!silent) {
+            window.dispatchEvent(new CustomEvent("local-data-changed"));
+        }
     },
 
     toggleCurrentSutta() {

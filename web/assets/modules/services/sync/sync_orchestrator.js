@@ -15,6 +15,11 @@ export const SyncOrchestrator = {
     init() {
         GithubAuthManager.init();
         
+        // Ensure local update timestamp is initialized
+        if (!localStorage.getItem("sync_local_update_timestamp")) {
+            localStorage.setItem("sync_local_update_timestamp", "0");
+        }
+
         // Listen for Auth Success
         window.addEventListener("github-auth-success", () => {
             this.autoSync();
@@ -215,15 +220,27 @@ export const SyncOrchestrator = {
                 const converted = {};
                 cloudBookmarks.forEach(b => {
                     const uid = b.uid || b.id;
-                    if (uid) converted[uid] = b;
+                    if (uid) {
+                        converted[uid] = {
+                            status: b.status !== undefined ? b.status : !b.deleted,
+                            timestamp: b.timestamp || Date.now()
+                        };
+                    }
                 });
                 cloudBookmarks = converted;
             }
 
             const mergedBookmarks = { ...localBookmarks };
             Object.keys(cloudBookmarks).forEach(uid => {
-                if (!mergedBookmarks[uid] || cloudBookmarks[uid].timestamp > mergedBookmarks[uid].timestamp) {
-                    mergedBookmarks[uid] = cloudBookmarks[uid];
+                const cloudItem = cloudBookmarks[uid];
+                // Clean cloud item before merge
+                const cleanCloudItem = {
+                    status: cloudItem.status,
+                    timestamp: cloudItem.timestamp
+                };
+
+                if (!mergedBookmarks[uid] || cleanCloudItem.timestamp > mergedBookmarks[uid].timestamp) {
+                    mergedBookmarks[uid] = cleanCloudItem;
                 }
             });
             mergedPayload.sutta_bookmarks = mergedBookmarks;
@@ -235,9 +252,17 @@ export const SyncOrchestrator = {
             const cloudHistory = cloudData.payload.sutta_history;
             const mergedHistory = { ...localHistory };
             
-            Object.keys(cloudHistory).forEach(id => {
-                if (!mergedHistory[id] || cloudHistory[id].timestamp > mergedHistory[id].timestamp) {
-                    mergedHistory[id] = cloudHistory[id];
+            Object.keys(cloudHistory).forEach(uid => {
+                const cloudItem = cloudHistory[uid];
+                // Clean item before merge
+                const cleanCloudItem = {
+                    level: cloudItem.level,
+                    timestamp: cloudItem.timestamp,
+                    deleted: cloudItem.deleted
+                };
+
+                if (!mergedHistory[uid] || cleanCloudItem.timestamp > mergedHistory[uid].timestamp) {
+                    mergedHistory[uid] = cleanCloudItem;
                 }
             });
             mergedPayload.sutta_history = mergedHistory;

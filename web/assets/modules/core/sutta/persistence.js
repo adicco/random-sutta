@@ -38,7 +38,6 @@ export const SuttaPersistence = {
       };
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-      window.dispatchEvent(new CustomEvent("local-data-changed"));
       logger.debug(`Saved: ${uid} at ${currentScroll}`);
     } catch (e) {
       console.warn("Could not save progress:", e);
