@@ -303,7 +303,8 @@ ios-copy:
 		READDLE_ID=$$(ideviceinstaller list | grep "com.readdle.ReaddleDocs" | head -n 1 | cut -d, -f1 | tr -d ' '); \
 		if [ "$$READDLE_ID" != "" ]; then \
 			echo "📥 Đang copy vào ứng dụng Documents ($$READDLE_ID)..."; \
-			if afcclient --documents "$$READDLE_ID" put -f dist/ios/randomsutta.ipa /Documents/randomsutta.ipa; then \
+			afcclient --documents "$$READDLE_ID" rm /Documents/randomsutta.ipa >/dev/null 2>&1 || true; \
+			if afcclient --documents "$$READDLE_ID" put dist/ios/randomsutta.ipa /Documents/randomsutta.ipa; then \
 				echo "✅ Đã copy vào ứng dụng Documents thành công!"; \
 				echo "📍 Vị trí: Mở app Documents -> 'My Files' -> Bạn sẽ thấy 'randomsutta.ipa'"; \
 			else \
@@ -311,7 +312,8 @@ ios-copy:
 			fi \
 		else \
 			echo "📥 Không thấy app Documents, đang thử copy vào chính app Random Sutta..."; \
-			if afcclient --documents com.randomsutta.app put -f dist/ios/randomsutta.ipa /Documents/randomsutta.ipa >/dev/null 2>&1; then \
+			afcclient --documents com.randomsutta.app rm /Documents/randomsutta.ipa >/dev/null 2>&1 || true; \
+			if afcclient --documents com.randomsutta.app put dist/ios/randomsutta.ipa /Documents/randomsutta.ipa >/dev/null 2>&1; then \
 				echo "✅ Đã copy vào app Random Sutta thành công!"; \
 			else \
 				echo "⚠️ Không tìm thấy ứng dụng nào có quyền chia sẻ file. Hãy cài đặt app Documents của Readdle trước."; false; \
