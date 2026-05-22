@@ -13,7 +13,7 @@ logger = logging.getLogger("Release.OTAPackager")
 DIST_WEB_DIR = "dist/web"
 MANIFEST_FILE = "native_version.json"
 ZIP_FILE = "dist.zip"
-BASE_URL = "https://hieucao.github.io/random-sutta"
+BASE_URL = "https://vjjda.github.io/random-sutta"
 
 def package_lean_ota(version_tag: str) -> bool:
     """

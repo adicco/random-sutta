@@ -9,8 +9,7 @@ const logger = getLogger("NativeUpdater");
  */
 export const NativeUpdater = {
     // URL to your version manifest on GitHub Pages
-    // For example: https://hieucao.github.io/random-sutta/native_version.json
-    MANIFEST_URL: "https://hieucao.github.io/random-sutta/native_version.json",
+    MANIFEST_URL: "https://vjjda.github.io/random-sutta/native_version.json",
 
     async init() {
         // Only run on native platforms (Android/iOS)
