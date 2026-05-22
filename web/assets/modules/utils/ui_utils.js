@@ -52,7 +52,20 @@ export const UIUtils = {
      * after the keyboard is hidden, causing fixed elements to shift or move during scroll.
      */
     stabilizeViewport() {
-        // Redundant in Fixed Shell architecture, kept as a no-op if needed for legacy calls
+        if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+        
+        // Brute force sync: Scroll the OUTER window to 0,0
+        // In Fixed Shell, the outer window should NEVER have a scroll.
+        window.scrollTo(0, 0);
+        
+        // Force a layout reflow
+        const doc = document.documentElement;
+        const prevH = doc.style.height;
+        doc.style.height = '100.1%';
+        requestAnimationFrame(() => {
+            doc.style.height = prevH || '100dvh';
+            window.scrollTo(0, 0);
+        });
     },
 
     /**
@@ -61,64 +74,84 @@ export const UIUtils = {
     initViewportLock() {
         if (!window.visualViewport) return;
 
-        let resetTimer1 = null;
-        let resetTimer2 = null;
+        let pollingTimer = null;
+        const pollCount = 15; // Poll for 1.5 seconds
 
-        const handleViewportChange = () => {
-            if (resetTimer1) clearTimeout(resetTimer1);
-            if (resetTimer2) clearTimeout(resetTimer2);
+        const updateElements = (offset) => {
+            const fixedBottomElements = [
+                document.getElementById("global-toolbar"),
+                document.getElementById("magic-toolbar-trigger"),
+                document.getElementById("magic-tts-trigger"),
+                document.querySelector(".popup-container:not(.hidden)"),
+                document.getElementById("lookup-popup")
+            ];
 
-            requestAnimationFrame(() => {
-                const viewport = window.visualViewport;
-                const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
-                const isIPad = /iPad/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-                
-                // Calculate raw keyboard offset
-                let offset = window.innerHeight - viewport.height;
-                
-                // [iOS/iPadOS Fix] Keyboard detection threshold. 
-                // iPad accessory bars can be shorter, but 45px is a safe minimum.
-                if (offset < 45) {
-                    offset = 0;
-                } else {
-                    // [UX Fix] Keyboard covers Home Indicator area, so subtract safeArea.
-                    offset = Math.max(0, offset - safeArea);
-                }
-
-                const fixedBottomElements = [
-                    document.getElementById("global-toolbar"),
-                    document.getElementById("magic-toolbar-trigger"),
-                    document.getElementById("magic-tts-trigger"),
-                    document.querySelector(".popup-container:not(.hidden)"),
-                    document.getElementById("lookup-popup")
-                ];
-
-                fixedBottomElements.forEach(el => {
-                    if (el) {
-                        if (offset > 0) {
-                            el.style.bottom = `${offset}px`;
-                        } else {
-                            // Pass 1: Immediate snap to bottom (might still have accessory bar gap)
-                            el.style.bottom = "0px";
-                            
-                            // Pass 2: Catch standard dismissal (500ms)
-                            resetTimer1 = setTimeout(() => {
-                                el.style.bottom = "0px";
-                            }, 500);
-
-                            // Pass 3: Final cleanup for very slow OS animations or iPad glitches (1000ms)
-                            resetTimer2 = setTimeout(() => {
-                                el.style.bottom = ""; // Restore PURE CSS defaults
-                            }, 1000);
-                        }
+            fixedBottomElements.forEach(el => {
+                if (el) {
+                    if (offset > 0) {
+                        el.style.bottom = `${offset}px`;
+                    } else {
+                        // Clear inline style to let CSS take over (Safe Area)
+                        el.style.bottom = "";
                     }
-                });
-
-                if (offset > 0) {
-                    window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
                 }
             });
         };
+
+        const handleViewportChange = () => {
+            const viewport = window.visualViewport;
+            const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+            
+            // Calculate keyboard offset
+            let offset = window.innerHeight - viewport.height;
+            
+            // Substract safe area when keyboard is active to prevent "too high"
+            if (offset > 45) {
+                offset = Math.max(0, offset - safeArea);
+            } else {
+                offset = 0;
+            }
+
+            updateElements(offset);
+
+            // Sync visual viewport scroll
+            if (offset > 0 || viewport.offsetTop > 0) {
+                window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
+            }
+        };
+
+        const startAggressivePolling = () => {
+            if (pollingTimer) clearInterval(pollingTimer);
+            let count = 0;
+            pollingTimer = setInterval(() => {
+                handleViewportChange();
+                // On dismissal, force window scroll to 0
+                if (window.visualViewport.height >= window.innerHeight - 10) {
+                    window.scrollTo(0, 0);
+                }
+                if (++count >= pollCount) clearInterval(pollingTimer);
+            }, 100);
+        };
+
+        window.visualViewport.addEventListener('resize', handleViewportChange);
+        window.visualViewport.addEventListener('scroll', handleViewportChange);
+        
+        // Detect keyboard dismissal via focusout
+        document.addEventListener('focusout', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                this.stabilizeViewport();
+                startAggressivePolling();
+            }
+        });
+
+        // Also poll on focusin to catch the "Done" bar appearance
+        document.addEventListener('focusin', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                startAggressivePolling();
+            }
+        });
+    }
+};
 
         window.visualViewport.addEventListener('resize', handleViewportChange);
         window.visualViewport.addEventListener('scroll', handleViewportChange);
