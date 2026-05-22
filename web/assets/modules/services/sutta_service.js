@@ -69,9 +69,27 @@ function getSingleChildTarget(nodeContent) {
 }
 
 export const SuttaService = {
+    isReady: false,
+    _initPromise: null,
+
     async init() {
-        await SuttaRepository.init();
-        RandomHelper.init(); 
+        if (this.isReady) return true;
+        if (this._initPromise) return this._initPromise;
+
+        this._initPromise = (async () => {
+            try {
+                await SuttaRepository.init();
+                RandomHelper.init();
+                this.isReady = true;
+                return true;
+            } catch (e) {
+                logger.error("Init", "SuttaService failed to initialize", e);
+                this._initPromise = null;
+                return false;
+            }
+        })();
+
+        return this._initPromise;
     },
 
     async loadSutta(input, options = { prefetchNav: true }) {

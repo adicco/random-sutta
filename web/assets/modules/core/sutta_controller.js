@@ -42,6 +42,15 @@ export const SuttaController = {
   },
 
   loadSutta: async function (input, shouldUpdateUrl = true, scrollY = 0, options = {}) {
+    // [FIX] Ensure SuttaService (and SuttaDB) is initialized before loading
+    // This is critical for cold starts on iOS where the router might trigger a load 
+    // before the database connection is established.
+    const { SuttaService } = await import("services/sutta_service.js");
+    if (!SuttaService.isReady) {
+        logger.info("loadSutta", "Waiting for SuttaService initialization...");
+        await SuttaService.init();
+    }
+
     if (SuttaLoaderUI.isLoading && !options.force) return;
     SuttaLoaderUI.show();
     
