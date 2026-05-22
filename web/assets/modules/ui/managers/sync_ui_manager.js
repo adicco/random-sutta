@@ -150,10 +150,23 @@ export const SyncUIManager = {
             e.stopPropagation();
             if (SyncOrchestrator.isSyncing) return;
             
+            // Visual feedback: Start spinning
+            this._setVisualState("syncing");
+            
             try {
+                // Full bidirectional sync (Check Cloud + Push Local)
                 await SyncOrchestrator.autoSync();
+                
+                // Visual feedback: Success flash
+                this.els.btnSyncNow.classList.add("sync-now-success");
+                setTimeout(() => {
+                    this.els.btnSyncNow.classList.remove("sync-now-success");
+                }, 2000);
+                
+                logger.info("ManualSync", "Unification completed successfully.");
             } catch (err) {
                 logger.error("ManualSync", err);
+                this._setVisualState("sync-error");
             }
         };
 
