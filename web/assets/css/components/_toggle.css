@@ -76,6 +76,36 @@
     margin-left: auto;
 }
 
+/* --- MINIMALIST CONTROLS (SVG + No BG/Border) --- */
+.minimalist-control {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, transform 0.1s;
+}
+
+.minimalist-control:hover {
+    color: var(--primary-color);
+}
+
+.minimalist-control:active {
+    transform: scale(0.9);
+}
+
+.minimalist-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-main);
+    min-width: 45px;
+    text-align: center;
+    user-select: none;
+}
+
 /* Responsive adjustment for narrow screens (e.g. iPhone) */
 @media (max-width: 420px) {
     .setting-item-row {
