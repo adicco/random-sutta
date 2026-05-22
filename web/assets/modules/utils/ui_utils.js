@@ -54,51 +54,13 @@ export const UIUtils = {
      * after the keyboard is hidden, causing fixed elements to shift or move during scroll.
      */
     stabilizeViewport() {
-        if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
-        
-        // 1. Force immediate scroll sync
-        window.scrollTo(window.pageXOffset, window.pageYOffset);
-
-        // 2. Aggressive reflow after a short delay
-        setTimeout(() => {
-            if (window.visualViewport) {
-                window.scrollTo(window.visualViewport.offsetLeft, window.visualViewport.offsetTop);
-            }
-
-            const scrollY = window.scrollY;
-            document.documentElement.style.height = '100.1%';
-            
-            requestAnimationFrame(() => {
-                document.documentElement.style.height = '100%';
-                window.scrollTo(0, scrollY);
-                
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                }, 50);
-            });
-        }, 300);
+        // Redundant in Fixed Shell architecture, kept as a no-op if needed for legacy calls
     },
 
     /**
      * Sets up ongoing listeners to keep the viewport stable.
      */
     initViewportLock() {
-        if (!window.visualViewport || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
-
-        const sync = () => {
-            if (window.visualViewport.offsetLeft !== 0 || window.visualViewport.offsetTop !== 0) {
-                window.scrollTo(window.visualViewport.offsetLeft, window.visualViewport.offsetTop);
-            }
-        };
-
-        window.visualViewport.addEventListener('scroll', sync);
-        window.visualViewport.addEventListener('resize', sync);
-        
-        // Also handle keyboard hide explicitly
-        document.addEventListener('focusout', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                this.stabilizeViewport();
-            }
-        });
+        // Redundant in Fixed Shell architecture
     }
 };

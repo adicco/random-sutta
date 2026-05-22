@@ -7,18 +7,23 @@ export const ScrollManager = {
         let scrollSaveTimer = null;
         let autoSwitchTimer = null;
         
-        window.addEventListener("scroll", () => {
+        const handleScroll = () => {
             if (scrollSaveTimer) clearTimeout(scrollSaveTimer);
             scrollSaveTimer = setTimeout(() => {
                 SuttaController._saveProgress();
             }, 1500);
 
-            // [NEW] Auto-switch comment logic
             if (autoSwitchTimer) clearTimeout(autoSwitchTimer);
             autoSwitchTimer = setTimeout(() => {
                 CommentController.handleAutoSwitch();
-            }, 100); // Faster reaction for auto-switch
-        }, { passive: true });
+            }, 100);
+        };
+
+        const reader = document.getElementById("reader-view");
+        const landing = document.getElementById("landing-view");
+
+        if (reader) reader.addEventListener("scroll", handleScroll, { passive: true });
+        if (landing) landing.addEventListener("scroll", handleScroll, { passive: true });
 
         window.addEventListener("beforeunload", () => {
             SuttaController._saveProgress();

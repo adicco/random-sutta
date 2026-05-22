@@ -7,14 +7,31 @@ const logger = getLogger("Scroller");
 // Offset context khi jump đến (trừ hao header)
 const SCROLL_OFFSET_CTX = 45;
 
+/**
+ * [FIX] Internal Scroller Logic
+ * Since the body is now fixed (to prevent iOS jitter), we must scroll the active view container.
+ */
+function getActiveScrollContainer() {
+    const reader = document.getElementById("reader-view");
+    if (reader && !reader.classList.contains("hidden")) return reader;
+    const landing = document.getElementById("landing-view");
+    if (landing && !landing.classList.contains("hidden")) return landing;
+    return document.documentElement; // Fallback
+}
+
 function getTargetPosition(element) {
-    const currentScrollY = window.scrollY || window.pageYOffset;
+    const container = getActiveScrollContainer();
+    const currentScrollY = container.scrollTop;
     const rectTop = element.getBoundingClientRect().top;
+    
+    // getBoundingClientRect is relative to viewport, so we add current scroll
+    // and subtract the container's top offset if any (header is inside container)
     return currentScrollY + rectTop - SCROLL_OFFSET_CTX;
 }
 
 function getReadingPosition(element) {
-    const currentScrollY = window.scrollY || window.pageYOffset;
+    const container = getActiveScrollContainer();
+    const currentScrollY = container.scrollTop;
     const rectTop = element.getBoundingClientRect().top;
     const viewportHeight = window.innerHeight;
     
@@ -32,11 +49,12 @@ function getReadingPosition(element) {
 
 export const Scroller = {
     getScrollTop: function() {
-        return window.scrollY || document.documentElement.scrollTop || 0;
+        return getActiveScrollContainer().scrollTop;
     },
 
     restoreScrollTop: function(y) {
         return new Promise((resolve) => {
+            const container = getActiveScrollContainer();
             if (typeof y !== 'number' || y < 0) {
                 resolve();
                 return;
@@ -46,27 +64,24 @@ export const Scroller = {
             const maxAttempts = 10;
             
             const attemptScroll = () => {
-                const currentHeight = document.documentElement.scrollHeight;
-                const viewportHeight = window.innerHeight;
+                const currentHeight = container.scrollHeight;
+                const viewportHeight = container.clientHeight;
                 
-                // Nếu chiều cao trang hiện tại chưa đủ để cuộn tới y, và chưa hết lượt thử
                 if (currentHeight < y + viewportHeight && attempts < maxAttempts) {
                     attempts++;
                     setTimeout(() => requestAnimationFrame(attemptScroll), 100);
                     return;
                 }
 
-                document.documentElement.style.scrollBehavior = 'auto';
-                window.scrollTo({ top: y, behavior: 'instant' });
+                container.style.scrollBehavior = 'auto';
+                container.scrollTop = y;
                 
-                // Giữ fixed cho đến khi ổn định
                 setTimeout(() => { 
-                    document.documentElement.style.scrollBehavior = '';
+                    container.style.scrollBehavior = '';
                     resolve();
                 }, 100);
             };
 
-            // [OPTIMIZATION] If y=0, we don't need to wait as much for height calculation
             const initialDelay = (y === 0) ? 0 : 50;
             if (initialDelay === 0) {
                 requestAnimationFrame(attemptScroll);
@@ -84,7 +99,6 @@ export const Scroller = {
             this.restoreScrollTop(0);
             return;
         }
-        // Force 'instant' behavior
         this._findAndScroll(targetId, getTargetPosition, 'instant');
     },
 
@@ -221,19 +235,54 @@ export const Scroller = {
 
         const executeScroll = (element) => {
             const targetY = positionCalculator(element);
+            const container = getActiveScrollContainer();
 
             if (behavior === 'instant') {
-                document.documentElement.style.scrollBehavior = 'auto';
+                container.style.scrollBehavior = 'auto';
             }
 
-            window.scrollTo({ top: targetY, behavior: behavior });
+            container.scrollTo({ top: targetY, behavior: behavior });
 
             if (behavior === 'instant') {
                 setTimeout(() => {
-                    document.documentElement.style.scrollBehavior = '';
+                    container.style.scrollBehavior = '';
                 }, 50);
             }
         };
+
+        // 1. Resolve Element directly or via ID
+        let element = null;
+        if (target instanceof HTMLElement) {
+            element = target;
+        } else if (typeof target === 'string') {
+            element = document.getElementById(target);
+        }
+
+        // 2. Execute if found
+        if (element) {
+            executeScroll(element);
+            return;
+        }
+
+        // 3. Async Retry Fallback (Only for string IDs)
+        if (typeof target === 'string') {
+            const attemptFind = () => {
+                const el = document.getElementById(target);
+                if (el) {
+                    executeScroll(el);
+                } else {
+                    retries++;
+                    if (retries < maxRetries) {
+                        requestAnimationFrame(attemptFind);
+                    } else {
+                        logger.warn("Find", `Target not found after retries: ${target}`);
+                    }
+                }
+            };
+            requestAnimationFrame(attemptFind);
+        }
+    }
+};
 
         // 1. Resolve Element directly or via ID
         let element = null;
