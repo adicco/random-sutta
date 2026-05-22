@@ -56,7 +56,10 @@ export const SyncUIManager = {
                     deviceInput.type = "text";
                     deviceInput.placeholder = "Device ID (e.g. My-iPhone)";
                     deviceInput.className = "sync-id-input";
-                    deviceInput.style.paddingRight = "32px"; // Make room for icon
+                    deviceInput.readOnly = true; // Prevent direct editing
+                    deviceInput.style.paddingRight = "32px";
+                    deviceInput.style.cursor = "default";
+                    deviceInput.style.opacity = "0.8";
                     deviceInput.value = GithubAuthManager.getDeviceId() || "";
                     wrapper.appendChild(deviceInput);
 
