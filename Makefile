@@ -243,19 +243,8 @@ clean-apk:
 # 🍎 IOS COMMANDS
 # ==============================================================================
 
-# Biên dịch web và đồng bộ với iOS, sau đó build release
+# Biên dịch web và đồng bộ với iOS, sau đó build release IPA cho AltStore
 ios:
-	@echo "🚀 Đang biên dịch mã nguồn cho iOS (Offline mode)..."
-	CAPACITOR_BUILD=true npm run build
-	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
-	npx cap sync ios
-	@echo "📦 Đang tạo bản build iOS..."
-	npx cap build ios
-	@echo "✅ XONG! Bản build iOS hoàn tất. Bạn có thể mở Xcode để deploy nghiệm thu."
-
-# Build iOS bản IPA cho AltStore (Development signed)
-altstore: ios-altstore
-ios-altstore:
 	@echo "🚀 Đang biên dịch mã nguồn cho iOS (AltStore mode)..."
 	CAPACITOR_BUILD=true npm run build
 	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
