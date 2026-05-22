@@ -255,6 +255,13 @@ ios:
 	@cp ios/App/output/App.ipa dist/ios/randomsutta.ipa
 	@echo "✅ XONG! File IPA của bạn nằm tại:"
 	@echo "📍 dist/ios/randomsutta.ipa"
+	@if command -v idevice_id >/dev/null 2>&1 && [ "$$(idevice_id -l)" != "" ]; then \
+		echo "📲 Phát hiện iPhone đang kết nối. Đang tự động copy IPA vào máy..."; \
+		afcclient put dist/ios/randomsutta.ipa randomsutta.ipa || true; \
+		echo "✅ Đã copy vào gốc iPhone. Bạn có thể mở ứng dụng Files hoặc Documents để cài đặt."; \
+	else \
+		echo "ℹ️ Không tìm thấy iPhone qua USB, bỏ qua bước copy."; \
+	fi
 
 # Mở dự án iOS bằng Xcode
 open-ios:
