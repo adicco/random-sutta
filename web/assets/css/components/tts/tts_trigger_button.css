@@ -24,16 +24,16 @@
 /* Chấm nhỏ low-profile đại diện cho khu vực nhấp */
 #magic-tts-trigger::after {
   content: '';
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   background: var(--text-muted);
   border-radius: 50%;
-  opacity: 0.3;
-  transition: all 0.2s ease;
+  opacity: 0.15; /* Giảm độ mờ ban đầu xuống cực thấp */
+  transition: all 0.3s ease;
 }
 
 #magic-tts-trigger:hover::after {
-  opacity: 1;
+  opacity: 0.8;
   transform: scale(1.5);
   background: var(--primary-color);
 }
