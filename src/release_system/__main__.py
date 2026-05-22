@@ -13,6 +13,7 @@ def main():
     parser.add_argument("-p", "--publish", action="store_true", help="Full Release: Commit -> Push -> GitHub Release.")
     parser.add_argument("-o", "--official", action="store_true", help="Mark as Official/Latest release.")
     parser.add_argument("-w", "--web", action="store_true", help="Deploy web/ to GitHub Pages (Ghost Folder method).")
+    parser.add_argument("--ota", action="store_true", help="Package Lean OTA Update (dist.zip + native_version.json)")
     
     # [NEW] Thêm cờ zip
     parser.add_argument("-z", "--zip", action="store_true", help="Create ZIP artifact (default: Skip if not publishing).")
@@ -25,7 +26,8 @@ def main():
             publish_gh=args.publish,
             is_official=args.official,
             deploy_web=args.web,
-            create_zip=args.zip  # Truyền tham số này vào logic
+            create_zip=args.zip,
+            package_ota=args.ota
         )
     except KeyboardInterrupt:
         print("\n🛑 Stopped by user.")

@@ -9,7 +9,8 @@ from .logic import (
     asset_validator,
     git_automator,
     github_publisher,
-    artifact_packer
+    artifact_packer,
+    ota_packager
 )
 
 logger = logging.getLogger("Release.Orchestrator")
@@ -19,7 +20,8 @@ def run_release_process(
     publish_gh: bool = False,
     is_official: bool = False,
     deploy_web: bool = False,
-    create_zip: bool = False 
+    create_zip: bool = False,
+    package_ota: bool = False 
 ) -> None:
     
     if is_official:
@@ -33,6 +35,7 @@ def run_release_process(
     
     mode_label = "OFFICIAL (Latest)" if is_official else "PRE-RELEASE"
     if not publish_gh: mode_label = "LOCAL BUILD (No Publish)"
+    if package_ota: mode_label = "OTA PACKAGE"
 
     logger.info(f"🚀 STARTING PROCESS: {version_tag} | Mode: {mode_label}")
 
@@ -41,10 +44,15 @@ def run_release_process(
 
     try:
         # =========================================================
-        # PHASE 3: PUBLISH (Phase 1 and 2 are now handled by Vite)
+        # PHASE 3: PUBLISH
         # =========================================================
         
-        # 1. Create Artifact if requested or publishing
+        # 1. OTA Packaging (New)
+        if package_ota:
+            if not ota_packager.package_lean_ota(version_tag):
+                raise Exception("OTA packaging failed.")
+
+        # 2. Create Artifact if requested or publishing
         if create_zip or publish_gh:
             if not artifact_packer.create_release_artifact(version_tag):
                 raise Exception("Artifact creation failed.")

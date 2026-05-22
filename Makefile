@@ -175,7 +175,7 @@ publish: official deploy
 # [NEW] OTA Update Packaging
 ota: re
 	@echo "📦 Packaging Lean OTA Update..."
-	$(PYTHON) scripts/package_ota.py
+	$(PYTHON) -m src.release_system --ota
 	@echo "✅ OTA Update files are ready in dist/ota/"
 
 # Delete all releases except the latest one
