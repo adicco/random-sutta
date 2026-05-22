@@ -48,17 +48,7 @@ export const SyncUnificationUI = {
                 </div>
 
                 <div class="unification-actions-main">
-                    <button class="resolve-card primary" id="btn-unif-merge">
-                        <span class="card-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
-                        </span>
-                        <div class="card-text">
-                            <strong>Smart Merge</strong>
-                            <p>Safely combine changes from both sides.</p>
-                        </div>
-                    </button>
-                    
-                    <button class="resolve-card" id="btn-unif-latest">
+                    <button class="resolve-card primary" id="btn-unif-latest">
                         <span class="card-icon">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </span>
@@ -68,6 +58,16 @@ export const SyncUnificationUI = {
                         </div>
                     </button>
 
+                    <button class="resolve-card" id="btn-unif-merge">
+                        <span class="card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                        </span>
+                        <div class="card-text">
+                            <strong>Smart Merge</strong>
+                            <p>Safely combine changes from both sides.</p>
+                        </div>
+                    </button>
+                    
                     <div class="resolve-row">
                         <button class="resolve-card-small" id="btn-unif-cloud">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="small-icon"><path d="M17.5 19A5.5 5.5 0 0 0 18 8.02a1 1 0 0 0-1-1.02H16V7a4 4 0 0 0-8 0v.5H7a4.5 4.5 0 0 0 0 9c.14 0 .28 0 .41-.02"/><path d="M12 13v8"/><path d="m15 18-3 3-3-3"/></svg>
@@ -174,13 +174,7 @@ export const SyncUnificationUI = {
                 const cls = line.type === 'add' ? 'add' : (line.type === 'remove' ? 'remove' : '');
                 const prefix = line.type === 'add' ? '+' : (line.type === 'remove' ? '-' : ' ');
                 const ln = line.type === 'add' ? line.lnNew : (line.type === 'remove' ? line.lnOld : line.lnNew);
-                
-                return `
-                    <div class="diff-line ${cls}">
-                        <span class="diff-ln">${ln}</span>
-                        <span class="diff-prefix">${prefix}</span>
-                        <span class="diff-content">${this._escapeHtml(line.val)}</span>
-                    </div>`;
+                return `<div class="diff-line ${cls}"><span class="diff-ln">${ln}</span><span class="diff-prefix">${prefix}</span><span class="diff-content">${this._escapeHtml(line.val)}</span></div>`;
             }).join('');
 
             const header = `<div class="diff-hunk-header">@@ -${startOld} +${startNew} @@</div>`;
