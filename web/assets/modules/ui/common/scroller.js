@@ -283,38 +283,3 @@ export const Scroller = {
         }
     }
 };
-
-        // 1. Resolve Element directly or via ID
-        let element = null;
-        if (target instanceof HTMLElement) {
-            element = target;
-        } else if (typeof target === 'string') {
-            element = document.getElementById(target);
-        }
-
-        // 2. Execute if found
-        if (element) {
-            executeScroll(element);
-            return;
-        }
-
-        // 3. Async Retry Fallback (Only for string IDs)
-        if (typeof target === 'string') {
-            const attemptFind = () => {
-                const el = document.getElementById(target);
-                if (el) {
-                    executeScroll(el);
-                } else {
-                    retries++;
-                    if (retries < maxRetries) {
-                        requestAnimationFrame(attemptFind);
-                    } else {
-                        logger.warn("Find", `Target not found after retries: ${target}`);
-                    }
-                }
-            };
-            requestAnimationFrame(attemptFind);
-        }
-    }
-};
-
