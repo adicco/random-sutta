@@ -2,10 +2,10 @@
 
 #magic-tts-trigger {
   position: fixed;
-  bottom: calc(5px + env(safe-area-inset-bottom));
-  right: 15px;
+  bottom: 0;
+  right: 0;
   width: 50px; 
-  height: 50px;
+  height: 120px; /* Tăng chiều cao để dễ bấm hơn theo chiều dọc */
   z-index: 1090;
   
   background: transparent;
@@ -13,9 +13,29 @@
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
-  
-  /* Icon handled by SVG inside or CSS background image if not inline */
-  /* Assuming inline SVG injected by JS */
+
+  /* Căn chỉnh chấm chỉ thị */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: calc(15px + env(safe-area-inset-bottom));
+}
+
+/* Chấm nhỏ low-profile đại diện cho khu vực nhấp */
+#magic-tts-trigger::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  opacity: 0.3;
+  transition: all 0.2s ease;
+}
+
+#magic-tts-trigger:hover::after {
+  opacity: 1;
+  transform: scale(1.5);
+  background: var(--primary-color);
 }
 
 /* Hide trigger when Popup is open (Comment Popup) */

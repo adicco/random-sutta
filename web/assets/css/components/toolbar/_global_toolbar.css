@@ -27,16 +27,39 @@
 /* Magic Trigger Button */
 #magic-toolbar-trigger {
   position: fixed;
-  bottom: calc(5px + env(safe-area-inset-bottom));
-  left: 15px;
+  bottom: 0;
+  left: 0;
   width: 50px;
-  height: 50px;
+  height: 120px; /* Tăng chiều cao để dễ bấm hơn theo chiều dọc */
   z-index: 1090;
   background: transparent;
   border: none;
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  
+  /* Căn chỉnh chấm chỉ thị */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: calc(15px + env(safe-area-inset-bottom));
+}
+
+/* Chấm nhỏ low-profile đại diện cho khu vực nhấp */
+#magic-toolbar-trigger::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  opacity: 0.3;
+  transition: all 0.2s ease;
+}
+
+#magic-toolbar-trigger:hover::after {
+  opacity: 1;
+  transform: scale(1.5);
+  background: var(--primary-color);
 }
 
 /* Hide trigger when Popup is open */
