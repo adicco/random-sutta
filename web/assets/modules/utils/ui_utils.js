@@ -61,25 +61,27 @@ export const UIUtils = {
     initViewportLock() {
         if (!window.visualViewport) return;
 
-        let resetTimer = null;
+        let resetTimer1 = null;
+        let resetTimer2 = null;
 
         const handleViewportChange = () => {
-            if (resetTimer) clearTimeout(resetTimer);
+            if (resetTimer1) clearTimeout(resetTimer1);
+            if (resetTimer2) clearTimeout(resetTimer2);
 
             requestAnimationFrame(() => {
                 const viewport = window.visualViewport;
                 const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
+                const isIPad = /iPad/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
                 
                 // Calculate raw keyboard offset
                 let offset = window.innerHeight - viewport.height;
                 
-                // [iOS Fix] If offset is small (e.g. < 45px), it's likely just the Done/Accessory bar 
-                // or dynamic UI, but we want a clean reset to 0 if it's below a threshold.
+                // [iOS/iPadOS Fix] Keyboard detection threshold. 
+                // iPad accessory bars can be shorter, but 45px is a safe minimum.
                 if (offset < 45) {
                     offset = 0;
                 } else {
-                    // [UX Fix] Since the keyboard covers the physical safe area (Home Indicator), 
-                    // we subtract safeArea from the push offset to prevent the UI from being "too high".
+                    // [UX Fix] Keyboard covers Home Indicator area, so subtract safeArea.
                     offset = Math.max(0, offset - safeArea);
                 }
 
@@ -96,14 +98,18 @@ export const UIUtils = {
                         if (offset > 0) {
                             el.style.bottom = `${offset}px`;
                         } else {
-                            // Immediate snap to bottom
+                            // Pass 1: Immediate snap to bottom (might still have accessory bar gap)
                             el.style.bottom = "0px";
                             
-                            // [CRITICAL] Secondary reset to catch the "Accessory Bar" lag (V ^ Done bar)
-                            // This bar on iOS disappears ~300ms after the main keyboard.
-                            resetTimer = setTimeout(() => {
-                                el.style.bottom = ""; // Restore CSS defaults (Safe Area)
+                            // Pass 2: Catch standard dismissal (500ms)
+                            resetTimer1 = setTimeout(() => {
+                                el.style.bottom = "0px";
                             }, 500);
+
+                            // Pass 3: Final cleanup for very slow OS animations or iPad glitches (1000ms)
+                            resetTimer2 = setTimeout(() => {
+                                el.style.bottom = ""; // Restore PURE CSS defaults
+                            }, 1000);
                         }
                     }
                 });
