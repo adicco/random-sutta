@@ -43,6 +43,11 @@ def run_release_process(
 
     logger.info(f"🚀 STARTING PROCESS: {version_tag} | Mode: {mode_label}")
 
+    # [NEW] Auto-update package.json version to match current date
+    # This ensures IPA internal version matches AltStore source.
+    clean_version = release_versioning.get_clean_version()
+    release_versioning.update_package_json(PROJECT_ROOT, clean_version)
+
     if not asset_validator.check_critical_assets(CRITICAL_ASSETS):
         sys.exit(1)
 
