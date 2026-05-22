@@ -141,8 +141,15 @@ export const CommentController = {
             this.activate(index);
             
             // [FIXED] Jump & Highlight segment when marker is clicked directly
-            // Use markerEl for precise scrolling if available, otherwise fallback to segment ID
+            // Use markerEl for precise scrolling if available, otherwise find it in the container
             const item = currentComments[index];
+            
+            if (!markerEl) {
+                const container = document.getElementById("sutta-container");
+                const markers = container ? Array.from(container.querySelectorAll(".comment-marker")) : [];
+                markerEl = markers[index];
+            }
+
             const scrollTarget = markerEl || item?.id;
             
             if (scrollTarget) {
