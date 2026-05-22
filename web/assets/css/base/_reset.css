@@ -4,8 +4,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* [UPDATED] Áp dụng Font Scaling và Warm Filter (Configurable) */
+/* [UPDATED] Áp dụng Font Scaling */
 html {
+  font-size: calc(100% * var(--text-scale));
+  transition: font-size 0.2s ease;
   height: 100dvh;
   width: 100%;
   margin: 0;
@@ -13,6 +15,12 @@ html {
   overflow: hidden;
   position: fixed; /* Lock the primary shell */
   -webkit-text-size-adjust: 100%;
+  
+  /* Fallback values phòng khi JS chưa kịp load */
+  --text-scale: 1;
+  --sepia-val: 0;
+  --sepia-hue-coeff: -0.5;
+  --sepia-saturate: 1.1;
 }
 
 body {
@@ -56,9 +64,17 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 999999;
-  background-color: #5d4037;
-  opacity: calc(var(--sepia-val) * 0.001);
-  display: none;
+  background-color: #8b4513; /* Primary warm brown */
+  opacity: calc(var(--sepia-val) * 0.0035); /* Slider 100 = ~0.35 opacity */
+  mix-blend-mode: multiply;
+  display: none; /* Controlled by JS ThemeManager */
+}
+
+/* Fallback for browsers that don't support multiply well */
+@supports not (mix-blend-mode: multiply) {
+  #sepia-overlay {
+    opacity: calc(var(--sepia-val) * 0.002);
+  }
 }
 
 button {
