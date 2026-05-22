@@ -91,6 +91,32 @@
   box-shadow: none;
 }
 
+/* LOADING STATE */
+.landing-btn.is-loading {
+    cursor: wait;
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+.landing-btn.is-loading .btn-icon,
+.landing-btn.is-loading .btn-text {
+    display: none;
+}
+
+.btn-loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: btn-spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes btn-spin {
+    to { transform: rotate(360deg); }
+}
+
 /* FOOTER */
 .landing-footer {
   padding-bottom: 20px;

@@ -222,6 +222,15 @@ export const SuttaController = {
       PopupAPI.hideAll();
       logger.timer('Random Process Total');
 
+      // [FIX] Ensure SuttaDB is ready before proceeding
+      // If it's the first time and DB is still loading, wait for it
+      const { SuttaDB } = await import("data/sutta_db.js");
+      if (SuttaDB.isInitializing || !SuttaDB.core) {
+          logger.info("Random", "SuttaDB still initializing, waiting...");
+          const ready = await SuttaDB.init();
+          if (!ready) throw new Error("SuttaDB failed to initialize");
+      }
+
       const filters = FilterComponent.getActiveFilters();
       const input = await RandomBuffer.getPayload(filters);
 

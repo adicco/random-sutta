@@ -9,9 +9,23 @@ export const RandomButton = {
         const landingRandomBtn = document.getElementById("btn-landing-random");
 
         if (landingRandomBtn) {
-            landingRandomBtn.addEventListener("click", () => {
-                ViewManager.switchView('reader');
-                SuttaController.loadRandomSutta(true);
+            landingRandomBtn.addEventListener("click", async () => {
+                // [NEW] Show loading state on button
+                landingRandomBtn.classList.add("is-loading");
+                const spinner = landingRandomBtn.querySelector(".btn-loading-spinner");
+                if (spinner) spinner.classList.remove("hidden");
+
+                try {
+                    // Wait for random load
+                    await SuttaController.loadRandomSutta(true);
+                    // View switching is usually handled inside loadSutta -> ViewManager
+                    // but we can ensure it here if needed.
+                    ViewManager.switchView('reader');
+                } finally {
+                    // Reset button state (though usually landing view is hidden now)
+                    landingRandomBtn.classList.remove("is-loading");
+                    if (spinner) spinner.classList.add("hidden");
+                }
             });
         }
 
