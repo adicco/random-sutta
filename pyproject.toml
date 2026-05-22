@@ -20,7 +20,7 @@ ignore = [".DS_Store", ".git", ".gitignore", ".hg", ".ruff_cache", ".svn", ".ven
 
 clean_extensions = ["py", "sh", "zsh"]
 
-extensions = ["", "bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh", "html", "css", "js", "ts", "webmanifest"]
+extensions = ["", "bash", "cfg", "cfg.py", "gitignore", "ini", "json", "md", "py", "sh", "template", "toml", "txt", "xml", "yaml", "yml", "zsh", "html", "css", "js", "ts", "webmanifest", "css"]
 
 format_extensions = ["py"]
 

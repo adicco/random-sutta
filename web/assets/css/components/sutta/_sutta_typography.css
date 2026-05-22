@@ -33,7 +33,7 @@ p {
 h1.sutta-title .segment,
 h2 .segment,
 h3 .segment {
-  display: inline !important; 
+  display: inline !important;
   margin-bottom: 0 !important;
 }
 
@@ -74,3 +74,17 @@ h3 .segment {
   z-index: 10;
   display: inline-block;
 }
+
+/* [NEW] Hit Area Expansion: Invisible larger touch target cho comment */
+.comment-marker::after {
+  content: '';
+  position: absolute;
+  /* Mở rộng vùng bấm ra 4 hướng khoảng 10-12px */
+  top: -12px; 
+  bottom: -12px;
+  left: -10px; 
+  right: -10px;
+  background: transparent;
+  z-index: 1; /* Nằm trên để bắt sự kiện click */
+}
+
