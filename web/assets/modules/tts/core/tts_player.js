@@ -23,6 +23,16 @@ export const TTSPlayer = {
         this.onPlaylistEnd = onPlaylistEnd;
     },
 
+    /**
+     * Unlocks the audio system on iOS.
+     * MUST be called from a user interaction event handler.
+     */
+    unlock() {
+        if (this.engine && typeof this.engine.unlock === 'function') {
+            this.engine.unlock();
+        }
+    },
+
     // --- Core Operations ---
 
     play() {

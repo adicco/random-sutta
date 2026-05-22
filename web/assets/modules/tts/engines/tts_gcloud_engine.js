@@ -78,6 +78,9 @@ export class TTSGoogleCloudEngine {
     pause() { this.player.pause(); }
     resume() { this.player.resume(); }
 
+    // [NEW] Unlocks audio on iOS
+    unlock() { this.player.unlock(); }
+
     // Properties accessors for UI
     get voice() { return this.config.getVoice(); }
     get rate() { return this.config.getRate(); }

@@ -118,13 +118,29 @@ export const TTSOrchestrator = {
     // --- Public API Delegation ---
 
     // Playback
-    togglePlay() { this.playback.togglePlay(); },
-    play() { this.playback.play(); },
+    togglePlay() { 
+        this.playback.togglePlay(); 
+        // [FIX] Always try to unlock on toggle (user gesture)
+        TTSPlayer.unlock();
+    },
+    play() { 
+        this.playback.play(); 
+        TTSPlayer.unlock();
+    },
     pause() { this.playback.pause(); },
     stop() { this.playback.stop(); },
-    next() { this.playback.next(); },
-    prev() { this.playback.prev(); },
-    jumpToID(id) { this.playback.jumpToID(id); },
+    next() { 
+        this.playback.next(); 
+        TTSPlayer.unlock();
+    },
+    prev() { 
+        this.playback.prev(); 
+        TTSPlayer.unlock();
+    },
+    jumpToID(id) { 
+        this.playback.jumpToID(id); 
+        TTSPlayer.unlock();
+    },
     
     // State & Config
     setAutoNext(e) { TTSStateStore.setAutoNext(e); },

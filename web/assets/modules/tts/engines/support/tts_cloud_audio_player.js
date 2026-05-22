@@ -6,8 +6,10 @@ const logger = getLogger("TTS_CloudPlayer");
 export class TTSCloudAudioPlayer {
     constructor() {
         this.audio = new Audio();
+        this.audio.preload = "auto";
         this.onEnd = null;
         this.isPlaying = false;
+        this._isUnlocked = false;
 
         // Bind events
         this.audio.onended = () => {
@@ -18,10 +20,28 @@ export class TTSCloudAudioPlayer {
 
         this.audio.onerror = (e) => {
             this.isPlaying = false;
-            logger.error("Playback", `Error: ${e.message || "Unknown error"}`);
+            const error = this.audio.error;
+            logger.error("Playback", `Error code: ${error ? error.code : 'unknown'}, Message: ${e.message || "Unknown error"}`);
             // Fallback: treat error as end to prevent hanging
             if (this.onEnd) this.onEnd();
         };
+    }
+
+    /**
+     * Unlocks the audio element on iOS. Must be called from a user gesture.
+     */
+    unlock() {
+        if (this._isUnlocked) return;
+        
+        // Play a tiny silent buffer or just try to play the current (empty) state
+        this.audio.play().then(() => {
+            this.audio.pause();
+            this._isUnlocked = true;
+            logger.info("Playback", "Audio unlocked successfully");
+        }).catch(err => {
+            // This is expected if no src is set yet, but it still "warms up" the element on some iOS versions
+            logger.debug("Playback", "Unlock attempt (normal if catch): " + err.message);
+        });
     }
 
     /**
@@ -43,17 +63,33 @@ export class TTSCloudAudioPlayer {
         }
 
         this.audio.src = url;
-        this.audio.playbackRate = rate; // [NEW] Set playback rate
+        this.audio.playbackRate = rate;
         
-        this.audio.play()
-            .then(() => {
-                this.isPlaying = true;
-                logger.debug("Playback", "Started");
-            })
-            .catch(err => {
-                logger.error("Playback", "Play request failed", err);
-                if (this.onEnd) this.onEnd();
-            });
+        // [FIX] Explicitly call load() for iOS stability with Blobs
+        this.audio.load();
+        
+        // Small delay to ensure iOS has processed the new source
+        const attemptPlay = () => {
+            this.audio.play()
+                .then(() => {
+                    this.isPlaying = true;
+                    logger.debug("Playback", "Started");
+                })
+                .catch(err => {
+                    logger.error("Playback", "Play request failed", err);
+                    // If blocked by gesture (NotAllowedError), we need to tell the user
+                    if (err.name === 'NotAllowedError') {
+                        logger.warn("Playback", "Playback blocked by browser policy. Interaction required.");
+                    }
+                    if (this.onEnd) this.onEnd();
+                });
+        };
+
+        if (window.requestAnimationFrame) {
+            requestAnimationFrame(attemptPlay);
+        } else {
+            setTimeout(attemptPlay, 0);
+        }
     }
 
     setRate(rate) {
