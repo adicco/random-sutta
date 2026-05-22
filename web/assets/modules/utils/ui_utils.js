@@ -54,18 +54,29 @@ export const UIUtils = {
     stabilizeViewport() {
         if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
         
-        // Brute force sync: Scroll the OUTER window to 0,0
+        // Brute force sync: Scroll the OUTER window and scrollers to 0,0
         // In Fixed Shell, the outer window should NEVER have a scroll.
         window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
         
         // Force a layout reflow
         const doc = document.documentElement;
         const prevH = doc.style.height;
         doc.style.height = '100.1%';
-        requestAnimationFrame(() => {
+        
+        // Use a timeout to allow iOS animation to settle
+        setTimeout(() => {
             doc.style.height = prevH || '100dvh';
             window.scrollTo(0, 0);
-        });
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+            
+            // One more check after another frame
+            requestAnimationFrame(() => {
+                if (window.scrollY !== 0) window.scrollTo(0, 0);
+            });
+        }, 300);
     },
 
     /**
@@ -75,7 +86,7 @@ export const UIUtils = {
         if (!window.visualViewport) return;
 
         let pollingTimer = null;
-        const pollCount = 15; // Poll for 1.5 seconds
+        const pollCount = 20; // Poll for 2 seconds
 
         const updateElements = (offset) => {
             const fixedBottomElements = [
@@ -103,9 +114,12 @@ export const UIUtils = {
             const safeArea = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-bottom')) || 0;
             
             // Calculate keyboard offset
-            let offset = window.innerHeight - viewport.height;
+            // We use Math.round to avoid sub-pixel jitter
+            let offset = Math.round(window.innerHeight - viewport.height);
             
             // Substract safe area when keyboard is active to prevent "too high"
+            // Note: On some iOS versions, the keyboard covers the safe area,
+            // so we subtract it because our elements already have padding-bottom: safeArea.
             if (offset > 45) {
                 offset = Math.max(0, offset - safeArea);
             } else {
@@ -117,6 +131,11 @@ export const UIUtils = {
             // Sync visual viewport scroll
             if (offset > 0 || viewport.offsetTop > 0) {
                 window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
+            } else {
+                // Ensure layout viewport is at 0 when keyboard is closed
+                if (window.scrollY !== 0) {
+                    window.scrollTo(0, 0);
+                }
             }
         };
 
@@ -125,11 +144,19 @@ export const UIUtils = {
             let count = 0;
             pollingTimer = setInterval(() => {
                 handleViewportChange();
-                // On dismissal, force window scroll to 0
-                if (window.visualViewport.height >= window.innerHeight - 10) {
+                
+                const isDismissed = window.visualViewport.height >= window.innerHeight - 40;
+                if (isDismissed) {
                     window.scrollTo(0, 0);
+                    document.body.scrollTop = 0;
+                    document.documentElement.scrollTop = 0;
                 }
-                if (++count >= pollCount) clearInterval(pollingTimer);
+                
+                if (++count >= pollCount) {
+                    clearInterval(pollingTimer);
+                    // Final stabilization
+                    this.stabilizeViewport();
+                }
             }, 100);
         };
 
