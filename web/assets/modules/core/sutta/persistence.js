@@ -19,20 +19,27 @@ export const SuttaPersistence = {
 
     try {
       const params = new URLSearchParams(window.location.search);
-      const suttaId = id || params.get("q");
-      if (!suttaId) return;
+      const uid = id || params.get("q");
+      if (!uid) return;
 
-      const currentScroll = (scrollY !== undefined) ? scrollY : Scroller.getScrollTop();
+      const currentScroll = (scrollY !== undefined) ? Math.round(scrollY) : Math.round(Scroller.getScrollTop());
       
+      const existing = this.load();
+      
+      // If same UID and same scroll (within 1px tolerance), don't update timestamp
+      if (existing && existing.uid === uid && Math.abs(existing.scrollY - currentScroll) < 2) {
+          return; 
+      }
+
       const progress = {
-        id: suttaId,
+        uid: uid,
         scrollY: currentScroll,
         timestamp: Date.now()
       };
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
       window.dispatchEvent(new CustomEvent("local-data-changed"));
-      logger.debug(`Saved: ${suttaId} at ${currentScroll}`);
+      logger.debug(`Saved: ${uid} at ${currentScroll}`);
     } catch (e) {
       console.warn("Could not save progress:", e);
     }
@@ -41,7 +48,17 @@ export const SuttaPersistence = {
   load() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      
+      const data = JSON.parse(saved);
+      
+      // [MIGRATION] Handle old 'id' format
+      if (data && data.id && !data.uid) {
+          data.uid = data.id;
+          delete data.id;
+      }
+      
+      return data;
     } catch (e) {
       return null;
     }
