@@ -1,60 +1,78 @@
-# Kiến trúc "Fixed Shell" giải quyết lỗi Fixed Positioning trên iOS
+# Kiến trúc "Fixed Shell" giải quyết lỗi Viewport trên iOS (WKWebView)
 
-Tài liệu này ghi lại giải pháp kiến trúc để khắc phục triệt để lỗi các phần tử `position: fixed` bị xê dịch hoặc trôi khi cuộn trang (scrolling) và khi bàn phím (virtual keyboard) xuất hiện trên iOS Safari.
+Tài liệu này ghi lại giải pháp kiến trúc để khắc phục triệt để lỗi các phần tử `position: fixed` bị xê dịch, giật (jitter) hoặc trôi khi bàn phím ảo (virtual keyboard) xuất hiện trên iOS (Capacitor/WKWebView).
 
 ## 1. Vấn đề (The Problem)
 
-Trên iOS Safari, các thành phần `position: fixed` thường xuyên gặp lỗi:
-- **Jitter/Drift:** Khi cuộn trang, các phần tử cố định bị rung lắc hoặc trôi khỏi vị trí chuẩn.
-- **Keyboard Viewport Glitch:** Khi bàn phím hiện lên, trình duyệt thay đổi "Visual Viewport" nhưng không cập nhật chính xác tọa độ cho các phần tử `fixed` được neo vào "Layout Viewport". Sau khi đóng bàn phím, sự sai lệch này thường trở thành vĩnh viễn cho đến khi tải lại trang.
-- **Stacking Context Conflict:** Các thuộc tính như `filter` (dùng cho Sepia) hoặc `transform` trên các container cha tạo ra ngữ cảnh hiển thị mới, làm hỏng khả năng neo vào màn hình của `position: fixed`.
+Trên iOS Safari và WKWebView, cơ chế "Visual Viewport" và "Layout Viewport" thường xuyên gây ra các vấn đề nghiêm trọng cho Single Page Apps (PWA/Hybrid):
+- **Keyboard Viewport Glitch:** Khi bàn phím hiện lên, hệ điều hành đẩy toàn bộ Viewport lên trên để giữ input trong tầm mắt, nhưng thường làm sai lệch tọa độ của các phần tử `fixed` (Toolbar, Settings). Sau khi đóng bàn phím, UI thường không trở về vị trí cũ (bị hở chân trang).
+- **Dynamic Toolbar Shifting:** Thanh địa chỉ của Safari (URL bar) thay đổi kích thước khi cuộn trang, làm giá trị `100vh` thay đổi liên tục, gây ra hiện tượng nhảy UI.
+- **Stacking Context & Filter:** Việc sử dụng `filter` (cho Sepia) trên thẻ `html` hoặc `body` có thể làm mất tác dụng của `position: fixed` bên trong nó.
 
 ## 2. Giải pháp: Kiến trúc Fixed Shell (The Solution)
 
-Thay vì cố gắng sửa lỗi bằng JavaScript (vốn thường gây giật và không ổn định), chúng ta thay đổi cấu trúc cơ bản của ứng dụng:
+Thay vì cố gắng tính toán tọa độ bù trừ bằng JavaScript (vốn không ổn định và gây giật), chúng ta sử dụng kiến trúc khóa cứng lớp vỏ ngoài cùng.
 
-### 2.1. Khóa cứng Lớp vỏ (Locking the Body)
-Thẻ `html` và `body` được thiết lập để không bao giờ cuộn và luôn cố định:
+### 2.1. Khóa cứng HTML (Locking the HTML)
+Thẻ `html` được thiết lập làm "Shell" cố định, không bao giờ cuộn và chiếm trọn màn hình:
 ```css
-html, body {
+/* Path: web/assets/css/base/_reset.css */
+html {
   height: 100dvh;
   width: 100%;
-  overflow: hidden; /* Ngăn cuộn ở mức độ body */
-  position: fixed; /* Khóa cứng body vào viewport */
+  overflow: hidden; /* Ngăn cuộn ở mức độ trình duyệt */
+  position: fixed; /* Khóa cứng Shell vào Viewport */
+  -webkit-text-size-adjust: 100%;
 }
 ```
-Việc này biến `body` thành một nền tảng tĩnh 100%, đảm bảo các phần tử con sử dụng `position: fixed` sẽ luôn được tính toán tọa độ dựa trên một khung tham chiếu không bao giờ thay đổi.
+Việc này biến `html` thành một nền tảng tĩnh 100%. Bất kỳ lỗi xê dịch Viewport nào từ hệ điều hành sẽ bị giới hạn bởi thuộc tính `fixed` này.
 
-### 2.2. Cuộn nội bộ (Internal Scrolling)
-Mọi nội dung cần cuộn (kinh văn, danh sách) được đưa vào các container nội bộ:
+### 2.2. Body và Container nội bộ
+`body` và các View chính (`#reader-view`, `#landing-view`) đóng vai trò là container chứa nội dung và quản lý việc cuộn:
 ```css
-#reader-view, #landing-view {
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+#landing-view, #reader-view {
   position: absolute;
   inset: 0;
-  overflow-y: auto; /* Chỉ cuộn bên trong container này */
-  -webkit-overflow-scrolling: touch;
+  overflow-y: auto; /* Chỉ cho phép cuộn bên trong View */
+  -webkit-overflow-scrolling: touch; /* Đảm bảo hiệu ứng cuộn mượt mà trên iOS */
 }
 ```
-Lúc này, sự kiện cuộn (scroll event) chỉ xảy ra bên trong container, không tác động đến `window` hay `body`.
 
-### 2.3. Điều chỉnh Scroller Utility
-Toàn bộ logic cuộn trong JavaScript (như nhảy đến đoạn kinh, lưu vị trí đọc) được cập nhật để tác động vào `container.scrollTop` thay vì `window.scrollTo`.
-
-### 2.4. Xử lý Bàn phím bằng Visual Viewport API
-Để tránh UI bị bàn phím che mất, chúng ta sử dụng `window.visualViewport` để tính toán khoảng không gian bàn phím chiếm dụng và đẩy các phần tử UI lên tương ứng:
+### 2.3. Khóa Safe Area Bottom (UIUtils)
+Để tránh chân trang bị đẩy lên khi URL bar hoặc Keyboard xuất hiện/biến mất, chúng ta sử dụng JavaScript để khóa giá trị `safe-area-inset-bottom` vào một biến CSS ngay khi khởi động:
 ```javascript
-const handleViewportChange = () => {
-    const offset = window.innerHeight - window.visualViewport.height;
-    fixedElement.style.bottom = `${offset}px`;
-};
+// web/assets/modules/utils/ui_utils.js
+const computed = window.getComputedStyle(div).paddingBottom;
+const safeAreaPx = parseInt(computed) || 0;
+document.documentElement.style.setProperty('--safe-bottom', `${safeAreaPx}px`);
+```
+Biến `--safe-bottom` này được dùng để tính toán `padding-bottom` cố định cho các view, đảm bảo không có sự thay đổi đột ngột khi cuộn.
+
+### 2.4. Xử lý Sepia bằng Overlay riêng
+Thay vì áp dụng `filter` lên toàn bộ `body` (gây lag và hỏng `fixed positioning`), chúng ta sử dụng một lớp overlay riêng biệt:
+```css
+#sepia-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10000;
+  background-color: #704214;
+  opacity: var(--sepia-overlay-opacity, 0);
+}
 ```
 
-## 3. Ưu điểm
-- **Ổn định tuyệt đối:** Các nút bấm và Toolbar không bao giờ bị xê dịch khi cuộn trang.
-- **Snappy UI:** Cảm giác ứng dụng mượt mà như Native App vì không có độ trễ của các script ổn định Viewport.
-- **Tương thích cao:** Giải quyết được xung đột với `filter` (Sepia) và các hiệu ứng phức tạp khác.
+## 3. Kết quả (The Benefits)
+- **Ổn định tuyệt đối:** Các thành phần như Toolbar, Settings Drawer luôn nằm đúng vị trí, không bị "bay" khỏi màn hình khi bàn phím bật/tắt.
+- **Không có Jitter:** Việc cuộn trang diễn ra mượt mà vì nó là cuộn nội bộ (internal scroll), không gây ra các sự kiện thay đổi kích thước Viewport của trình duyệt.
+- **Tiết kiệm tài nguyên:** Loại bỏ hoàn toàn các listener `window.onscroll` và `window.onresize` phức tạp để sửa lỗi UI.
 
-## 4. Lưu ý khi bảo trì
-- Không bao giờ cho phép `body` cuộn trở lại.
-- Luôn đảm bảo các popup mới được thêm vào phải được neo vào Shell (body) hoặc có cơ chế bù trừ tọa độ tương tự.
-- Khi tính toán tọa độ phần tử (getBoundingClientRect), cần cộng thêm `container.scrollTop` thay vì `window.scrollY`.
+## 4. Lưu ý cho Nhà phát triển
+1. **Không sử dụng `window.scrollTo`:** Hãy sử dụng `document.getElementById('reader-view').scrollTo()` hoặc các hàm tương đương trên scroller container.
+2. **Tọa độ phần tử:** Khi dùng `getBoundingClientRect()`, hãy nhớ rằng tọa độ này là tương đối so với Viewport tĩnh. Nếu cần tọa độ trong tài liệu, phải cộng thêm `container.scrollTop`.
+3. **Z-Index:** Các phần tử fixed cần được quản lý Z-Index cẩn thận vì giờ đây chúng đều nằm trong một Shell tĩnh.
