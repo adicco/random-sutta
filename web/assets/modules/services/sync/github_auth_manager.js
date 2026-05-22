@@ -3,7 +3,7 @@ import { getLogger } from "utils/logger.js";
 
 const logger = getLogger("GithubAuthManager");
 const STORAGE_KEY = "github_sync_pat";
-const REPO_NAME = "random-sutta-sync";
+const REPO_NAME = "rsnote";
 
 export const GithubAuthManager = {
     _token: null,

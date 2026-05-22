@@ -37,14 +37,14 @@ export const GithubSync = {
         return response;
     },
 
-    async downloadData() {
+    async downloadData(filePath = FILE_PATH) {
         try {
-            logger.info("Download", "Fetching sync.json...");
-            const response = await this._request("GET", `/contents/${FILE_PATH}`);
+            logger.info("Download", `Fetching ${filePath}...`);
+            const response = await this._request("GET", `/contents/${filePath}`);
             
             if (response.status === 404) {
-                logger.info("Download", "File not found on cloud.");
-                return null; // File doesn't exist yet
+                logger.info("Download", `File ${filePath} not found on cloud.`);
+                return null;
             }
 
             const data = await response.json();
@@ -56,10 +56,15 @@ export const GithubSync = {
                 bytes[i] = binaryString.charCodeAt(i);
             }
             const decoder = new TextDecoder('utf-8');
-            const jsonString = decoder.decode(bytes);
+            const content = decoder.decode(bytes);
+            
+            let parsed = content;
+            if (filePath.endsWith(".json")) {
+                parsed = JSON.parse(content);
+            }
             
             return {
-                data: JSON.parse(jsonString),
+                data: parsed,
                 sha: data.sha
             };
         } catch (error) {
@@ -68,19 +73,20 @@ export const GithubSync = {
         }
     },
 
-    async uploadData(payload, currentSha = null) {
+    async uploadData(payload, currentSha = null, filePath = FILE_PATH) {
         try {
-            logger.info("Upload", "Uploading sync.json...");
+            logger.info("Upload", `Uploading ${filePath}...`);
+            
+            const contentString = typeof payload === "string" ? payload : JSON.stringify(payload, null, 2);
             
             // Encode to Base64 (handles Unicode safely)
-            const jsonString = JSON.stringify(payload, null, 2);
             const encoder = new TextEncoder();
-            const bytes = encoder.encode(jsonString);
+            const bytes = encoder.encode(contentString);
             const binaryString = Array.from(bytes).map(b => String.fromCharCode(b)).join('');
             const base64Content = btoa(binaryString);
 
             const body = {
-                message: "Auto-sync from Random Sutta Reader",
+                message: `Update ${filePath} from Random Sutta Reader`,
                 content: base64Content
             };
 

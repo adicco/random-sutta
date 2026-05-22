@@ -12,9 +12,9 @@ This document details the migration from Google Drive to a **GitHub-based synchr
 
 ### Flaws & Improvements
 1.  **UX Friction (Repo Creation):** Asking users to manually create a repository is prone to errors.
-    *   *Improvement:* The app will use the PAT to automatically check for the existence of a specific repo (e.g., `random-sutta-sync`). If it doesn't exist, the app will auto-create it as a private repository.
+    *   *Improvement:* The app will use the PAT to automatically check for the existence of a specific repo (e.g., `rsnote`). If it doesn't exist, the app will auto-create it as a private repository.
 2.  **Security of PAT:** Storing a Classic PAT with broad `repo` access in `localStorage` is risky.
-    *   *Improvement:* Provide clear instructions in the UI for generating a **Fine-grained PAT** that is restricted *only* to the `random-sutta-sync` repository, rather than a Classic PAT.
+    *   *Improvement:* Provide clear instructions in the UI for generating a **Fine-grained PAT** that is restricted *only* to the `rsnote` repository, rather than a Classic PAT.
 3.  **Conflict Resolution Burden:** Asking the user to manually resolve JSON conflicts is bad UX.
     *   *Improvement:* Implement an automatic **Deep Smart Merge**. Since we know the schema (Arrays for bookmarks, Objects for history), we can merge at the item level based on timestamps, rather than just the file level. The UI prompt (Keep Local vs. Keep Cloud vs. Smart Merge) should default to "Smart Merge".
 
@@ -23,21 +23,13 @@ This document details the migration from Google Drive to a **GitHub-based synchr
 ### 3.1. Authentication
 *   User inputs a GitHub PAT.
 *   App validates the token by calling `GET /user`.
-*   App checks for repo `GET /repos/{owner}/random-sutta-sync`. If 404, calls `POST /user/repos` to create it (private).
+*   App checks for repo `GET /repos/{owner}/rsnote`. If 404, calls `POST /user/repos` to create it (private).
 
 ### 3.2. Sync Payload
-Data will be serialized into a single `sync.json` file in the repository.
-```json
-{
-  "version": 1,
-  "timestamp": 1716300000000,
-  "payload": {
-    "sutta_bookmarks": [...],
-    "sutta_history": {...},
-    "tts_settings": {...}
-  }
-}
-```
+The repository will contain:
+*   `sync.json`: Application state (bookmarks, history, settings).
+*   `notes/`: Markdown files for personal sutta annotations, organized by Nikaya.
+    *   Example: `notes/mn/mn1.md` for Majjhima Nikaya 1.
 
 ### 3.3. Smart Merge Logic (The `sha` Check)
 The application will track two local variables:
