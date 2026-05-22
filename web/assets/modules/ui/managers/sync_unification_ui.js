@@ -103,13 +103,19 @@ export const SyncUnificationUI = {
                 .unification-footer { border-top: 1px solid var(--border-color); padding-top: 12px; }
                 .text-link-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 4px 0; text-decoration: underline; }
                 
-                #unif-diff-area { margin-top: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); max-height: 300px; overflow-y: auto; }
-                .diff-view { font-family: monospace; font-size: 10px; line-height: 1.4; padding: 10px; white-space: pre; }
-                .diff-hunk-header { background: rgba(var(--primary-rgb), 0.05); color: var(--primary-color); padding: 2px 4px; display: block; font-style: italic; border-bottom: 1px solid var(--border-light); }
-                .diff-line { display: block; padding: 0 4px; border-left: 2px solid transparent; }
-                .diff-line.add { background-color: rgba(46, 160, 67, 0.1); border-left-color: #3fb950; }
-                .diff-line.remove { background-color: rgba(248, 81, 73, 0.1); border-left-color: #f85149; }
-                .diff-prefix { display: inline-block; width: 10px; user-select: none; opacity: 0.5; }
+                #unif-diff-area { margin-top: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); max-height: 350px; overflow-y: auto; }
+                .diff-view { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 10px; line-height: 1.5; padding: 0; white-space: pre; background: rgba(0,0,0,0.02); }
+                [data-theme="dark"] .diff-view { background: rgba(255,255,255,0.02); }
+                
+                .diff-hunk-header { background: var(--border-light); color: var(--text-muted); padding: 4px 8px; display: block; font-size: 9px; border-bottom: 1px solid var(--border-light); opacity: 0.8; }
+                
+                .diff-line { display: flex; align-items: flex-start; width: 100%; border-left: 3px solid transparent; }
+                .diff-line.add { background-color: rgba(46, 160, 67, 0.12); border-left-color: #3fb950; }
+                .diff-line.remove { background-color: rgba(248, 81, 73, 0.12); border-left-color: #f85149; }
+                
+                .diff-ln { width: 30px; flex-shrink: 0; display: inline-block; text-align: right; padding-right: 8px; color: var(--text-light); user-select: none; border-right: 1px solid var(--border-light); margin-right: 8px; opacity: 0.6; }
+                .diff-prefix { width: 12px; flex-shrink: 0; display: inline-block; user-select: none; opacity: 0.7; font-weight: bold; }
+                .diff-content { flex-grow: 1; overflow-x: auto; }
             </style>
         `;
 
@@ -121,8 +127,8 @@ export const SyncUnificationUI = {
             const area = div.querySelector("#unif-diff-area");
             area.classList.toggle("hidden");
             div.querySelector("#btn-unif-toggle-details").innerText = area.classList.contains("hidden") 
-                ? "Show technical diff ↓" 
-                : "Hide technical diff ↑";
+                ? "Compare changes ↓" 
+                : "Hide changes ↑";
         };
 
         return div;
@@ -137,7 +143,6 @@ export const SyncUnificationUI = {
         const oldLines = oldStr.split('\n');
         const newLines = newStr.split('\n');
         
-        // Standard LCS to get line-by-line diff
         const matrix = Array(oldLines.length + 1).fill().map(() => Array(newLines.length + 1).fill(0));
         for (let i = 1; i <= oldLines.length; i++) {
             for (let j = 1; j <= newLines.length; j++) {
@@ -150,26 +155,23 @@ export const SyncUnificationUI = {
         let i = oldLines.length, j = newLines.length;
         while (i > 0 || j > 0) {
             if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
-                fullDiff.unshift({ type: 'equal', val: oldLines[i - 1] });
+                fullDiff.unshift({ type: 'equal', val: oldLines[i - 1], lnOld: i, lnNew: j });
                 i--; j--;
             } else if (j > 0 && (i === 0 || matrix[i][j - 1] >= matrix[i - 1][j])) {
-                fullDiff.unshift({ type: 'add', val: newLines[j - 1] });
+                fullDiff.unshift({ type: 'add', val: newLines[j - 1], lnNew: j });
                 j--;
             } else {
-                fullDiff.unshift({ type: 'remove', val: oldLines[i - 1] });
+                fullDiff.unshift({ type: 'remove', val: oldLines[i - 1], lnOld: i });
                 i--;
             }
         }
 
-        // --- Hunk Creation Logic ---
         const contextLines = 2;
         const hunks = [];
         let currentHunk = null;
 
         fullDiff.forEach((line, idx) => {
             const isChanged = line.type !== 'equal';
-            
-            // Check if this line or any nearby line is changed
             let shouldShow = isChanged;
             if (!shouldShow) {
                 for (let k = 1; k <= contextLines; k++) {
@@ -180,7 +182,7 @@ export const SyncUnificationUI = {
 
             if (shouldShow) {
                 if (!currentHunk) {
-                    currentHunk = { startIdx: idx, lines: [] };
+                    currentHunk = { lines: [] };
                     hunks.push(currentHunk);
                 }
                 currentHunk.lines.push(line);
@@ -189,17 +191,26 @@ export const SyncUnificationUI = {
             }
         });
 
-        // Generate HTML
-        return hunks.map((hunk, hIdx) => {
+        return hunks.map((hunk) => {
+            const startOld = hunk.lines.find(l => l.lnOld)?.lnOld || '..';
+            const startNew = hunk.lines.find(l => l.lnNew)?.lnNew || '..';
+            
             const linesHtml = hunk.lines.map(line => {
                 const cls = line.type === 'add' ? 'add' : (line.type === 'remove' ? 'remove' : '');
                 const prefix = line.type === 'add' ? '+' : (line.type === 'remove' ? '-' : ' ');
-                return `<span class="diff-line ${cls}"><span class="diff-prefix">${prefix}</span>${this._escapeHtml(line.val)}</span>`;
+                const ln = line.type === 'add' ? line.lnNew : (line.type === 'remove' ? line.lnOld : line.lnNew);
+                
+                return `
+                    <div class="diff-line ${cls}">
+                        <span class="diff-ln">${ln}</span>
+                        <span class="diff-prefix">${prefix}</span>
+                        <span class="diff-content">${this._escapeHtml(line.val)}</span>
+                    </div>`;
             }).join('');
 
-            const header = `<span class="diff-hunk-header">@@ hunk ${hIdx + 1} @@</span>`;
+            const header = `<div class="diff-hunk-header">@@ -${startOld} +${startNew} @@</div>`;
             return header + linesHtml;
-        }).join('<span class="diff-line">...</span>');
+        }).join('<div class="diff-line"><span class="diff-ln">..</span><span class="diff-prefix"> </span><span class="diff-content">...</span></div>');
     },
 
     _escapeHtml(str) {
