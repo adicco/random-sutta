@@ -229,14 +229,9 @@ export const ReadManager = {
                             </div>
                             ${displayTitle ? `<div class="read-title">${displayTitle}</div>` : ''}
                         </div>
-                        <div class="read-actions">
-                            <button class="fam-adjust-btn fam-dec" title="Decrease Familiarity">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
-                            <button class="fam-adjust-btn fam-inc" title="Increase Familiarity">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            </button>
-                        </div>
+                        <button class="bookmark-del-btn" title="Remove">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
                     </div>
                 `;
             }).join("");
@@ -248,85 +243,12 @@ export const ReadManager = {
         this.listContainer.querySelectorAll(".read-item").forEach(item => {
             const uid = item.getAttribute("data-id");
 
-            // Swipe logic
-            let startX = 0;
-            let startY = 0;
-            let isSwiping = false;
-
-            item.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                isSwiping = true;
-            }, { passive: true });
-
-            item.addEventListener('touchmove', (e) => {
-                if (!isSwiping) return;
-                const currentY = e.touches[0].clientY;
-                if (Math.abs(currentY - startY) > 20) {
-                    isSwiping = false; // Cancel swipe if user scrolls vertically
-                }
-            }, { passive: true });
-
-            item.addEventListener('touchend', (e) => {
-                if (!isSwiping) return;
-                const endX = e.changedTouches[0].clientX;
-                const deltaX = endX - startX;
-
-                if (Math.abs(deltaX) > 50) {
-                    // Lấy level mới nhất từ DOM (phòng trường hợp bấm nhiều lần)
-                    const latestLevel = parseInt(item.getAttribute("data-level"), 10);
-                    let newLevel = latestLevel;
-                    if (deltaX > 0 && latestLevel > 0) {
-                        newLevel--; // Swipe Right -> Decrease
-                    } else if (deltaX < 0 && latestLevel < 5) {
-                        newLevel++; // Swipe Left -> Increase
-                    }
-
-                    if (newLevel !== latestLevel) {
-                        const skipRender = newLevel > 0;
-                        this.setFamiliarity(uid, newLevel, skipRender); 
-                        
-                        if (newLevel > 0) {
-                            this._updateItemDOM(item, newLevel);
-                        }
-                        
-                        if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(uid, newLevel);
-                    }
-                }
-            });
-
             // Click logic
             item.onclick = (e) => {
-                const decBtn = e.target.closest('.fam-dec');
-                const incBtn = e.target.closest('.fam-inc');
-
-                if (decBtn || incBtn) {
+                if (e.target.closest(".bookmark-del-btn")) {
                     e.stopPropagation();
-                    const latestLevel = parseInt(item.getAttribute("data-level"), 10);
-                    let newLevel = latestLevel;
-                    if (incBtn && latestLevel < 5) newLevel++;
-                    if (decBtn && latestLevel > 0) newLevel--;
-                    
-                    if (newLevel !== latestLevel) {
-                        const skipRender = newLevel > 0;
-                        this.setFamiliarity(uid, newLevel, skipRender); 
-                        
-                        if (newLevel > 0) {
-                            this._updateItemDOM(item, newLevel);
-                            
-                            const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${uid}"]`);
-                            barContainers.forEach(container => {
-                                const buttons = container.querySelectorAll('.fam-btn');
-                                buttons.forEach(btn => {
-                                    if (parseInt(btn.getAttribute('data-level'), 10) === newLevel) {
-                                        btn.classList.add('active');
-                                    } else {
-                                        btn.classList.remove('active');
-                                    }
-                                });
-                            });
-                        }
-                    }
+                    this.setFamiliarity(uid, 0, false);
+                    if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(uid, 0);
                     return;
                 }
                 
