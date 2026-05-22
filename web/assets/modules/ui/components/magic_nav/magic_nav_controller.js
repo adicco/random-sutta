@@ -344,8 +344,8 @@ export const MagicNav = {
         const finalMeta = { ...superMeta, ...contextMeta };
         const bcHtml = fullPath ? BreadcrumbRenderer.generateHtml(fullPath, finalMeta, localRootId, structureForLookup) : "";
         
-        const bookmarks = BookmarkManager.getBookmarks();
-        const bookmarkedSet = new Set(bookmarks.map(b => b.id));
+        const bookmarksObj = BookmarkManager.getBookmarks();
+        const bookmarkedSet = new Set(Object.keys(bookmarksObj).filter(uid => bookmarksObj[uid].status));
         const historyMap = ReadManager.getHistory();
 
         const tocHtml = TocRenderer.render(localTree, currentUid, finalMeta, 0, bookmarkedSet, historyMap);

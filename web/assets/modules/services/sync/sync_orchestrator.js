@@ -257,8 +257,7 @@ export const SyncOrchestrator = {
                 // Clean item before merge
                 const cleanCloudItem = {
                     level: cloudItem.level,
-                    timestamp: cloudItem.timestamp,
-                    deleted: cloudItem.deleted
+                    timestamp: cloudItem.timestamp
                 };
 
                 if (!mergedHistory[uid] || cleanCloudItem.timestamp > mergedHistory[uid].timestamp) {

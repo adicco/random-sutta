@@ -127,7 +127,7 @@ export const ReadManager = {
 
     getFamiliarity(id) {
         const history = this.getHistory();
-        return (history[id] && !history[id].deleted) ? history[id].level : 0;
+        return (history[id] && history[id].level > 0) ? history[id].level : 0;
     },
 
     getKeepProbability(id) {
@@ -140,16 +140,15 @@ export const ReadManager = {
         
         if (level === 0) {
             if (history[id]) {
-                history[id].deleted = true;
                 history[id].level = 0;
                 history[id].timestamp = Date.now();
+                delete history[id].deleted; // Clean up old flag
             }
-            logger.info("Familiarity", `Removed (soft-delete): ${id}`);
+            logger.info("Familiarity", `Removed (tombstone level 0): ${id}`);
         } else {
             history[id] = {
                 level: level,
-                timestamp: Date.now(),
-                deleted: false
+                timestamp: Date.now()
             };
             logger.info("Familiarity", `Set: ${id} to level ${level}`);
         }
@@ -179,7 +178,7 @@ export const ReadManager = {
     async renderList() {
         if (!this.listContainer) return;
         const history = this.getHistory();
-        const entries = Object.entries(history).filter(([uid, data]) => !data.deleted && data.level > 0);
+        const entries = Object.entries(history).filter(([uid, data]) => data.level > 0);
         
         if (entries.length === 0) {
             this.listContainer.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem;">No history yet.</div>`;
