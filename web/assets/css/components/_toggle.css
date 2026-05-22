@@ -69,41 +69,47 @@
     border-color: var(--primary-color);
 }
 
-.setting-multi-badge-row {
+/* --- MINIMALIST CONTROLS (SVG + No BG/Border) --- */
+.minimalist-control-group {
     display: flex;
     align-items: center;
-    gap: 12px; /* Increased gap from 4px to 12px */
+    gap: 12px;
     margin-left: auto;
+    touch-action: pan-y; /* Allow vertical scroll but prevent default horizontal if swiping */
 }
 
-/* --- MINIMALIST CONTROLS (SVG + No BG/Border) --- */
 .minimalist-control {
     background: transparent;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 8px; /* Increased padding for better hit area */
+    padding: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s;
     border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.minimalist-control:hover {
-    color: var(--primary-color);
-    background-color: var(--bg-hover); /* Subtle background on hover */
+/* Fix sticky hover on touch devices */
+@media (hover: hover) {
+    .minimalist-control:hover {
+        color: var(--primary-color);
+        background-color: var(--bg-hover);
+    }
 }
 
 .minimalist-control:active {
     transform: scale(0.85);
+    background-color: var(--bg-hover);
 }
 
 .minimalist-label {
-    font-size: 0.9rem; /* Slightly larger */
-    font-weight: 700; /* Bolder */
+    font-size: 0.9rem;
+    font-weight: 700;
     color: var(--text-main);
-    min-width: 55px; /* Wider space for label */
+    min-width: 55px;
     text-align: center;
     user-select: none;
 }
