@@ -283,8 +283,13 @@ export const ReadManager = {
                     }
 
                     if (newLevel !== latestLevel) {
-                        this.setFamiliarity(uid, newLevel, true); // skipRender = true
-                        this._updateItemDOM(item, newLevel);
+                        const skipRender = newLevel > 0;
+                        this.setFamiliarity(uid, newLevel, skipRender); 
+                        
+                        if (newLevel > 0) {
+                            this._updateItemDOM(item, newLevel);
+                        }
+                        
                         if (window.FamiliarityBar) window.FamiliarityBar.updateUIState(uid, newLevel);
                     }
                 }
@@ -303,20 +308,24 @@ export const ReadManager = {
                     if (decBtn && latestLevel > 0) newLevel--;
                     
                     if (newLevel !== latestLevel) {
-                        this.setFamiliarity(uid, newLevel, true); // skipRender = true
-                        this._updateItemDOM(item, newLevel);
+                        const skipRender = newLevel > 0;
+                        this.setFamiliarity(uid, newLevel, skipRender); 
                         
-                        const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${uid}"]`);
-                        barContainers.forEach(container => {
-                            const buttons = container.querySelectorAll('.fam-btn');
-                            buttons.forEach(btn => {
-                                if (parseInt(btn.getAttribute('data-level'), 10) === newLevel) {
-                                    btn.classList.add('active');
-                                } else {
-                                    btn.classList.remove('active');
-                                }
+                        if (newLevel > 0) {
+                            this._updateItemDOM(item, newLevel);
+                            
+                            const barContainers = document.querySelectorAll(`.familiarity-bar-container[data-uid="${uid}"]`);
+                            barContainers.forEach(container => {
+                                const buttons = container.querySelectorAll('.fam-btn');
+                                buttons.forEach(btn => {
+                                    if (parseInt(btn.getAttribute('data-level'), 10) === newLevel) {
+                                        btn.classList.add('active');
+                                    } else {
+                                        btn.classList.remove('active');
+                                    }
+                                });
                             });
-                        });
+                        }
                     }
                     return;
                 }
