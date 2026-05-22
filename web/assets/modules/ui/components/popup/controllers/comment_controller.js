@@ -150,11 +150,8 @@ export const CommentController = {
                 markerEl = markers[index];
             }
 
-            const scrollTarget = markerEl || item?.id;
-            
-            if (scrollTarget) {
-                Scroller.jumpTo(scrollTarget);
-            }
+            // [NEW] Balanced Smart Jump
+            this._smartJump(markerEl, item?.id);
             
             if (item && item.id) {
                 Scroller.highlightElement(item.id);
@@ -216,25 +213,69 @@ export const CommentController = {
         
         const nextIdx = currentIdx + dir;
         if (nextIdx >= 0 && nextIdx < comments.length) {
-            this.activate(nextIdx);
-            
-            // [FIXED] Instant Jump & Highlight Sync for Navigation
-            // Find the specific marker in the main container to ensure it's not obscured
-            const item = comments[nextIdx];
-            const container = document.getElementById("sutta-container");
-            const markers = container ? Array.from(container.querySelectorAll(".comment-marker")) : [];
-            const markerEl = markers[nextIdx];
-            
-            const scrollTarget = markerEl || item?.id;
-            if (scrollTarget) {
-                Scroller.jumpTo(scrollTarget);
-            }
-
-            if (item && item.id) {
-                Scroller.highlightElement(item.id);
-            }
-            
+            this.navigateToIndex(nextIdx);
             QuicklookUI.hide();
+        }
+    },
+
+    // [NEW] Helper for standardized navigation
+    navigateToIndex(index) {
+        const comments = PopupState.getComments();
+        if (index < 0 || index >= comments.length) return;
+
+        this.activate(index);
+        
+        const item = comments[index];
+        const container = document.getElementById("sutta-container");
+        const markers = container ? Array.from(container.querySelectorAll(".comment-marker")) : [];
+        const markerEl = markers[index];
+        
+        // [NEW] Balanced Smart Jump
+        this._smartJump(markerEl, item?.id);
+
+        if (item && item.id) {
+            Scroller.highlightElement(item.id);
+        }
+    },
+
+    /**
+     * [NEW] Balanced Smart Jump Logic
+     * Tries to show the start of the segment if it fits along with the marker.
+     * Otherwise, prioritizes the marker to ensure it's not obscured.
+     */
+    _smartJump(markerEl, segmentId) {
+        if (!markerEl) {
+            if (segmentId) Scroller.jumpTo(segmentId);
+            return;
+        }
+
+        const segmentEl = document.getElementById(segmentId);
+        if (!segmentEl) {
+            Scroller.jumpTo(markerEl);
+            return;
+        }
+
+        const popup = document.getElementById("comment-popup");
+        const headerOffset = 60; // SCROLL_OFFSET_CTX from Scroller.js
+        const viewportHeight = window.innerHeight;
+        
+        // Estimate visible area height
+        const popupHeight = popup ? popup.offsetHeight : (viewportHeight * 0.45);
+        const visibleHeight = viewportHeight - popupHeight - headerOffset;
+
+        const markerRect = markerEl.getBoundingClientRect();
+        const segmentRect = segmentEl.getBoundingClientRect();
+        
+        // Relative distance from segment start to marker bottom
+        const distanceToMarkerBottom = markerRect.bottom - segmentRect.top;
+
+        // If the span from segment start to marker bottom fits in visible area (with 20px safety margin)
+        if (distanceToMarkerBottom < (visibleHeight - 20)) {
+            // Context prioritized: Show from the start of the translation segment
+            Scroller.jumpTo(segmentId);
+        } else {
+            // Visibility prioritized: Show specifically the marker
+            Scroller.jumpTo(markerEl);
         }
     },
 
