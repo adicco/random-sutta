@@ -29,9 +29,9 @@ export const UIUtils = {
                 const safeAreaPx = parseInt(computed) || 0;
                 
                 // Hardware safe area (e.g., 34px on iPhone X+)
-                // We add a small base padding (15px) for aesthetics.
-                // Default minimum is 20px.
-                const finalPadding = Math.max(20, safeAreaPx + 15);
+                // Reduced base padding from 15px to 5px for a tighter look.
+                // Default minimum is 15px instead of 20px.
+                const finalPadding = Math.max(15, safeAreaPx + 5);
                 
                 document.documentElement.style.setProperty('--safe-bottom', `${finalPadding}px`);
                 document.body.removeChild(div);
@@ -65,25 +65,30 @@ export const UIUtils = {
 
         const handleViewportChange = () => {
             const viewport = window.visualViewport;
-            const offset = window.innerHeight - viewport.height;
+            // Calculate how much the viewport has shrunk from the bottom
+            let offset = window.innerHeight - viewport.height;
             
+            // Guard: If offset is very small (e.g. dynamic bars), treat as 0
+            if (offset < 20) offset = 0;
+
             // Adjust bottom-fixed elements
             const fixedBottomElements = [
                 document.getElementById("global-toolbar"),
                 document.getElementById("magic-toolbar-trigger"),
                 document.getElementById("magic-tts-trigger"),
                 document.querySelector(".popup-container:not(.hidden)"),
-                document.getElementById("lookup-popup:not(.hidden)")
+                document.getElementById("lookup-popup")
             ];
 
             fixedBottomElements.forEach(el => {
                 if (el) {
-                    // Push up by the amount the keyboard covers
+                    // Push up by the amount the keyboard covers.
+                    // When offset is 0, it snaps back to bottom: 0.
                     el.style.bottom = `${offset}px`;
                 }
             });
 
-            // Also ensure we are scrolled to the right visual spot
+            // Ensure visual sync
             if (offset > 0) {
                 window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
             }
