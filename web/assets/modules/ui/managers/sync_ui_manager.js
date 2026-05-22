@@ -40,6 +40,7 @@ export const SyncUIManager = {
             if (this.els.inputArea.classList.contains("hidden")) {
                 this.els.inputArea.classList.remove("hidden");
                 this.els.clientIdInput.placeholder = "GitHub PAT";
+                this.els.clientIdInput.type = "password"; // Mask the token
                 
                 // Add Repo Input if it doesn't exist (Optional field)
                 if (!document.getElementById("sync-repo-name")) {
