@@ -53,8 +53,10 @@ const buildVersion = new Date().getTime();
 export default defineConfig(({ mode }) => {
     const isProd = mode === 'production';
     
-    // APK_BUILD is set in Makefile, TAURI_ENV_PLATFORM is set by Tauri
-    const isNative = process.env.APK_BUILD === 'true' || !!process.env.TAURI_ENV_PLATFORM;
+    // APK_BUILD/CAPACITOR_BUILD is set in Makefile, TAURI_ENV_PLATFORM is set by Tauri
+    const isNative = process.env.APK_BUILD === 'true' || 
+                     process.env.CAPACITOR_BUILD === 'true' ||
+                     !!process.env.TAURI_ENV_PLATFORM;
     
     // GitHub Pages needs '/random-sutta/', but APK/Tauri needs './'
     // Dev mode usually works best with '/'

@@ -239,7 +239,7 @@ clean-apk:
 # Biên dịch web và đồng bộ với iOS, sau đó build release
 ios:
 	@echo "🚀 Đang biên dịch mã nguồn cho iOS (Offline mode)..."
-	npm run build
+	CAPACITOR_BUILD=true npm run build
 	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
 	npx cap sync ios
 	@echo "📦 Đang tạo bản build iOS..."
@@ -250,7 +250,7 @@ ios:
 altstore: ios-altstore
 ios-altstore:
 	@echo "🚀 Đang biên dịch mã nguồn cho iOS (AltStore mode)..."
-	npm run build
+	CAPACITOR_BUILD=true npm run build
 	@echo "🔄 Đồng bộ với dự án iOS (Capacitor)..."
 	npx cap sync ios
 	@echo "📦 Đang tạo bản build IPA cho AltStore..."
