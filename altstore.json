@@ -1,0 +1,23 @@
+{
+  "name": "Random Sutta Source",
+  "identifier": "com.randomsutta.app.source",
+  "apps": [
+    {
+      "name": "Random Sutta",
+      "bundleIdentifier": "com.randomsutta.app",
+      "developerName": "Vijjo",
+      "subtitle": "Discover the Wisdom of the Buddha",
+      "localizedDescription": "A lean, fast, and beautiful Sutta reader for PWA and Mobile.",
+      "iconURL": "https://vjjda.github.io/random-sutta/assets/icons/apple-touch-icon.png",
+      "versions": [
+        {
+          "version": "2026.05.22-15.31.44",
+          "date": "2026-05-22",
+          "downloadURL": "https://github.com/vjjda/random-sutta/releases/download/v2026.05.22-15.31.44/randomsutta.ipa",
+          "localizedDescription": "Release v2026.05.22-15.31.44",
+          "size": 0
+        }
+      ]
+    }
+  ]
+}

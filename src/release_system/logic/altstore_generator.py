@@ -5,6 +5,8 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+from ..release_config import PROJECT_ROOT
+
 logger = logging.getLogger("Release.AltStore")
 
 # Constants
@@ -18,28 +20,29 @@ ICON_URL = f"https://vjjda.github.io/random-sutta/assets/icons/apple-touch-icon.
 
 def update_altstore_source(version_tag: str) -> bool:
     """
-    Updates or creates the AltStore source JSON file in dist/web.
+    Updates or creates the AltStore source JSON file.
+    Writes to both dist/web (for PWA) and project root (for GitHub Raw).
     """
     logger.info(f"📲 Updating AltStore Source for {version_tag}...")
 
-    if not DIST_WEB_DIR.exists():
-        logger.error(f"Vite build directory not found: {DIST_WEB_DIR}")
-        return False
-
-    altstore_path = DIST_WEB_DIR / ALTSTORE_FILENAME
+    # Paths to write to
+    target_paths = [PROJECT_ROOT / ALTSTORE_FILENAME]
+    if DIST_WEB_DIR.exists():
+        target_paths.append(DIST_WEB_DIR / ALTSTORE_FILENAME)
     
-    # 1. Initialize or Load existing
+    # 1. Initialize or Load existing (Try root first as it's the source of truth)
     source = {
         "name": f"{APP_NAME} Source",
         "identifier": f"{BUNDLE_ID}.source",
         "apps": []
     }
 
-    if altstore_path.exists():
+    root_altstore = PROJECT_ROOT / ALTSTORE_FILENAME
+    if root_altstore.exists():
         try:
-            with open(altstore_path, 'r', encoding='utf-8') as f:
+            with open(root_altstore, 'r', encoding='utf-8') as f:
                 source = json.load(f)
-            logger.info("   📂 Loaded existing AltStore source.")
+            logger.info("   📂 Loaded existing AltStore source from root.")
         except Exception as e:
             logger.warning(f"   ⚠️ Could not load existing AltStore source: {e}")
 
@@ -58,11 +61,8 @@ def update_altstore_source(version_tag: str) -> bool:
 
     if app_entry:
         # Update existing app entry
-        # Remove version if it already exists (to update it)
         app_entry["versions"] = [v for v in app_entry["versions"] if v["version"] != new_version["version"]]
-        # Add new version at the beginning (latest first)
         app_entry["versions"].insert(0, new_version)
-        # Update other fields just in case
         app_entry["iconURL"] = ICON_URL
     else:
         # Create new app entry
@@ -78,10 +78,10 @@ def update_altstore_source(version_tag: str) -> bool:
         source["apps"].append(app_entry)
 
     try:
-        with open(altstore_path, 'w', encoding='utf-8') as f:
-            json.dump(source, f, indent=2, ensure_ascii=False)
-        
-        logger.info(f"   ✅ AltStore Source generated: {altstore_path}")
+        for path in target_paths:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(source, f, indent=2, ensure_ascii=False)
+            logger.info(f"   ✅ AltStore Source generated: {path}")
         return True
     except Exception as e:
         logger.error(f"❌ Failed to generate AltStore source: {e}")

@@ -29,7 +29,11 @@ Adding our official source allows you to receive update notifications and instal
 1. Open the **AltStore** app on your iPhone.
 2. Go to the **"Sources"** tab.
 3. Tap the **"+"** button in the top right corner.
-4. Copy and paste the following URL:
+4. Copy and paste the following URL (GitHub Raw is most reliable):
+   ```text
+   https://raw.githubusercontent.com/vjjda/random-sutta/main/altstore.json
+   ```
+   *Alternative link (GitHub Pages):*
    ```text
    https://vjjda.github.io/random-sutta/altstore.json
    ```
