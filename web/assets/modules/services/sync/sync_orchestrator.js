@@ -184,6 +184,9 @@ export const SyncOrchestrator = {
         if (!cloudData || !cloudData.payload) return;
         
         Object.entries(cloudData.payload).forEach(([key, value]) => {
+            // Only apply keys that we currently want to sync
+            if (!this.SYNC_KEYS.includes(key)) return;
+
             const stringValue = typeof value === 'object' ? JSON.stringify(value) : value;
             localStorage.setItem(key, stringValue);
         });
