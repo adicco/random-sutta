@@ -47,7 +47,6 @@ export const SyncUnificationUI = {
                 </button>
                 <div class="unification-header">
                     <h3>Sync Unification</h3>
-                    <p>Conflict detected. How would you like to resolve it?</p>
                 </div>
 
                 <div class="unification-actions-main">
