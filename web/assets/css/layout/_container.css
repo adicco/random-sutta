@@ -25,7 +25,7 @@ body.tts-open #reader-view > header {
   }
 }
 
-#sutta-container {
+#sutta-container.sutta-text-view {
   background: transparent;
   box-shadow: none;
   
@@ -40,7 +40,7 @@ body.tts-open #reader-view > header {
 
 /* [KHI BẬT TTS] Không cần padding-top cho container nữa vì Header đã đẩy xuống.
    Vẫn giữ padding-bottom nếu cần (ví dụ cho popup ở dưới) */
-body.tts-open #sutta-container {
+body.tts-open #sutta-container.sutta-text-view {
   /* No extra top padding needed here */
 }
 
@@ -48,11 +48,12 @@ body.tts-open #sutta-container {
   body {
     padding: 0;
   }
-  #sutta-container {
+  
+  #sutta-container.sutta-text-view {
     padding: 15px var(--reader-margin) 30px var(--reader-margin);
   }
   
-  body.tts-open #sutta-container {
+  body.tts-open #sutta-container.sutta-text-view {
      /* Mobile adjustment if needed */
   }
 }

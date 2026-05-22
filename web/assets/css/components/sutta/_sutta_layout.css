@@ -7,7 +7,10 @@
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
-  max-width: 100%;
+  max-width: var(--container-width, 800px);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
 }
 
 /* Reset list style inside the text view */
