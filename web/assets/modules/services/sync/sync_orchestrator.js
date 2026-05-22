@@ -50,7 +50,7 @@ export const SyncOrchestrator = {
         }
     },
 
-    async autoSync() {
+    autoSync() {
         if (this.isSyncing) return;
         this.isSyncing = true;
         window.dispatchEvent(new CustomEvent("sync-start"));
@@ -161,9 +161,10 @@ export const SyncOrchestrator = {
     },
 
     packData() {
+        const lastUpdate = parseInt(localStorage.getItem("sync_local_update_timestamp") || Date.now().toString(), 10);
         const data = {
             version: 1,
-            timestamp: Date.now(),
+            timestamp: lastUpdate,
             payload: {}
         };
         this.SYNC_KEYS.forEach(key => {
@@ -186,6 +187,10 @@ export const SyncOrchestrator = {
             const stringValue = typeof value === 'object' ? JSON.stringify(value) : value;
             localStorage.setItem(key, stringValue);
         });
+
+        if (cloudData.timestamp) {
+            localStorage.setItem("sync_local_update_timestamp", cloudData.timestamp.toString());
+        }
         
         // Notify app to refresh UI
         window.dispatchEvent(new CustomEvent("sync-data-applied"));
@@ -271,12 +276,16 @@ export const SyncOrchestrator = {
         });
 
         // Apply back locally
-        this.unpackAndApply({ payload: mergedPayload });
+        const mergeTimestamp = Date.now();
+        this.unpackAndApply({ 
+            payload: mergedPayload,
+            timestamp: mergeTimestamp
+        });
         
         // Push merged back to cloud
         const mergedDataToPush = {
             version: 1,
-            timestamp: Date.now(),
+            timestamp: mergeTimestamp,
             payload: mergedPayload
         };
         const newSha = await GithubSync.uploadData(mergedDataToPush, cloudSha);
