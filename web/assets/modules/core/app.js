@@ -5,6 +5,7 @@ import { SuttaController } from "core/sutta_controller.js";
 import { SuttaDB } from "data/sutta_db.js";
 import { SuttaService } from "services/index.js";
 import { setupLogging, LogLevel, getLogger } from "utils/logger.js";
+import { UIUtils } from "utils/ui_utils.js";
 import { FilterComponent } from "ui/components/filters/index.js";
 import { setupQuickNav } from "ui/components/nav_search/nav_search.js";
 import { initPopupSystem } from "ui/components/popup/index.js";
@@ -32,6 +33,9 @@ const logger = getLogger("App");
 
 document.addEventListener("DOMContentLoaded", async () => {
   console.time("🚀 App Start to Ready");
+
+  // Lock safe area bottom to prevent shifting during scroll
+  UIUtils.lockSafeAreaBottom();
 
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 

@@ -18,7 +18,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 25px; /* Sử dụng giá trị cố định để tránh hiện tượng "nhảy" khi env() thay đổi lúc scroll */
+  padding-bottom: var(--safe-bottom); /* Sử dụng biến đã được chốt giá trị để tránh "nhảy" */
 }
 
 /* Chấm nhỏ low-profile đại diện cho khu vực nhấp */

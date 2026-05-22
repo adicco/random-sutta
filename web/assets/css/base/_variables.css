@@ -198,6 +198,9 @@
   --highlight-bg: rgba(var(--primary-rgb), 0.08);
   --highlight-border-width: 4px;
   --highlight-side-offset: 1.25rem; /* Increased slightly for better visual balance */
+
+  /* Safe Area Lock (Updated by JS) */
+  --safe-bottom: 20px; 
   --para-spacing: 1.2rem;
   --seg-spacing: 0.6rem;
 
