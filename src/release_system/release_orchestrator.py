@@ -3,7 +3,7 @@ import logging
 import sys
 
 # [UPDATED] Import hằng số mới
-from .release_config import CRITICAL_ASSETS
+from .release_config import CRITICAL_ASSETS, PROJECT_ROOT
 from .logic import (
     release_versioning,
     asset_validator,
