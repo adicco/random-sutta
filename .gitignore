@@ -39,6 +39,7 @@ Thumbs.db
 /web/public/assets/books/*
 /web/assets/sutta/
 /web/public/assets/db/
+/web/assets/modules/data/constants.js
 
 .env_aliases
 
