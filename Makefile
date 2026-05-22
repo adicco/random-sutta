@@ -255,6 +255,10 @@ ios:
 	@cp ios/App/output/App.ipa dist/ios/randomsutta.ipa
 	@echo "✅ XONG! File IPA của bạn nằm tại:"
 	@echo "📍 dist/ios/randomsutta.ipa"
+	@$(MAKE) ios-copy
+
+# Chỉ thực hiện copy IPA vào iPhone (yêu cầu đã build trước đó)
+ios-copy:
 	@if command -v idevice_id >/dev/null 2>&1 && [ "$$(idevice_id -l)" != "" ]; then \
 		echo "📲 Phát hiện iPhone đang kết nối. Đang tìm nơi gửi file..."; \
 		READDLE_ID=$$(ideviceinstaller list | grep "com.readdle.ReaddleDocs" | head -n 1 | cut -d, -f1 | tr -d ' '); \
@@ -269,7 +273,8 @@ ios:
 			echo "✅ Đã copy vào máy. Bạn hãy kiểm tra trong app Files (Tệp) hoặc mục Downloads."; \
 		fi \
 	else \
-		echo "ℹ️ Không tìm thấy iPhone qua USB, bỏ qua bước copy."; \
+		echo "❌ Không tìm thấy iPhone qua USB. Hãy cắm máy và thử lại."; \
+		exit 1; \
 	fi
 
 # Mở dự án iOS bằng Xcode
