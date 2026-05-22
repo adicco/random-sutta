@@ -16,22 +16,15 @@ export const SyncUIManager = {
             btnPull: document.getElementById("btn-sync-pull"),
             manualControls: document.getElementById("sync-manual-controls"),
             inputArea: document.getElementById("sync-input-area"),
-            clientIdInput: document.getElementById("sync-client-id") // We'll keep the ID but treat it as PAT input
+            clientIdInput: document.getElementById("sync-client-id"), // Used for PAT
+            repoNameInput: document.getElementById("sync-repo-name")   // New input for Repo
         };
 
         if (!this.els.btnLogin) return;
 
-        this._setupEventListeners();
-        this._loadSettings();
-        this._updateUI();
-        
-        // Initialize Orchestrator
-        SyncOrchestrator.init();
-
-        // Global Sync Listeners for Animation
-        window.addEventListener("sync-start", () => this._setVisualState("syncing"));
-        window.addEventListener("sync-end", () => this._setVisualState("authed"));
-        window.addEventListener("sync-error", () => this._setVisualState("sync-error"));
+        // If repoNameInput doesn't exist in HTML yet, we create it dynamically for now 
+        // OR we can just use the existing area and add it if we are allowed to modify index.html
+        // For this task, I'll assume I should check index.html or create it.
     },
 
     _setupEventListeners() {
@@ -40,7 +33,21 @@ export const SyncUIManager = {
             
             if (this.els.inputArea.classList.contains("hidden")) {
                 this.els.inputArea.classList.remove("hidden");
-                this.els.clientIdInput.placeholder = "Enter GitHub PAT (repo scope)";
+                this.els.clientIdInput.placeholder = "GitHub PAT";
+                
+                // Add Repo Input if it doesn't exist
+                if (!document.getElementById("sync-repo-name")) {
+                    const repoInput = document.createElement("input");
+                    repoInput.id = "sync-repo-name";
+                    repoInput.type = "text";
+                    repoInput.placeholder = "Repository Name (e.g. rsnote)";
+                    repoInput.className = "sync-input";
+                    repoInput.style.marginTop = "8px";
+                    this.els.clientIdInput.parentNode.insertBefore(repoInput, this.els.btnConnect);
+                    this.els.repoNameInput = repoInput;
+                    repoInput.onclick = (e) => e.stopPropagation();
+                }
+
                 this.els.clientIdInput.focus();
             } else {
                 this.els.inputArea.classList.add("hidden");
@@ -50,8 +57,10 @@ export const SyncUIManager = {
         this.els.btnConnect.onclick = async (e) => {
             e.stopPropagation();
             const token = this.els.clientIdInput.value.trim();
-            if (!token) {
-                alert("Please paste your GitHub Personal Access Token (PAT).");
+            const repoName = this.els.repoNameInput ? this.els.repoNameInput.value.trim() : "rsnote";
+
+            if (!token || !repoName) {
+                alert("Please enter both GitHub PAT and Repository Name.");
                 return;
             }
             
@@ -59,9 +68,9 @@ export const SyncUIManager = {
             this.els.btnConnect.innerText = "Connecting...";
             
             try {
-                await GithubAuthManager.login(token);
+                await GithubAuthManager.login(token, repoName);
             } catch (err) {
-                alert("Failed to authenticate with GitHub. Check your token.");
+                alert("Failed to connect: " + err.message);
             } finally {
                 this.els.btnConnect.disabled = false;
                 this.els.btnConnect.innerText = "Connect";

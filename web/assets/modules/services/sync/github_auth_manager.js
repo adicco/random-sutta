@@ -2,16 +2,18 @@
 import { getLogger } from "utils/logger.js";
 
 const logger = getLogger("GithubAuthManager");
-const STORAGE_KEY = "github_sync_pat";
-const REPO_NAME = "rsnote";
+const STORAGE_KEY_PAT = "github_sync_pat";
+const STORAGE_KEY_REPO = "github_sync_repo";
 
 export const GithubAuthManager = {
     _token: null,
     _username: null,
+    _repo: null,
 
     init() {
-        this._token = localStorage.getItem(STORAGE_KEY);
-        if (this._token) {
+        this._token = localStorage.getItem(STORAGE_KEY_PAT);
+        this._repo = localStorage.getItem(STORAGE_KEY_REPO);
+        if (this._token && this._repo) {
             // Validate token asynchronously on init
             this.validateToken(this._token).catch(() => {
                 logger.warn("Init", "Stored token is invalid, logging out.");
@@ -21,7 +23,7 @@ export const GithubAuthManager = {
     },
 
     isAuthenticated() {
-        return !!this._token && !!this._username;
+        return !!this._token && !!this._username && !!this._repo;
     },
 
     getToken() {
@@ -33,11 +35,12 @@ export const GithubAuthManager = {
     },
     
     getRepoName() {
-        return REPO_NAME;
+        return this._repo;
     },
 
-    async login(token) {
+    async login(token, repoName) {
         if (!token) throw new Error("Token is required");
+        if (!repoName) throw new Error("Repository name is required");
         
         try {
             logger.info("Login", "Validating token...");
@@ -45,9 +48,11 @@ export const GithubAuthManager = {
             
             this._token = token;
             this._username = username;
-            localStorage.setItem(STORAGE_KEY, token);
+            this._repo = repoName;
+            localStorage.setItem(STORAGE_KEY_PAT, token);
+            localStorage.setItem(STORAGE_KEY_REPO, repoName);
             
-            logger.info("Login", `Authenticated as ${username}`);
+            logger.info("Login", `Authenticated as ${username} for repo ${repoName}`);
             
             // Ensure repo exists
             await this.ensureRepoExists();
@@ -64,7 +69,9 @@ export const GithubAuthManager = {
     logout() {
         this._token = null;
         this._username = null;
-        localStorage.removeItem(STORAGE_KEY);
+        this._repo = null;
+        localStorage.removeItem(STORAGE_KEY_PAT);
+        localStorage.removeItem(STORAGE_KEY_REPO);
         window.dispatchEvent(new CustomEvent("github-auth-logout"));
     },
 
@@ -89,7 +96,7 @@ export const GithubAuthManager = {
         if (!this.isAuthenticated()) throw new Error("Not authenticated");
 
         // 1. Check if repo exists
-        const checkRes = await fetch(`https://api.github.com/repos/${this._username}/${REPO_NAME}`, {
+        const checkRes = await fetch(`https://api.github.com/repos/${this._username}/${this._repo}`, {
             headers: {
                 "Authorization": `Bearer ${this._token}`,
                 "Accept": "application/vnd.github.v3+json"
@@ -97,12 +104,12 @@ export const GithubAuthManager = {
         });
 
         if (checkRes.ok) {
-            logger.info("EnsureRepo", `Repo ${REPO_NAME} exists.`);
+            logger.info("EnsureRepo", `Repo ${this._repo} exists.`);
             return;
         }
 
         if (checkRes.status === 404) {
-            logger.info("EnsureRepo", `Repo ${REPO_NAME} not found. Creating...`);
+            logger.info("EnsureRepo", `Repo ${this._repo} not found. Creating...`);
             // 2. Create repo
             const createRes = await fetch("https://api.github.com/user/repos", {
                 method: "POST",
@@ -112,8 +119,8 @@ export const GithubAuthManager = {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    name: REPO_NAME,
-                    description: "Sync repository for Random Sutta Reader",
+                    name: this._repo,
+                    description: "Sync repository for Random Sutta Reader (Auto-created)",
                     private: true,
                     has_issues: false,
                     has_projects: false,
