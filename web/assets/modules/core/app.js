@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Lock safe area bottom to prevent shifting during scroll
   UIUtils.lockSafeAreaBottom();
+  UIUtils.initViewportLock();
 
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
 

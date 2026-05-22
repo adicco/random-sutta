@@ -81,6 +81,11 @@ export const ThemeManager = {
             // Truyền giá trị thô (unitless) để CSS tự tính toán
             document.documentElement.style.setProperty('--sepia-val', cssValue);
             
+            const overlay = document.getElementById("sepia-overlay");
+            if (overlay) {
+                overlay.style.display = (sliderValue > 0) ? "block" : "none";
+            }
+
             if (sepiaSlider && sepiaSlider.value != sliderValue) {
                 sepiaSlider.value = sliderValue;
             }

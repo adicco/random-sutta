@@ -61,24 +61,44 @@ export const UIUtils = {
 
         // 2. Aggressive reflow after a short delay
         setTimeout(() => {
-            // Restore visual viewport offset if it's shifted
             if (window.visualViewport) {
                 window.scrollTo(window.visualViewport.offsetLeft, window.visualViewport.offsetTop);
             }
 
             const scrollY = window.scrollY;
-            // Force a layout reflow by temporarily changing height and triggering a scroll
             document.documentElement.style.height = '100.1%';
             
             requestAnimationFrame(() => {
                 document.documentElement.style.height = '100%';
                 window.scrollTo(0, scrollY);
                 
-                // Final "nudge" to ensure fixed elements are correctly placed
                 setTimeout(() => {
                     window.dispatchEvent(new Event('resize'));
                 }, 50);
             });
         }, 300);
+    },
+
+    /**
+     * Sets up ongoing listeners to keep the viewport stable.
+     */
+    initViewportLock() {
+        if (!window.visualViewport || !/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+
+        const sync = () => {
+            if (window.visualViewport.offsetLeft !== 0 || window.visualViewport.offsetTop !== 0) {
+                window.scrollTo(window.visualViewport.offsetLeft, window.visualViewport.offsetTop);
+            }
+        };
+
+        window.visualViewport.addEventListener('scroll', sync);
+        window.visualViewport.addEventListener('resize', sync);
+        
+        // Also handle keyboard hide explicitly
+        document.addEventListener('focusout', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                this.stabilizeViewport();
+            }
+        });
     }
 };

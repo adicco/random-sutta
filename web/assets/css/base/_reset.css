@@ -15,9 +15,6 @@ html {
   --sepia-saturate: 1.1;
 
   transition: font-size 0.2s ease;
-  
-  /* [NEW] Prevent rubber-banding on iOS at root level */
-  overscroll-behavior-y: none;
 }
 
 body {
@@ -29,13 +26,6 @@ body {
   margin: 0;
   padding: 0;
   line-height: 1.6;
-  
-  /* [NEW] Prevent rubber-banding pull-to-refresh effect on mobile.
-     Keeps fixed elements stable. */
-  overscroll-behavior-y: none;
-  
-  /* [GLOBAL FIX] Hardware acceleration for all fixed elements to prevent jitter on iOS */
-  --ios-fixed-fix: translate3d(0, 0, 0);
 }
 
 /* [FIX] View Containers Centering */
@@ -47,33 +37,16 @@ body {
   padding: 0 20px calc(20px + var(--safe-bottom)) 20px;
 }
 
-/* [FIX] Hardware accelerate all critical fixed elements */
-#global-toolbar,
-.popup-container,
-#lookup-popup,
-#magic-toolbar-trigger,
-#magic-tts-trigger,
-.edge-nav-zone,
-.nav-search-preview,
-#splash-screen {
-  will-change: transform;
-  -webkit-transform: var(--ios-fixed-fix);
-  transform: var(--ios-fixed-fix);
-}
-
-/* [FIX] Apply Filter to Content Bodies ONLY, not the container shells.
-   This prevents 'position: fixed' elements from breaking context on iOS
+/* [FIX] Sepia Overlay 
+   We use an overlay div instead of CSS 'filter' to avoid breaking 'position: fixed' context on iOS.
 */
-#landing-view .landing-content, 
-#reader-view main, 
-.popup-body,
-.nav-search-preview {
-  filter: 
-    sepia(calc(var(--sepia-val) * 1%)) 
-    hue-rotate(calc(var(--sepia-val) * var(--sepia-hue-coeff) * 1deg)) 
-    saturate(var(--sepia-saturate));
-  
-  transition: filter 0.2s ease;
+#sepia-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999999;
+  background-color: #5d4037; /* Darker warm brown */
+  opacity: calc(var(--sepia-val) * 0.001); /* Very subtle tint */
 }
 
 button {
