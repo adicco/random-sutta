@@ -12,6 +12,7 @@ export const SyncUIManager = {
             btnLogin: document.getElementById("btn-sync-login"),
             btnConnect: document.getElementById("btn-sync-connect"),
             btnLogout: document.getElementById("btn-sync-logout"),
+            btnSyncNow: document.getElementById("btn-sync-now"),
             manualControls: document.getElementById("sync-manual-controls"),
             inputArea: document.getElementById("sync-input-area"),
             clientIdInput: document.getElementById("sync-client-id"), // Used for PAT
@@ -142,6 +143,17 @@ export const SyncUIManager = {
             if (confirm("Logout from GitHub Sync?")) {
                 GithubAuthManager.logout();
                 this._updateUI();
+            }
+        };
+
+        this.els.btnSyncNow.onclick = async (e) => {
+            e.stopPropagation();
+            if (SyncOrchestrator.isSyncing) return;
+            
+            try {
+                await SyncOrchestrator.autoSync();
+            } catch (err) {
+                logger.error("ManualSync", err);
             }
         };
 
