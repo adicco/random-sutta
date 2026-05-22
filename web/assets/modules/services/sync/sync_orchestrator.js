@@ -210,21 +210,33 @@ export const SyncOrchestrator = {
         const localData = this.packData();
         const mergedPayload = { ...localData.payload };
         
-        // Special logic for bookmarks (Object merge by UID)
+        // Special logic for bookmarks (Merge by UID with Signed Timestamp)
         if (cloudData.payload.sutta_bookmarks) {
             const localBookmarks = localData.payload.sutta_bookmarks || {};
             let cloudBookmarks = cloudData.payload.sutta_bookmarks;
             
-            // [COMPAT] Handle cloud sending legacy array
+            // [COMPAT] Migrate cloud data to Signed Timestamp format before merging
             if (Array.isArray(cloudBookmarks)) {
                 const converted = {};
                 cloudBookmarks.forEach(b => {
                     const uid = b.uid || b.id;
                     if (uid) {
-                        converted[uid] = {
-                            status: b.status !== undefined ? b.status : !b.deleted,
-                            timestamp: b.timestamp || Date.now()
-                        };
+                        const ts = b.timestamp || Date.now();
+                        const status = b.status !== undefined ? b.status : !b.deleted;
+                        converted[uid] = status ? Math.abs(ts) : -Math.abs(ts);
+                    }
+                });
+                cloudBookmarks = converted;
+            } else {
+                const converted = {};
+                Object.keys(cloudBookmarks).forEach(uid => {
+                    const item = cloudBookmarks[uid];
+                    if (typeof item === 'object' && item !== null) {
+                        const ts = item.timestamp || 0;
+                        const status = item.status !== undefined ? item.status : !item.deleted;
+                        converted[uid] = status ? Math.abs(ts) : -Math.abs(ts);
+                    } else if (typeof item === 'number') {
+                        converted[uid] = item;
                     }
                 });
                 cloudBookmarks = converted;
@@ -232,15 +244,20 @@ export const SyncOrchestrator = {
 
             const mergedBookmarks = { ...localBookmarks };
             Object.keys(cloudBookmarks).forEach(uid => {
-                const cloudItem = cloudBookmarks[uid];
-                // Clean cloud item before merge
-                const cleanCloudItem = {
-                    status: cloudItem.status,
-                    timestamp: cloudItem.timestamp
-                };
+                const cloudVal = cloudBookmarks[uid];
+                const cloudTs = Math.abs(cloudVal);
+                
+                const localVal = mergedBookmarks[uid];
+                // Handle legacy local formats during merge just in case
+                let localTs = 0;
+                if (typeof localVal === 'number') {
+                    localTs = Math.abs(localVal);
+                } else if (typeof localVal === 'object' && localVal !== null) {
+                    localTs = localVal.timestamp || 0;
+                }
 
-                if (!mergedBookmarks[uid] || cleanCloudItem.timestamp > mergedBookmarks[uid].timestamp) {
-                    mergedBookmarks[uid] = cleanCloudItem;
+                if (!mergedBookmarks[uid] || cloudTs > localTs) {
+                    mergedBookmarks[uid] = cloudVal;
                 }
             });
             mergedPayload.sutta_bookmarks = mergedBookmarks;
