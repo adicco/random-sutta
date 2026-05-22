@@ -72,7 +72,7 @@
 .setting-multi-badge-row {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 12px; /* Increased gap from 4px to 12px */
     margin-left: auto;
 }
 
@@ -82,26 +82,28 @@
     border: none;
     color: var(--text-muted);
     cursor: pointer;
-    padding: 4px;
+    padding: 8px; /* Increased padding for better hit area */
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: color 0.2s, transform 0.1s;
+    transition: all 0.2s;
+    border-radius: 50%;
 }
 
 .minimalist-control:hover {
     color: var(--primary-color);
+    background-color: var(--bg-hover); /* Subtle background on hover */
 }
 
 .minimalist-control:active {
-    transform: scale(0.9);
+    transform: scale(0.85);
 }
 
 .minimalist-label {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.9rem; /* Slightly larger */
+    font-weight: 700; /* Bolder */
     color: var(--text-main);
-    min-width: 45px;
+    min-width: 55px; /* Wider space for label */
     text-align: center;
     user-select: none;
 }
