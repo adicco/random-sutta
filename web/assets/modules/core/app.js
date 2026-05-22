@@ -28,6 +28,7 @@ import { TTSBootstrap } from "tts/tts_bootstrap.js";
 import { initLookup } from "lookup/index.js";
 import { ToolbarManager } from "toolbar/toolbar_manager.js";
 import { PWAManager } from "services/pwa/pwa_manager.js";
+import { NativeUpdater } from "services/pwa/native_updater.js";
 
 const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : "dev-mode";
 const logger = getLogger("App");
@@ -35,8 +36,9 @@ const logger = getLogger("App");
 document.addEventListener("DOMContentLoaded", async () => {
   console.time("🚀 App Start to Ready");
 
-  // Initialize PWA Update Manager
+  // Initialize Update Managers
   PWAManager.init();
+  NativeUpdater.init();
 
   // Lock safe area bottom to prevent shifting during scroll
   UIUtils.lockSafeAreaBottom();
