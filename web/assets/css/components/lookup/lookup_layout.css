@@ -42,7 +42,7 @@
 }
 
 #lookup-popup .popup-body {
-    padding-bottom: calc(40vh + env(safe-area-inset-bottom)); /* [UX] Generous overscroll space */
+    padding-bottom: calc(40vh + var(--safe-bottom)); /* [UX] Generous overscroll space */
     flex: 1;
     overflow-y: auto;
     position: relative; /* Context for tab content */

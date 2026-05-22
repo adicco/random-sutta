@@ -97,7 +97,7 @@ body.is-resizing .popup-container {
   /* [UPDATED] Add Safe Area Padding internally */
   padding: var(--popup-padding-mobile);
   /* Base padding + Extra breathing room (30px) + Safe Area */
-  padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + env(safe-area-inset-bottom, 20px));
+  padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + var(--safe-bottom));
   
   overflow-y: auto;
   overflow-anchor: auto;
@@ -110,7 +110,7 @@ body.is-resizing .popup-container {
 /* [NEW] PWA Adjustment: Remove extra bottom padding (no address bar) */
 @media all and (display-mode: standalone) {
   .popup-body {
-    padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + env(safe-area-inset-bottom, 0px)); 
+    padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + var(--safe-bottom)); 
   }
 }
 
@@ -173,7 +173,7 @@ body.parallels-open #quicklook-popup {
 /* Ensure content isn't hidden behind floating nav */
 #comment-popup .popup-body {
   /* [UPDATED] Generous padding for overscroll (readability at bottom) */
-  padding-bottom: calc(30vh + env(safe-area-inset-bottom, 20px));
+  padding-bottom: calc(30vh + var(--safe-bottom));
 }
 
 .comment-paragraph {
