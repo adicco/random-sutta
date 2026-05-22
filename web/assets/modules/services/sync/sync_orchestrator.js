@@ -96,6 +96,8 @@ export const SyncOrchestrator = {
                                     await this._doPush(cloudSha);
                                 }
                                 localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
+                            } else if (choice === 'cancel') {
+                                logger.info("AutoSync", "User ignored unification choice.");
                             }
                             window.dispatchEvent(new CustomEvent("sync-end"));
                         });

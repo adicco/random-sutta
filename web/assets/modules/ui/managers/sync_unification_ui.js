@@ -42,6 +42,9 @@ export const SyncUnificationUI = {
         div.className = "modal-overlay sync-unification-modal hidden";
         div.innerHTML = `
             <div class="modal-content unification-content">
+                <button class="modal-close-btn" id="btn-unif-close" title="Ignore for now">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
                 <div class="unification-header">
                     <h3>Sync Unification</h3>
                     <p>Conflict detected. How would you like to resolve it?</p>
@@ -96,6 +99,7 @@ export const SyncUnificationUI = {
         div.querySelector("#btn-unif-cloud").onclick = () => this._handle("cloud");
         div.querySelector("#btn-unif-latest").onclick = () => this._handle("latest");
         div.querySelector("#btn-unif-merge").onclick = () => this._handle("merge");
+        div.querySelector("#btn-unif-close").onclick = () => this._handle("cancel");
         div.querySelector("#btn-unif-toggle-details").onclick = () => {
             const area = div.querySelector("#unif-diff-area");
             const btn = div.querySelector("#btn-unif-toggle-details");
