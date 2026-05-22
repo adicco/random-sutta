@@ -18,19 +18,20 @@ export const AppRouter = {
 
     handleInitialRoute: async function() {
         const initialParams = Router.getParams();
+        const progress = SuttaPersistence.load();
         
+        logger.info("handleInitialRoute", "Start", { q: initialParams.q, hasProgress: !!progress });
+
         if (initialParams.q) {
             ViewManager.switchView('reader');
             
             let loadId = initialParams.q;
             if (window.location.hash) loadId += window.location.hash;
             
-            // [NEW] Carry over highlight param
             const options = {};
             if (initialParams.hl) options.hl = initialParams.hl;
 
             let restoreScroll = 0;
-            const progress = SuttaPersistence.load();
             if (progress && progress.id === loadId.split('#')[0]) {
                 restoreScroll = progress.scrollY;
             }
@@ -39,20 +40,24 @@ export const AppRouter = {
             RandomBuffer.startBackgroundWork();
         } else {
             // Root access -> Try restore last read or go to Landing
-            const progress = SuttaPersistence.load();
-            let restored = false;
-            
             if (progress && progress.id) {
+                logger.info("handleInitialRoute", `Restoring last read: ${progress.id}`);
                 ViewManager.switchView('reader');
-                await SuttaController.loadSutta(progress.id, true, progress.scrollY);
-                restored = true;
-            }
-
-            if (!restored) {
+                
+                // [FIX] iOS IPA might need a small tick to ensure DOM is ready after switchView
+                await new Promise(r => requestAnimationFrame(r));
+                
+                try {
+                    await SuttaController.loadSutta(progress.id, true, progress.scrollY);
+                } catch (e) {
+                    logger.error("handleInitialRoute", "Restoration failed, falling back to landing", e);
+                    ViewManager.switchView('landing');
+                }
+            } else {
+                logger.info("handleInitialRoute", "No progress found, showing landing");
                 ViewManager.switchView('landing');
             }
             
-            // Pre-fetch randoms in background while user stares at the landing page (or is reading restored sutta)
             RandomBuffer.startBackgroundWork();
         }
     },
