@@ -22,9 +22,17 @@ export const SyncUIManager = {
 
         if (!this.els.btnLogin) return;
 
-        // If repoNameInput doesn't exist in HTML yet, we create it dynamically for now 
-        // OR we can just use the existing area and add it if we are allowed to modify index.html
-        // For this task, I'll assume I should check index.html or create it.
+        this._setupEventListeners();
+        this._loadSettings();
+        this._updateUI();
+        
+        // Initialize Orchestrator
+        SyncOrchestrator.init();
+
+        // Global Sync Listeners for Animation
+        window.addEventListener("sync-start", () => this._setVisualState("syncing"));
+        window.addEventListener("sync-end", () => this._setVisualState("authed"));
+        window.addEventListener("sync-error", () => this._setVisualState("sync-error"));
     },
 
     _setupEventListeners() {
