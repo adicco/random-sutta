@@ -11,7 +11,6 @@ logger = logging.getLogger("Release.OTAPackager")
 
 # Configuration (Could be moved to release_config.py later)
 DIST_WEB_DIR = "dist/web"
-OUTPUT_DIR = "dist/ota"
 MANIFEST_FILE = "native_version.json"
 ZIP_FILE = "dist.zip"
 BASE_URL = "https://hieucao.github.io/random-sutta"
@@ -28,20 +27,15 @@ def package_lean_ota(version_tag: str) -> bool:
         return False
 
     try:
-        # 1. Prepare Output Directory
-        if os.path.exists(OUTPUT_DIR):
-            shutil.rmtree(OUTPUT_DIR)
-        os.makedirs(OUTPUT_DIR)
-
-        # 2. Create Lean ZIP (Exclude assets/db/)
-        zip_path = os.path.join(OUTPUT_DIR, ZIP_FILE)
+        # 1. Prepare ZIP (In DIST_WEB_DIR so it gets deployed)
+        zip_path = os.path.join(DIST_WEB_DIR, ZIP_FILE)
         logger.info(f"Creating {ZIP_FILE} (excluding databases)...")
         
         file_count = 0
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for root, dirs, files in os.walk(DIST_WEB_DIR):
-                # Skip the large database directory
-                if "assets/db" in root:
+                # Skip the large database directory and the zip itself if it exists
+                if "assets/db" in root or ZIP_FILE in files:
                     continue
                     
                 for file in files:
@@ -54,7 +48,7 @@ def package_lean_ota(version_tag: str) -> bool:
         zip_size = os.path.getsize(zip_path) / (1024 * 1024)
         logger.info(f"✅ Created {ZIP_FILE} with {file_count} files ({zip_size:.2f} MB)")
 
-        # 3. Generate native_version.json
+        # 2. Generate native_version.json in DIST_WEB_DIR
         manifest = {
             "version": version_tag,
             "url": f"{BASE_URL}/{ZIP_FILE}",
@@ -62,12 +56,11 @@ def package_lean_ota(version_tag: str) -> bool:
             "notes": f"Automated Lean OTA update: {version_tag}"
         }
 
-        manifest_path = os.path.join(OUTPUT_DIR, MANIFEST_FILE)
+        manifest_path = os.path.join(DIST_WEB_DIR, MANIFEST_FILE)
         with open(manifest_path, 'w') as f:
             json.dump(manifest, f, indent=2)
 
-        logger.info(f"✅ Generated {MANIFEST_FILE} with version: {version_tag}")
-        logger.info(f"📍 OTA files ready in: {OUTPUT_DIR}")
+        logger.info(f"✅ Generated {MANIFEST_FILE} in {DIST_WEB_DIR}")
         
         return True
 
