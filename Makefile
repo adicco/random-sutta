@@ -216,8 +216,8 @@ undo:
 # 📱 ANDROID / APK COMMANDS
 # ==============================================================================
 
-# Biên dịch web cho APK và xuất file APK ngay lập tức
-apk:
+# Build APK (Common logic)
+apk-build:
 	@echo "🚀 Đang biên dịch mã nguồn cho APK (Offline mode)..."
 	APK_BUILD=true npm run build
 	@echo "🔄 Đồng bộ với dự án Android (Capacitor)..."
@@ -227,10 +227,10 @@ apk:
 	cd android && ./gradlew assembleDebug
 	@mkdir -p dist/apk
 	@cp android/app/build/outputs/apk/debug/app-debug.apk dist/apk/randomsutta.apk
-	@rm -f randomsutta.apk
-	@echo "✅ XONG! File APK của bạn nằm tại:"
-	@echo "📍 dist/apk/randomsutta.apk"
-	@$(MAKE) apk-copy
+	@echo "✅ Build hoàn tất: dist/apk/randomsutta.apk"
+
+# Build và Copy vào thư mục Download
+apk: apk-build apk-copy
 
 # Copy APK vào thư mục Download của Android (Yêu cầu ADB và bật USB Debugging)
 apk-copy:
@@ -248,7 +248,7 @@ apk-copy:
 	fi
 
 # Cài đặt trực tiếp APK vào máy Android và khởi chạy
-apk-install:
+apk-install: apk-build
 	@if command -v adb >/dev/null 2>&1; then \
 		echo "🚀 Đang cài đặt APK trực tiếp vào thiết bị..."; \
 		adb install -r dist/apk/randomsutta.apk && \
