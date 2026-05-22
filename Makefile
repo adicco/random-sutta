@@ -230,6 +230,34 @@ apk:
 	@rm -f randomsutta.apk
 	@echo "✅ XONG! File APK của bạn nằm tại:"
 	@echo "📍 dist/apk/randomsutta.apk"
+	@$(MAKE) apk-copy
+
+# Copy APK vào thư mục Download của Android (Yêu cầu ADB và bật USB Debugging)
+apk-copy:
+	@if command -v adb >/dev/null 2>&1; then \
+		if [ "$$(adb devices | grep -v "List" | grep "device")" != "" ]; then \
+			echo "📲 Phát hiện thiết bị Android. Đang copy APK vào thư mục Download..."; \
+			adb push dist/apk/randomsutta.apk /sdcard/Download/randomsutta.apk && \
+			echo "✅ Đã copy vào /sdcard/Download/randomsutta.apk thành công!" || \
+			echo "❌ Lỗi khi copy. Hãy kiểm tra kết nối USB."; \
+		else \
+			echo "⚠️ Không tìm thấy thiết bị Android nào qua ADB. Hãy bật USB Debugging."; \
+		fi \
+	else \
+		echo "⚠️ Không tìm thấy lệnh 'adb'. Hãy cài đặt Android Platform Tools."; \
+	fi
+
+# Cài đặt trực tiếp APK vào máy Android và khởi chạy
+apk-install:
+	@if command -v adb >/dev/null 2>&1; then \
+		echo "🚀 Đang cài đặt APK trực tiếp vào thiết bị..."; \
+		adb install -r dist/apk/randomsutta.apk && \
+		echo "✅ Đã cài đặt thành công! Đang khởi chạy ứng dụng..." && \
+		adb shell am start -n com.randomsutta.app/com.randomsutta.app.MainActivity || \
+		echo "❌ Thất bại. Hãy đảm bảo máy đã mở khóa và cho phép cài đặt."; \
+	else \
+		echo "⚠️ ADB không khả dụng."; \
+	fi
 
 # Mở dự án Android bằng Android Studio
 open-apk:
