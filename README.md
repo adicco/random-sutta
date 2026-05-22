@@ -57,8 +57,8 @@ make sync
 # Process JSON into optimized SQLite databases
 make data
 
-# Build Dictionaries
-make da
+# Build Dictionaries (mini)
+make de
 ```
 
 ### 4\. Development & Build
