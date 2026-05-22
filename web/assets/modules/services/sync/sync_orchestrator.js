@@ -2,6 +2,7 @@
 import { getLogger } from "utils/logger.js";
 import { GithubAuthManager } from "services/sync/github_auth_manager.js";
 import { GithubSync } from "services/sync/github_sync.js";
+import { SyncConflictUI } from "ui/managers/sync_conflict_ui.js";
 
 const logger = getLogger("SyncOrchestrator");
 
@@ -57,8 +58,22 @@ export const SyncOrchestrator = {
                 } else {
                     logger.info("AutoSync", "Cloud has changed.");
                     if (localUpdateTimestamp > lastSyncTimestamp) {
-                        logger.info("AutoSync", "Local has changed too. Smart Merge required.");
-                        await this.smartMerge(cloudData, cloudSha);
+                        logger.info("AutoSync", "Local has changed too. Triggering Conflict Resolver.");
+                        this.isSyncing = false; // Release lock for UI interaction
+                        SyncConflictUI.show(this.packData(), cloudData, async (choice) => {
+                            this.isSyncing = true;
+                            if (choice === 'merge') {
+                                await this.smartMerge(cloudData, cloudSha);
+                            } else if (choice === 'cloud') {
+                                this.unpackAndApply(cloudData);
+                                localStorage.setItem("sync_github_sha", cloudSha);
+                                localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
+                            } else if (choice === 'local') {
+                                await this._doPush(cloudSha);
+                            }
+                            window.dispatchEvent(new CustomEvent("sync-end"));
+                        });
+                        return; // Exit and wait for UI callback
                     } else {
                         logger.info("AutoSync", "No local changes. Pulling from cloud.");
                         this.unpackAndApply(cloudData);
