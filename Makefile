@@ -260,18 +260,11 @@ ios:
 # Chỉ thực hiện copy IPA vào iPhone (yêu cầu đã build trước đó)
 ios-copy:
 	@if command -v idevice_id >/dev/null 2>&1 && [ "$$(idevice_id -l)" != "" ]; then \
-		echo "📲 Phát hiện iPhone đang kết nối. Đang tìm nơi gửi file..."; \
-		READDLE_ID=$$(ideviceinstaller list | grep "com.readdle.ReaddleDocs" | head -n 1 | cut -d, -f1 | tr -d ' '); \
-		if [ "$$READDLE_ID" != "" ]; then \
-			echo "📥 Đang copy vào ứng dụng Documents ($$READDLE_ID) dưới tên RS_Build.zip..."; \
-			afcclient --documents "$$READDLE_ID" put dist/ios/randomsutta.ipa RS_Build.zip || true; \
-			echo "✅ Đã copy vào ứng dụng Documents. Bạn hãy mở app Documents trên iPhone, tìm file 'RS_Build.zip' và đổi tên thành '.ipa' để cài đặt."; \
-		else \
-			echo "📥 Không thấy app Documents, đang thử copy vào app chính hoặc thư mục gốc..."; \
-			afcclient --documents com.randomsutta.app put dist/ios/randomsutta.ipa RS_Build.zip >/dev/null 2>&1 || \
-			afcclient put dist/ios/randomsutta.ipa RS_Build.zip || true; \
-			echo "✅ Đã copy vào máy dưới tên RS_Build.zip. Bạn hãy kiểm tra trong app Files (Tệp) hoặc mục Downloads."; \
-		fi \
+		echo "📲 Phát hiện iPhone đang kết nối. Đang gửi file vào thư mục Downloads..."; \
+		afcclient put dist/ios/randomsutta.ipa Downloads/RS_Build.zip || true; \
+		echo "✅ Đã copy vào iPhone thành công!"; \
+		echo "📍 Vị trí: Mở app 'Tệp' (Files) -> 'Trên iPhone' -> 'Downloads'"; \
+		echo "💡 Lưu ý: Hãy đổi tên 'RS_Build.zip' thành '.ipa' để cài đặt."; \
 	else \
 		echo "❌ Không tìm thấy iPhone qua USB. Hãy cắm máy và thử lại."; \
 		exit 1; \
