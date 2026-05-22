@@ -12,12 +12,10 @@ export const SyncUIManager = {
             btnLogin: document.getElementById("btn-sync-login"),
             btnConnect: document.getElementById("btn-sync-connect"),
             btnLogout: document.getElementById("btn-sync-logout"),
-            btnPush: document.getElementById("btn-sync-push"),
-            btnPull: document.getElementById("btn-sync-pull"),
             manualControls: document.getElementById("sync-manual-controls"),
             inputArea: document.getElementById("sync-input-area"),
             clientIdInput: document.getElementById("sync-client-id"), // Used for PAT
-            repoNameInput: document.getElementById("sync-repo-name")   // New input for Repo
+            repoNameInput: null // Will be created or checked dynamically
         };
 
         if (!this.els.btnLogin) return;
@@ -43,13 +41,13 @@ export const SyncUIManager = {
                 this.els.inputArea.classList.remove("hidden");
                 this.els.clientIdInput.placeholder = "GitHub PAT";
                 
-                // Add Repo Input if it doesn't exist
+                // Add Repo Input if it doesn't exist (Optional field)
                 if (!document.getElementById("sync-repo-name")) {
                     const repoInput = document.createElement("input");
                     repoInput.id = "sync-repo-name";
                     repoInput.type = "text";
-                    repoInput.placeholder = "Repository Name (e.g. rsnote)";
-                    repoInput.className = "sync-input";
+                    repoInput.placeholder = "Repo Name (Default: rsnote)";
+                    repoInput.className = "sync-id-input"; // Use existing style
                     repoInput.style.marginTop = "8px";
                     this.els.clientIdInput.parentNode.insertBefore(repoInput, this.els.btnConnect);
                     this.els.repoNameInput = repoInput;
@@ -65,10 +63,10 @@ export const SyncUIManager = {
         this.els.btnConnect.onclick = async (e) => {
             e.stopPropagation();
             const token = this.els.clientIdInput.value.trim();
-            const repoName = this.els.repoNameInput ? this.els.repoNameInput.value.trim() : "rsnote";
+            const repoName = (this.els.repoNameInput && this.els.repoNameInput.value.trim()) || "rsnote";
 
-            if (!token || !repoName) {
-                alert("Please enter both GitHub PAT and Repository Name.");
+            if (!token) {
+                alert("Please enter your GitHub Personal Access Token (PAT).");
                 return;
             }
             
@@ -90,32 +88,6 @@ export const SyncUIManager = {
             if (confirm("Logout from GitHub Sync?")) {
                 GithubAuthManager.logout();
                 this._updateUI();
-            }
-        };
-
-        this.els.btnPush.onclick = async (e) => {
-            e.stopPropagation();
-            if (confirm("Overwrite Cloud data with Local data?")) {
-                window.dispatchEvent(new CustomEvent("sync-start"));
-                try {
-                    await SyncOrchestrator.forcePush();
-                    window.dispatchEvent(new CustomEvent("sync-end"));
-                } catch (e) {
-                    window.dispatchEvent(new CustomEvent("sync-error"));
-                }
-            }
-        };
-
-        this.els.btnPull.onclick = async (e) => {
-            e.stopPropagation();
-            if (confirm("Overwrite Local data with Cloud data? This will refresh your bookmarks and settings.")) {
-                window.dispatchEvent(new CustomEvent("sync-start"));
-                try {
-                    await SyncOrchestrator.forcePull();
-                    window.dispatchEvent(new CustomEvent("sync-end"));
-                } catch (e) {
-                    window.dispatchEvent(new CustomEvent("sync-error"));
-                }
             }
         };
 
