@@ -47,5 +47,23 @@ export const UIUtils = {
             // Also try on DOMContentLoaded just in case load is delayed
             document.addEventListener('DOMContentLoaded', setLock, { once: true });
         }
+    },
+
+    /**
+     * Fix for iOS Safari where the visual viewport doesn't correctly sync with the layout viewport
+     * after the keyboard is hidden, causing fixed elements to shift or move during scroll.
+     */
+    stabilizeViewport() {
+        if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+        
+        // Slight delay to allow the keyboard hide animation to finish
+        setTimeout(() => {
+            window.scrollTo(window.scrollX, window.scrollY);
+            // Force a layout reflow
+            document.documentElement.style.height = '100.1%';
+            requestAnimationFrame(() => {
+                document.documentElement.style.height = '100%';
+            });
+        }, 300);
     }
 };

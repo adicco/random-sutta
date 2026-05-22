@@ -240,6 +240,9 @@ export function setupQuickNav(onSearchCallback) {
 
   // Tự đóng khi mất focus
   inputField.addEventListener("blur", (e) => {
+    import("utils/ui_utils.js").then(({ UIUtils }) => {
+      UIUtils.stabilizeViewport();
+    });
     setTimeout(() => {
       // Prevent closing if we clicked inside or are hovering over the preview container (e.g., right-click context menu)
       if (!inputMode.contains(document.activeElement) && !previewContainer.matches(':hover')) {

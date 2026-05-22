@@ -20,18 +20,18 @@ html {
   overscroll-behavior-y: none;
 }
 
-/* [FIX] Apply Filter to Content Layouts ONLY, not Root 
-   This prevents 'position: fixed' elements from breaking context on iOS
-*/
+/* [FIX] View Containers */
 #landing-view, 
 #reader-view {
   position: relative;
-  z-index: 1;
 }
 
-#landing-view, 
-#reader-view, 
-.popup-container,
+/* [FIX] Apply Filter to Content Bodies ONLY, not the container shells.
+   This prevents 'position: fixed' elements from breaking context on iOS
+*/
+#landing-view .landing-content, 
+#reader-view main, 
+.popup-body,
 .nav-search-preview {
   filter: 
     sepia(calc(var(--sepia-val) * 1%)) 
@@ -46,7 +46,7 @@ body {
   background-color: var(--bg-body);
   color: var(--text-main);
   max-width: var(--container-width);
-  min-height: 100%; /* [Fix iOS] Fill the viewport */
+  min-height: 100dvh; /* [FIXED] Use dvh for dynamic viewport height */
   margin: 0 auto;
   padding: 0 20px calc(20px + var(--safe-bottom)) 20px;
   line-height: 1.6;

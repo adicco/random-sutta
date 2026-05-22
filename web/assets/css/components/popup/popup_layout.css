@@ -2,8 +2,8 @@
 
 /* --- SHARED STYLES --- */
 :root {
-  --popup-comment-height: 40vh;
-  --popup-parallels-height: 40vh;
+  --popup-comment-height: 40dvh;
+  --popup-parallels-height: 40dvh;
   --popup-filter-height: auto;
   --popup-quicklook-top: calc(70px + env(safe-area-inset-top, 0px));
 }
@@ -38,7 +38,7 @@
 
 #filter-popup {
   height: auto !important; /* Force auto height to match content levels */
-  max-height: 80vh;
+  max-height: 80dvh;
 }
 
 #filter-resize-handle {
@@ -97,7 +97,7 @@ body.is-resizing .popup-container {
   /* [UPDATED] Add Safe Area Padding internally */
   padding: var(--popup-padding-mobile);
   /* Base padding + Extra breathing room (30px) + Safe Area */
-  padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + var(--safe-bottom));
+  padding-bottom: calc(var(--popup-padding-y-mobile) + 30dvh + var(--safe-bottom));
   
   overflow-y: auto;
   overflow-anchor: auto;
@@ -110,7 +110,7 @@ body.is-resizing .popup-container {
 /* [NEW] PWA Adjustment: Remove extra bottom padding (no address bar) */
 @media all and (display-mode: standalone) {
   .popup-body {
-    padding-bottom: calc(var(--popup-padding-y-mobile) + 30vh + var(--safe-bottom)); 
+    padding-bottom: calc(var(--popup-padding-y-mobile) + 30dvh + var(--safe-bottom)); 
   }
 }
 
@@ -143,7 +143,7 @@ body.is-resizing .popup-container {
   /* Sits above Comment Popup if open, but mostly independent now */
   bottom: 0;
   height: auto;
-  max-height: 60vh; /* Limit height */
+  max-height: 60dvh; /* Limit height */
   border-radius: 0;
   /* border-left: 5px solid var(--primitive-brown-300); */
   border-bottom: none;
@@ -156,12 +156,12 @@ body.popup-open #quicklook-popup,
 body.parallels-open #quicklook-popup {
   bottom: var(--popup-comment-height) !important;
   top: var(--popup-quicklook-top) !important; /* Stretch from top to bottom popup */
-  max-height: calc(100vh - var(--popup-comment-height) - var(--popup-quicklook-top));
+  max-height: calc(100dvh - var(--popup-comment-height) - var(--popup-quicklook-top));
 }
 
 body.parallels-open #quicklook-popup {
   bottom: var(--popup-parallels-height) !important;
-  max-height: calc(100vh - var(--popup-parallels-height) - var(--popup-quicklook-top));
+  max-height: calc(100dvh - var(--popup-parallels-height) - var(--popup-quicklook-top));
 }
 
 #quicklook-popup.hidden {
@@ -173,7 +173,7 @@ body.parallels-open #quicklook-popup {
 /* Ensure content isn't hidden behind floating nav */
 #comment-popup .popup-body {
   /* [UPDATED] Generous padding for overscroll (readability at bottom) */
-  padding-bottom: calc(30vh + var(--safe-bottom));
+  padding-bottom: calc(30dvh + var(--safe-bottom));
 }
 
 .comment-paragraph {
@@ -212,7 +212,7 @@ body.parallels-open #quicklook-popup {
 body.popup-open, body.lookup-open, body.parallels-open {
   /* No special body padding needed for bottom popups if they overlay content */
   /* But if we want to scroll content fully: */
-  padding-bottom: 45vh !important;
+  padding-bottom: 45dvh !important;
 }
 
 /* [DYNAMIC STACKING] Force active popup to top */

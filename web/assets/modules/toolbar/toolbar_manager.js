@@ -43,6 +43,11 @@ export const ToolbarManager = {
 
         // Search Input Events
         if (this.searchInput) {
+            this.searchInput.addEventListener("blur", () => {
+                import("utils/ui_utils.js").then(({ UIUtils }) => {
+                    UIUtils.stabilizeViewport();
+                });
+            });
             this.searchInput.addEventListener("input", (e) => {
                 if (this.searchDebounce) clearTimeout(this.searchDebounce);
                 const val = e.target.value;

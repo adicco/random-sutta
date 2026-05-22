@@ -13,7 +13,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: 50vh; /* Ensure it feels "filled" */
+  min-height: 50dvh; /* Ensure it feels "filled" */
 }
 
 .sc-link {
