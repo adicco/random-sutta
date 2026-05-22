@@ -7,7 +7,7 @@ import { SyncUnificationUI } from "ui/managers/sync_unification_ui.js";
 const logger = getLogger("SyncOrchestrator");
 
 export const SyncOrchestrator = {
-    SYNC_KEYS: ["sutta_bookmarks", "sutta_history", "last_read_sutta", "tts_auto_next", "tts_playback_mode", "tts_active_engine", "tts_rate", "tts_pitch", "tts_voice_uri"],
+    SYNC_KEYS: ["sutta_bookmarks", "sutta_history", "tts_auto_next", "tts_playback_mode", "tts_active_engine", "tts_rate", "tts_pitch", "tts_voice_uri"],
     DEBOUNCE_MS: 60000, // 1 minute debounce for cleaner history
     debounceTimer: null,
     isSyncing: false,
@@ -240,42 +240,9 @@ export const SyncOrchestrator = {
             mergedPayload.sutta_history = mergedHistory;
         }
 
-        // Special logic for last_read_sutta
-        if (cloudData.payload.last_read_sutta) {
-            let localLastRead = localData.payload.last_read_sutta || {};
-            let cloudLastRead = cloudData.payload.last_read_sutta;
-            
-            // Normalize data (handle legacy 'id')
-            if (localLastRead.id && !localLastRead.uid) {
-                localLastRead.uid = localLastRead.id;
-            }
-            if (cloudLastRead.id && !cloudLastRead.uid) {
-                cloudLastRead.uid = cloudLastRead.id;
-            }
-
-            const isSameContent = localLastRead.uid === cloudLastRead.uid && 
-                                Math.abs((localLastRead.scrollY || 0) - (cloudLastRead.scrollY || 0)) < 2;
-
-            if (isSameContent) {
-                // If content is same, just adopt the cloud timestamp to align, no need to push back
-                mergedPayload.last_read_sutta = {
-                    uid: localLastRead.uid,
-                    scrollY: localLastRead.scrollY,
-                    timestamp: cloudLastRead.timestamp
-                };
-            } else if (!localLastRead.timestamp || cloudLastRead.timestamp > localLastRead.timestamp) {
-                // Cloud is newer and different
-                mergedPayload.last_read_sutta = {
-                    uid: cloudLastRead.uid,
-                    scrollY: cloudLastRead.scrollY,
-                    timestamp: cloudLastRead.timestamp
-                };
-            }
-        }
-
         // For other keys, just take the one with the newest overall timestamp
         Object.entries(cloudData.payload).forEach(([key, value]) => {
-            if (key === "sutta_bookmarks" || key === "sutta_history" || key === "last_read_sutta") return;
+            if (key === "sutta_bookmarks" || key === "sutta_history") return;
             
             if (!mergedPayload[key] || cloudData.timestamp > localData.timestamp) {
                 mergedPayload[key] = value;
