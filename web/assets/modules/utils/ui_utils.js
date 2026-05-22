@@ -62,35 +62,47 @@ export const UIUtils = {
         if (!window.visualViewport) return;
 
         const handleViewportChange = () => {
-            const viewport = window.visualViewport;
-            const totalHeight = window.innerHeight;
-            let offset = totalHeight - viewport.height;
-            
-            // On iOS, a small offset (like 1-5px) can happen due to subpixel rendering or dynamic bars.
-            // If it's less than 30px, it's definitely not the keyboard.
-            if (offset < 30) offset = 0;
+            requestAnimationFrame(() => {
+                const viewport = window.visualViewport;
+                // Calculate actual offset from bottom
+                let offset = window.innerHeight - viewport.height;
+                
+                // [iOS Fix] If offset is small, it's likely browser UI or rounding error, not keyboard
+                if (offset < 40) offset = 0;
 
-            const fixedBottomElements = [
-                document.getElementById("global-toolbar"),
-                document.getElementById("magic-toolbar-trigger"),
-                document.getElementById("magic-tts-trigger"),
-                document.querySelector(".popup-container:not(.hidden)"),
-                document.getElementById("lookup-popup")
-            ];
+                const fixedBottomElements = [
+                    document.getElementById("global-toolbar"),
+                    document.getElementById("magic-toolbar-trigger"),
+                    document.getElementById("magic-tts-trigger"),
+                    document.querySelector(".popup-container:not(.hidden)"),
+                    document.getElementById("lookup-popup")
+                ];
 
-            fixedBottomElements.forEach(el => {
-                if (el) {
-                    // Reset to 0 precisely when offset is 0
-                    el.style.bottom = offset > 0 ? `${offset}px` : '0px';
+                fixedBottomElements.forEach(el => {
+                    if (el) {
+                        // Apply precise offset or clear it to let CSS take over
+                        if (offset > 0) {
+                            el.style.bottom = `${offset}px`;
+                        } else {
+                            el.style.bottom = "0px";
+                            // Use empty string after a tick to let CSS defaults fully restore if needed
+                            setTimeout(() => { if (offset === 0) el.style.bottom = ""; }, 100);
+                        }
+                    }
+                });
+
+                if (offset > 0) {
+                    window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
                 }
             });
-
-            if (offset > 0) {
-                window.scrollTo(viewport.offsetLeft, viewport.offsetTop);
-            }
         };
 
         window.visualViewport.addEventListener('resize', handleViewportChange);
         window.visualViewport.addEventListener('scroll', handleViewportChange);
+        
+        // Extra guard: Reset on focusout to catch cases where resize event is missed
+        document.addEventListener('focusout', () => {
+            setTimeout(handleViewportChange, 300);
+        });
     }
 };
