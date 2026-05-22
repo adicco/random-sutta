@@ -103,19 +103,22 @@ export const SyncUnificationUI = {
                 .unification-footer { border-top: 1px solid var(--border-color); padding-top: 12px; }
                 .text-link-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; padding: 4px 0; text-decoration: underline; }
                 
-                #unif-diff-area { margin-top: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); max-height: 350px; overflow-y: auto; }
-                .diff-view { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 10px; line-height: 1.5; padding: 0; white-space: pre; background: rgba(0,0,0,0.02); }
+                #unif-diff-area { margin-top: 12px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-paper); max-height: 400px; overflow-y: auto; }
+                .diff-view { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: 10px; line-height: 1.25; padding: 0; white-space: pre; background: rgba(0,0,0,0.02); }
                 [data-theme="dark"] .diff-view { background: rgba(255,255,255,0.02); }
                 
-                .diff-hunk-header { background: var(--border-light); color: var(--text-muted); padding: 4px 8px; display: block; font-size: 9px; border-bottom: 1px solid var(--border-light); opacity: 0.8; }
+                .diff-hunk-group { border-bottom: 1px solid var(--border-light); }
+                .diff-hunk-group:last-child { border-bottom: none; }
                 
-                .diff-line { display: flex; align-items: flex-start; width: 100%; border-left: 3px solid transparent; }
+                .diff-hunk-header { background: var(--border-light); color: var(--text-muted); padding: 2px 8px; display: block; font-size: 9px; opacity: 0.8; user-select: none; }
+                
+                .diff-line { display: flex; align-items: flex-start; width: 100%; border-left: 3px solid transparent; min-height: 16px; }
                 .diff-line.add { background-color: rgba(46, 160, 67, 0.12); border-left-color: #3fb950; }
                 .diff-line.remove { background-color: rgba(248, 81, 73, 0.12); border-left-color: #f85149; }
                 
-                .diff-ln { width: 30px; flex-shrink: 0; display: inline-block; text-align: right; padding-right: 8px; color: var(--text-light); user-select: none; border-right: 1px solid var(--border-light); margin-right: 8px; opacity: 0.6; }
-                .diff-prefix { width: 12px; flex-shrink: 0; display: inline-block; user-select: none; opacity: 0.7; font-weight: bold; }
-                .diff-content { flex-grow: 1; overflow-x: auto; }
+                .diff-ln { width: 30px; flex-shrink: 0; display: inline-block; text-align: right; padding-right: 6px; color: var(--text-light); user-select: none; border-right: 1px solid var(--border-light); margin-right: 6px; opacity: 0.6; font-size: 9px; }
+                .diff-prefix { width: 10px; flex-shrink: 0; display: inline-block; user-select: none; opacity: 0.7; font-weight: bold; }
+                .diff-content { flex-grow: 1; overflow-x: auto; padding-right: 8px; }
             </style>
         `;
 
@@ -209,8 +212,8 @@ export const SyncUnificationUI = {
             }).join('');
 
             const header = `<div class="diff-hunk-header">@@ -${startOld} +${startNew} @@</div>`;
-            return header + linesHtml;
-        }).join('<div class="diff-line"><span class="diff-ln">..</span><span class="diff-prefix"> </span><span class="diff-content">...</span></div>');
+            return `<div class="diff-hunk-group">${header}${linesHtml}</div>`;
+        }).join('');
     },
 
     _escapeHtml(str) {
