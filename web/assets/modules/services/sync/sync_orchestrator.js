@@ -197,21 +197,28 @@ export const SyncOrchestrator = {
         const localData = this.packData();
         const mergedPayload = { ...localData.payload };
         
-        // Special logic for bookmarks (Array merge)
-        if (cloudData.payload.sutta_bookmarks && Array.isArray(cloudData.payload.sutta_bookmarks)) {
-            const localBookmarks = localData.payload.sutta_bookmarks || [];
-            const cloudBookmarks = cloudData.payload.sutta_bookmarks;
+        // Special logic for bookmarks (Object merge by UID)
+        if (cloudData.payload.sutta_bookmarks) {
+            const localBookmarks = localData.payload.sutta_bookmarks || {};
+            let cloudBookmarks = cloudData.payload.sutta_bookmarks;
             
-            // Map by ID/UID and take latest timestamp
-            const bookmarkMap = new Map();
-            [...localBookmarks, ...cloudBookmarks].forEach(b => {
-                const uid = b.uid || b.id;
-                const existing = bookmarkMap.get(uid);
-                if (!existing || b.timestamp > existing.timestamp) {
-                    bookmarkMap.set(uid, b);
+            // [COMPAT] Handle cloud sending legacy array
+            if (Array.isArray(cloudBookmarks)) {
+                const converted = {};
+                cloudBookmarks.forEach(b => {
+                    const uid = b.uid || b.id;
+                    if (uid) converted[uid] = b;
+                });
+                cloudBookmarks = converted;
+            }
+
+            const mergedBookmarks = { ...localBookmarks };
+            Object.keys(cloudBookmarks).forEach(uid => {
+                if (!mergedBookmarks[uid] || cloudBookmarks[uid].timestamp > mergedBookmarks[uid].timestamp) {
+                    mergedBookmarks[uid] = cloudBookmarks[uid];
                 }
             });
-            mergedPayload.sutta_bookmarks = Array.from(bookmarkMap.values());
+            mergedPayload.sutta_bookmarks = mergedBookmarks;
         }
 
         // Special logic for history (Object merge by ID)
