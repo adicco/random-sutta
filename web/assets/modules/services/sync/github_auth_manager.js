@@ -15,7 +15,10 @@ export const GithubAuthManager = {
         this._repo = localStorage.getItem(STORAGE_KEY_REPO);
         if (this._token && this._repo) {
             // Validate token asynchronously on init
-            this.validateToken(this._token).catch(() => {
+            this.validateToken(this._token).then(() => {
+                logger.info("Init", "Stored session restored successfully.");
+                window.dispatchEvent(new CustomEvent("github-auth-success"));
+            }).catch(() => {
                 logger.warn("Init", "Stored token is invalid, logging out.");
                 this.logout();
             });
