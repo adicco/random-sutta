@@ -92,9 +92,17 @@ export const GithubAuthManager = {
         this._token = null;
         this._username = null;
         this._repo = null;
+        // NOTE: We do NOT remove STORAGE_KEY_DEVICE here to ensure it persists as requested
         localStorage.removeItem(STORAGE_KEY_PAT);
         localStorage.removeItem(STORAGE_KEY_REPO);
         window.dispatchEvent(new CustomEvent("github-auth-logout"));
+    },
+
+    setDeviceId(newId) {
+        if (!newId) return;
+        this._deviceId = newId;
+        localStorage.setItem(STORAGE_KEY_DEVICE, newId);
+        logger.info("SetDeviceId", `Device ID updated to: ${newId}`);
     },
 
     async validateToken(token) {

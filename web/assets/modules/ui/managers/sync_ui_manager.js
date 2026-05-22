@@ -43,18 +43,35 @@ export const SyncUIManager = {
                 this.els.clientIdInput.placeholder = "GitHub PAT";
                 this.els.clientIdInput.type = "password"; // Mask the token
                 
-                // Add Device Name Input
-                if (!document.getElementById("sync-device-name")) {
+                // Add Device ID Input (Top of the area)
+                if (!document.getElementById("sync-device-id")) {
                     const deviceInput = document.createElement("input");
-                    deviceInput.id = "sync-device-name";
+                    deviceInput.id = "sync-device-id";
                     deviceInput.type = "text";
-                    deviceInput.placeholder = "Device Name (e.g. My Phone)";
+                    deviceInput.placeholder = "Device ID (e.g. My-iPhone)";
                     deviceInput.className = "sync-id-input";
                     deviceInput.style.marginBottom = "8px";
                     deviceInput.value = GithubAuthManager.getDeviceId() || "";
                     this.els.clientIdInput.parentNode.insertBefore(deviceInput, this.els.clientIdInput);
                     this.els.deviceNameInput = deviceInput;
                     deviceInput.onclick = (e) => e.stopPropagation();
+
+                    // Add Rename Link
+                    const renameLink = document.createElement("a");
+                    renameLink.href = "#";
+                    renameLink.innerText = "Rename device ID";
+                    renameLink.style.fontSize = "10px";
+                    renameLink.style.color = "var(--text-muted)";
+                    renameLink.style.display = "block";
+                    renameLink.style.marginTop = "-6px";
+                    renameLink.style.marginBottom = "8px";
+                    renameLink.style.textAlign = "right";
+                    renameLink.onclick = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this._handleDeviceRename();
+                    };
+                    this.els.clientIdInput.parentNode.insertBefore(renameLink, this.els.clientIdInput);
                 }
 
                 // Add Repo Input if it doesn't exist (Optional field)
@@ -81,18 +98,21 @@ export const SyncUIManager = {
             e.stopPropagation();
             const token = this.els.clientIdInput.value.trim();
             const repoName = (this.els.repoNameInput && this.els.repoNameInput.value.trim()) || "rsnote";
-            const deviceName = (this.els.deviceNameInput && this.els.deviceNameInput.value.trim()) || "";
+            const deviceId = (this.els.deviceNameInput && this.els.deviceNameInput.value.trim());
 
             if (!token) {
                 alert("Please enter your GitHub Personal Access Token (PAT).");
                 return;
             }
+
+            // Persist deviceId if changed manually before connect
+            if (deviceId) GithubAuthManager.setDeviceId(deviceId);
             
             this.els.btnConnect.disabled = true;
             this.els.btnConnect.innerText = "Connecting...";
             
             try {
-                await GithubAuthManager.login(token, repoName, deviceName);
+                await GithubAuthManager.login(token, repoName, deviceId);
             } catch (err) {
                 alert("Failed to connect: " + err.message);
             } finally {
@@ -132,6 +152,20 @@ export const SyncUIManager = {
             this.els.btnLogin.classList.remove("hidden");
             this.els.manualControls.classList.add("hidden");
             this._setVisualState("off");
+        }
+    },
+
+    async _handleDeviceRename() {
+        const currentId = GithubAuthManager.getDeviceId();
+        const newId = prompt("Enter new Device ID:", currentId);
+        if (newId && newId !== currentId) {
+            if (confirm(`Change Device ID to "${newId}"? This will update your identifier for future syncs.`)) {
+                GithubAuthManager.setDeviceId(newId);
+                if (this.els.deviceNameInput) this.els.deviceNameInput.value = newId;
+                logger.info("Rename", `Device renamed to ${newId}`);
+                // Since this app stores Device ID in the commit message metadata rather than in record fields,
+                // we don't need a batch record update, but we've updated the identifier for all future syncs.
+            }
         }
     },
 
