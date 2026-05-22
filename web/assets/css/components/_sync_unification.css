@@ -103,30 +103,62 @@
   color: var(--text-muted);
   transition: all 0.2s;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .resolve-card-small:hover {
   color: var(--text-main);
   border-color: var(--text-muted);
+  background: var(--bg-hover);
+}
+
+.resolve-card-small .small-icon {
+  opacity: 0.6;
 }
 
 .unification-footer {
   border-top: 1px solid var(--border-color);
   padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.unification-footer .text-link-btn {
-  background: none;
-  border: none;
+.secondary-action-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   color: var(--text-muted);
   cursor: pointer;
   font-size: 11px;
-  padding: 4px 0;
-  text-decoration: underline;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  font-family: inherit;
 }
 
-.unification-footer .text-link-btn:hover {
+.secondary-action-btn:hover {
+  border-color: var(--primary-color);
   color: var(--primary-color);
+}
+
+.secondary-action-btn.active {
+  background: var(--bg-hover);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.secondary-action-btn svg {
+  transition: transform 0.3s;
+}
+
+.secondary-action-btn.active svg {
+  transform: rotate(180deg);
 }
 
 #unif-diff-area {

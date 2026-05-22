@@ -60,7 +60,7 @@ export const SyncUnificationUI = {
                     
                     <button class="resolve-card" id="btn-unif-latest">
                         <span class="card-icon">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="m19 15-7 7-7-7"/><path d="m19 9-7-7-7 7"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                         </span>
                         <div class="card-text">
                             <strong>Use Latest</strong>
@@ -69,13 +69,22 @@ export const SyncUnificationUI = {
                     </button>
 
                     <div class="resolve-row">
-                        <button class="resolve-card-small" id="btn-unif-cloud">Use Cloud</button>
-                        <button class="resolve-card-small" id="btn-unif-local">Keep Local</button>
+                        <button class="resolve-card-small" id="btn-unif-cloud">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="small-icon"><path d="M17.5 19A5.5 5.5 0 0 0 18 8.02a1 1 0 0 0-1-1.02H16V7a4 4 0 0 0-8 0v.5H7a4.5 4.5 0 0 0 0 9c.14 0 .28 0 .41-.02"/><path d="M12 13v8"/><path d="m15 18-3 3-3-3"/></svg>
+                            Use Cloud
+                        </button>
+                        <button class="resolve-card-small" id="btn-unif-local">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="small-icon"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+                            Keep Local
+                        </button>
                     </div>
                 </div>
 
                 <div class="unification-footer">
-                    <button class="text-link-btn" id="btn-unif-toggle-details">Show technical diff ↓</button>
+                    <button class="secondary-action-btn" id="btn-unif-toggle-details">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                        <span>Show technical diff</span>
+                    </button>
                     <div id="unif-diff-area" class="hidden">
                         <div class="diff-view" id="unif-diff-content"></div>
                     </div>
@@ -89,10 +98,12 @@ export const SyncUnificationUI = {
         div.querySelector("#btn-unif-merge").onclick = () => this._handle("merge");
         div.querySelector("#btn-unif-toggle-details").onclick = () => {
             const area = div.querySelector("#unif-diff-area");
+            const btn = div.querySelector("#btn-unif-toggle-details");
             area.classList.toggle("hidden");
-            div.querySelector("#btn-unif-toggle-details").innerText = area.classList.contains("hidden") 
-                ? "Show technical diff ↓" 
-                : "Hide technical diff ↑";
+            
+            const isHidden = area.classList.contains("hidden");
+            btn.querySelector("span").innerText = isHidden ? "Show technical diff" : "Hide technical diff";
+            btn.classList.toggle("active", !isHidden);
         };
 
         return div;
