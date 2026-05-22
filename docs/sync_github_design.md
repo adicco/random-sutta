@@ -28,8 +28,9 @@ This document details the migration from Google Drive to a **GitHub-based synchr
 ### 3.2. Sync Payload
 The repository will contain:
 *   `sync.json`: Application state (bookmarks, history, settings).
-*   `notes/`: Markdown files for personal sutta annotations, organized by Nikaya.
-    *   Example: `notes/mn/mn1.md` for Majjhima Nikaya 1.
+*   `notes/`: Markdown files for personal sutta annotations, organized by `book_id`.
+    *   Example: `notes/dhp/dhp1.md` (where `dhp` is the `book_id` and `dhp1` is the `uid`).
+    *   Example: `notes/dn/dn1.md` (where `dn` is the `book_id`).
 
 ### 3.3. Smart Merge Logic (The `sha` Check)
 The application will track two local variables:
