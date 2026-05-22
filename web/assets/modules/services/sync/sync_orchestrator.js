@@ -8,7 +8,7 @@ const logger = getLogger("SyncOrchestrator");
 
 export const SyncOrchestrator = {
     SYNC_KEYS: ["sutta_bookmarks", "sutta_history", "last_read_sutta", "tts_auto_next", "tts_playback_mode", "tts_active_engine", "tts_rate", "tts_pitch", "tts_voice_uri"],
-    DEBOUNCE_MS: 5000,
+    DEBOUNCE_MS: 60000, // 1 minute debounce for cleaner history
     debounceTimer: null,
     isSyncing: false,
 

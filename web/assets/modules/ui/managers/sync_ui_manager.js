@@ -15,7 +15,8 @@ export const SyncUIManager = {
             manualControls: document.getElementById("sync-manual-controls"),
             inputArea: document.getElementById("sync-input-area"),
             clientIdInput: document.getElementById("sync-client-id"), // Used for PAT
-            repoNameInput: null // Will be created or checked dynamically
+            repoNameInput: null,
+            deviceNameInput: null
         };
 
         if (!this.els.btnLogin) return;
@@ -42,14 +43,29 @@ export const SyncUIManager = {
                 this.els.clientIdInput.placeholder = "GitHub PAT";
                 this.els.clientIdInput.type = "password"; // Mask the token
                 
+                // Add Device Name Input
+                if (!document.getElementById("sync-device-name")) {
+                    const deviceInput = document.createElement("input");
+                    deviceInput.id = "sync-device-name";
+                    deviceInput.type = "text";
+                    deviceInput.placeholder = "Device Name (e.g. My Phone)";
+                    deviceInput.className = "sync-id-input";
+                    deviceInput.style.marginBottom = "8px";
+                    deviceInput.value = GithubAuthManager.getDeviceId() || "";
+                    this.els.clientIdInput.parentNode.insertBefore(deviceInput, this.els.clientIdInput);
+                    this.els.deviceNameInput = deviceInput;
+                    deviceInput.onclick = (e) => e.stopPropagation();
+                }
+
                 // Add Repo Input if it doesn't exist (Optional field)
                 if (!document.getElementById("sync-repo-name")) {
                     const repoInput = document.createElement("input");
                     repoInput.id = "sync-repo-name";
                     repoInput.type = "text";
                     repoInput.placeholder = "Repo Name (Default: rsnote)";
-                    repoInput.className = "sync-id-input"; // Use existing style
+                    repoInput.className = "sync-id-input"; 
                     repoInput.style.marginTop = "8px";
+                    repoInput.style.marginBottom = "8px";
                     this.els.clientIdInput.parentNode.insertBefore(repoInput, this.els.btnConnect);
                     this.els.repoNameInput = repoInput;
                     repoInput.onclick = (e) => e.stopPropagation();
@@ -65,6 +81,7 @@ export const SyncUIManager = {
             e.stopPropagation();
             const token = this.els.clientIdInput.value.trim();
             const repoName = (this.els.repoNameInput && this.els.repoNameInput.value.trim()) || "rsnote";
+            const deviceName = (this.els.deviceNameInput && this.els.deviceNameInput.value.trim()) || "";
 
             if (!token) {
                 alert("Please enter your GitHub Personal Access Token (PAT).");
@@ -75,7 +92,7 @@ export const SyncUIManager = {
             this.els.btnConnect.innerText = "Connecting...";
             
             try {
-                await GithubAuthManager.login(token, repoName);
+                await GithubAuthManager.login(token, repoName, deviceName);
             } catch (err) {
                 alert("Failed to connect: " + err.message);
             } finally {

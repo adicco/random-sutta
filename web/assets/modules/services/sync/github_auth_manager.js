@@ -4,15 +4,24 @@ import { getLogger } from "utils/logger.js";
 const logger = getLogger("GithubAuthManager");
 const STORAGE_KEY_PAT = "github_sync_pat";
 const STORAGE_KEY_REPO = "github_sync_repo";
+const STORAGE_KEY_DEVICE = "github_sync_device_id";
 
 export const GithubAuthManager = {
     _token: null,
     _username: null,
     _repo: null,
+    _deviceId: null,
 
     init() {
         this._token = localStorage.getItem(STORAGE_KEY_PAT);
         this._repo = localStorage.getItem(STORAGE_KEY_REPO);
+        this._deviceId = localStorage.getItem(STORAGE_KEY_DEVICE);
+        
+        if (!this._deviceId) {
+            this._deviceId = "device-" + Math.random().toString(36).substring(2, 7);
+            localStorage.setItem(STORAGE_KEY_DEVICE, this._deviceId);
+        }
+
         if (this._token && this._repo) {
             // Validate token asynchronously on init
             this.validateToken(this._token).then(() => {
@@ -41,7 +50,11 @@ export const GithubAuthManager = {
         return this._repo;
     },
 
-    async login(token, repoName) {
+    getDeviceId() {
+        return this._deviceId;
+    },
+
+    async login(token, repoName, customDeviceName) {
         if (!token) throw new Error("Token is required");
         if (!repoName) throw new Error("Repository name is required");
         
@@ -52,10 +65,16 @@ export const GithubAuthManager = {
             this._token = token;
             this._username = username;
             this._repo = repoName;
+            
+            if (customDeviceName) {
+                this._deviceId = customDeviceName;
+            }
+            
             localStorage.setItem(STORAGE_KEY_PAT, token);
             localStorage.setItem(STORAGE_KEY_REPO, repoName);
+            localStorage.setItem(STORAGE_KEY_DEVICE, this._deviceId);
             
-            logger.info("Login", `Authenticated as ${username} for repo ${repoName}`);
+            logger.info("Login", `Authenticated as ${username} for repo ${repoName} (Device: ${this._deviceId})`);
             
             // Ensure repo exists
             await this.ensureRepoExists();
