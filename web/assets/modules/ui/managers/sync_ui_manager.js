@@ -1,6 +1,6 @@
 // Path: web/assets/modules/ui/managers/sync_ui_manager.js
 import { getLogger } from "utils/logger.js";
-import { GoogleAuthManager } from "services/sync/google_auth_manager.js";
+import { GithubAuthManager } from "services/sync/github_auth_manager.js";
 import { SyncOrchestrator } from "services/sync/sync_orchestrator.js";
 
 const logger = getLogger("SyncUIManager");
@@ -16,7 +16,7 @@ export const SyncUIManager = {
             btnPull: document.getElementById("btn-sync-pull"),
             manualControls: document.getElementById("sync-manual-controls"),
             inputArea: document.getElementById("sync-input-area"),
-            clientIdInput: document.getElementById("sync-client-id")
+            clientIdInput: document.getElementById("sync-client-id") // We'll keep the ID but treat it as PAT input
         };
 
         if (!this.els.btnLogin) return;
@@ -37,35 +37,41 @@ export const SyncUIManager = {
     _setupEventListeners() {
         this.els.btnLogin.onclick = (e) => {
             e.stopPropagation();
-            // If we have a hardcoded ID, just login. Otherwise, show input.
-            if (GoogleAuthManager.CLIENT_ID) {
-                GoogleAuthManager.login();
-                return;
-            }
-
+            
             if (this.els.inputArea.classList.contains("hidden")) {
                 this.els.inputArea.classList.remove("hidden");
+                this.els.clientIdInput.placeholder = "Enter GitHub PAT (repo scope)";
                 this.els.clientIdInput.focus();
             } else {
                 this.els.inputArea.classList.add("hidden");
             }
         };
 
-        this.els.btnConnect.onclick = (e) => {
+        this.els.btnConnect.onclick = async (e) => {
             e.stopPropagation();
-            const clientId = this.els.clientIdInput.value.trim();
-            if (!clientId) {
-                alert("Please paste your Google Client ID.");
+            const token = this.els.clientIdInput.value.trim();
+            if (!token) {
+                alert("Please paste your GitHub Personal Access Token (PAT).");
                 return;
             }
-            GoogleAuthManager.setClientId(clientId);
-            GoogleAuthManager.login();
+            
+            this.els.btnConnect.disabled = true;
+            this.els.btnConnect.innerText = "Connecting...";
+            
+            try {
+                await GithubAuthManager.login(token);
+            } catch (err) {
+                alert("Failed to authenticate with GitHub. Check your token.");
+            } finally {
+                this.els.btnConnect.disabled = false;
+                this.els.btnConnect.innerText = "Connect";
+            }
         };
 
         this.els.btnLogout.onclick = (e) => {
             e.stopPropagation();
-            if (confirm("Logout from Google Sync?")) {
-                GoogleAuthManager.logout();
+            if (confirm("Logout from GitHub Sync?")) {
+                GithubAuthManager.logout();
                 this._updateUI();
             }
         };
@@ -96,26 +102,19 @@ export const SyncUIManager = {
             }
         };
 
-        this.els.clientIdInput.onchange = (e) => {
-            GoogleAuthManager.setClientId(e.target.value.trim());
-        };
-
         this.els.clientIdInput.onclick = (e) => e.stopPropagation();
 
         // Listen for Auth Events
-        window.addEventListener("google-auth-success", () => this._updateUI());
-        window.addEventListener("google-auth-logout", () => this._updateUI());
+        window.addEventListener("github-auth-success", () => this._updateUI());
+        window.addEventListener("github-auth-logout", () => this._updateUI());
     },
 
     _loadSettings() {
-        const savedId = GoogleAuthManager.loadClientId();
-        if (savedId) {
-            this.els.clientIdInput.value = savedId;
-        }
+        // Not auto-filling PAT for security reasons
     },
 
     _updateUI() {
-        const isAuthed = GoogleAuthManager.isAuthenticated();
+        const isAuthed = GithubAuthManager.isAuthenticated();
         
         if (isAuthed) {
             this.els.btnLogin.classList.add("hidden");

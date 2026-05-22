@@ -2,7 +2,6 @@
 import { Router } from "core/router.js";
 import { SuttaController } from "core/sutta_controller.js";
 import { ViewManager } from "ui/managers/view_manager.js";
-import { GoogleAuthManager } from "services/sync/google_auth_manager.js";
 import { getLogger } from "utils/logger.js";
 import { RandomBuffer } from "services/index.js";
 import { SuttaPersistence } from "core/sutta/persistence.js";
@@ -84,12 +83,6 @@ export const AppRouter = {
 
     processDeepLink: async function(urlStr) {
         logger.info("DeepLink", "Processing: " + urlStr);
-        
-        // Handle Google Auth Callbacks
-        if (urlStr.includes('auth-callback')) {
-            GoogleAuthManager.handleNativeCallback(urlStr);
-            return;
-        }
 
         try {
             let q = null;

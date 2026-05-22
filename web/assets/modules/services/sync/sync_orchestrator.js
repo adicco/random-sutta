@@ -1,7 +1,7 @@
 // Path: web/assets/modules/services/sync/sync_orchestrator.js
 import { getLogger } from "utils/logger.js";
-import { GoogleAuthManager } from "services/sync/google_auth_manager.js";
-import { GoogleDriveSync } from "services/sync/google_drive_sync.js";
+import { GithubAuthManager } from "services/sync/github_auth_manager.js";
+import { GithubSync } from "services/sync/github_sync.js";
 
 const logger = getLogger("SyncOrchestrator");
 
@@ -12,23 +12,23 @@ export const SyncOrchestrator = {
     isSyncing: false,
 
     init() {
-        GoogleAuthManager.init();
+        GithubAuthManager.init();
         
         // Listen for Auth Success
-        window.addEventListener("google-auth-success", () => {
+        window.addEventListener("github-auth-success", () => {
             this.autoSync();
         });
 
         // Listen for Local Changes
         window.addEventListener("local-data-changed", () => {
             localStorage.setItem("sync_local_update_timestamp", Date.now().toString());
-            if (GoogleAuthManager.isAuthenticated()) {
+            if (GithubAuthManager.isAuthenticated()) {
                 this.scheduleAutoPush();
             }
         });
 
         // Initial Sync if already authenticated
-        if (GoogleAuthManager.isAuthenticated()) {
+        if (GithubAuthManager.isAuthenticated()) {
             this.autoSync();
         }
     },
@@ -40,10 +40,32 @@ export const SyncOrchestrator = {
         logger.info("AutoSync", "Starting auto-sync...");
         
         try {
-            const cloudData = await GoogleDriveSync.downloadData();
-            if (cloudData) {
-                this.smartMerge(cloudData);
-                logger.info("AutoSync", "Pull and merge completed");
+            const cloudResult = await GithubSync.downloadData();
+            const localSha = localStorage.getItem("sync_github_sha");
+            const localUpdateTimestamp = parseInt(localStorage.getItem("sync_local_update_timestamp") || "0", 10);
+            const lastSyncTimestamp = parseInt(localStorage.getItem("sync_last_success_timestamp") || "0", 10);
+
+            if (cloudResult) {
+                const { data: cloudData, sha: cloudSha } = cloudResult;
+                
+                if (cloudSha === localSha) {
+                    logger.info("AutoSync", "Cloud is up to date.");
+                    if (localUpdateTimestamp > lastSyncTimestamp) {
+                        logger.info("AutoSync", "Local changes detected, pushing to cloud.");
+                        await this._doPush(cloudSha);
+                    }
+                } else {
+                    logger.info("AutoSync", "Cloud has changed.");
+                    if (localUpdateTimestamp > lastSyncTimestamp) {
+                        logger.info("AutoSync", "Local has changed too. Smart Merge required.");
+                        await this.smartMerge(cloudData, cloudSha);
+                    } else {
+                        logger.info("AutoSync", "No local changes. Pulling from cloud.");
+                        this.unpackAndApply(cloudData);
+                        localStorage.setItem("sync_github_sha", cloudSha);
+                        localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
+                    }
+                }
             } else {
                 logger.info("AutoSync", "No cloud data found. Preparing first push.");
                 await this.forcePush();
@@ -69,16 +91,30 @@ export const SyncOrchestrator = {
         this.isSyncing = true;
         window.dispatchEvent(new CustomEvent("sync-start"));
         try {
-            const localData = this.packData();
-            await GoogleDriveSync.uploadData(localData);
-            logger.info("AutoPush", "Success");
+            const localSha = localStorage.getItem("sync_github_sha");
+            await this._doPush(localSha);
             window.dispatchEvent(new CustomEvent("sync-end"));
         } catch (e) {
             logger.error("AutoPush", e);
+            // If it's a conflict (409 from Github API), we should trigger autoSync to resolve it
+            if (e.message.includes("409")) {
+                 logger.warn("AutoPush", "Conflict detected during push. Triggering autoSync...");
+                 this.isSyncing = false;
+                 await this.autoSync();
+                 return;
+            }
             window.dispatchEvent(new CustomEvent("sync-error"));
         } finally {
             this.isSyncing = false;
         }
+    },
+
+    async _doPush(currentSha) {
+        const localData = this.packData();
+        const newSha = await GithubSync.uploadData(localData, currentSha);
+        localStorage.setItem("sync_github_sha", newSha);
+        localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
+        logger.info("_doPush", "Success");
     },
 
     packData() {
@@ -112,13 +148,12 @@ export const SyncOrchestrator = {
         window.dispatchEvent(new CustomEvent("sync-data-applied"));
     },
 
-    smartMerge(cloudData) {
+    async smartMerge(cloudData, cloudSha) {
         if (!cloudData || !cloudData.payload) return;
         
         const localData = this.packData();
         const mergedPayload = { ...localData.payload };
-        const localUpdateTimestamp = parseInt(localStorage.getItem("sync_local_update_timestamp") || "0", 10);
-
+        
         // Special logic for bookmarks (Array merge)
         if (cloudData.payload.sutta_bookmarks && Array.isArray(cloudData.payload.sutta_bookmarks)) {
             const localBookmarks = localData.payload.sutta_bookmarks || [];
@@ -149,35 +184,46 @@ export const SyncOrchestrator = {
             mergedPayload.sutta_history = mergedHistory;
         }
 
-        // For other keys, if not present in local or cloud is newer (overall)
+        // For other keys, just take the one with the newest overall timestamp
         Object.entries(cloudData.payload).forEach(([key, value]) => {
-            if (key === "sutta_bookmarks" || key === "sutta_history") return; // Already handled
+            if (key === "sutta_bookmarks" || key === "sutta_history") return;
             
-            // If local doesn't have it, or cloud data is newer than the last local update
-            if (!mergedPayload[key] || cloudData.timestamp > localUpdateTimestamp) {
+            if (!mergedPayload[key] || cloudData.timestamp > localData.timestamp) {
                 mergedPayload[key] = value;
             }
         });
 
-        // Apply back
+        // Apply back locally
         this.unpackAndApply({ payload: mergedPayload });
         
-        // Push merged back to cloud if it changed something
-        this.autoPush();
+        // Push merged back to cloud
+        const mergedDataToPush = {
+            version: 1,
+            timestamp: Date.now(),
+            payload: mergedPayload
+        };
+        const newSha = await GithubSync.uploadData(mergedDataToPush, cloudSha);
+        localStorage.setItem("sync_github_sha", newSha);
+        localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
+        logger.info("SmartMerge", "Done and pushed to cloud.");
     },
 
     async forcePush() {
         logger.info("ForcePush", "Overwriting cloud with local data...");
-        const localData = this.packData();
-        await GoogleDriveSync.uploadData(localData);
+        // Get cloud sha first to overwrite safely
+        const cloudResult = await GithubSync.downloadData();
+        const cloudSha = cloudResult ? cloudResult.sha : null;
+        await this._doPush(cloudSha);
         logger.info("ForcePush", "Done");
     },
 
     async forcePull() {
         logger.info("ForcePull", "Overwriting local with cloud data...");
-        const cloudData = await GoogleDriveSync.downloadData();
-        if (cloudData) {
-            this.unpackAndApply(cloudData);
+        const cloudResult = await GithubSync.downloadData();
+        if (cloudResult) {
+            this.unpackAndApply(cloudResult.data);
+            localStorage.setItem("sync_github_sha", cloudResult.sha);
+            localStorage.setItem("sync_last_success_timestamp", Date.now().toString());
             logger.info("ForcePull", "Done");
         } else {
             logger.warn("ForcePull", "No cloud data to pull");
