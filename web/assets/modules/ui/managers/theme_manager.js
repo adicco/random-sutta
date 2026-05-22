@@ -69,31 +69,24 @@ export const ThemeManager = {
         };
 
         const sliderToCss = (sliderValue, theme) => {
-            const maxCss = theme === 'dark' 
-                ? AppConfig.SEPIA.MAX_CSS_DARK 
-                : AppConfig.SEPIA.MAX_CSS_LIGHT;
-            return (sliderValue / 100) * maxCss;
+            // [OPTIMIZED] Dùng opacity overlay theo cách của gioibon để tránh crash iOS
+            const maxOpacity = theme === 'dark' ? 0.2 : 0.3;
+            return (sliderValue / 100) * maxOpacity;
         };
 
         const updateSepiaVisuals = (sliderValue, theme) => {
-            const cssValue = sliderToCss(sliderValue, theme);
+            const opacity = sliderToCss(sliderValue, theme);
             
-            // Truyền giá trị thô (unitless) để CSS tự tính toán
-            document.documentElement.style.setProperty('--sepia-val', cssValue);
+            // Cập nhật biến số cho lớp phủ (overlay) theo chuẩn gioibon
+            document.documentElement.style.setProperty('--sepia-overlay-opacity', opacity);
             
-            const overlay = document.getElementById("sepia-overlay");
-            if (overlay) {
-                overlay.style.display = (sliderValue > 0) ? "block" : "none";
-            }
-
             if (sepiaSlider && sepiaSlider.value != sliderValue) {
                 sepiaSlider.value = sliderValue;
             }
 
-            // [NEW] Update Indicator Text
+            // [NEW] Update Indicator Text với % cho rõ ràng
             if (sepiaIndicator) {
-                sepiaIndicator.textContent = sliderValue; // Just the number
-                // Optional: visual clue when active (value > 0) - Kept for logic but CSS overrides color
+                sepiaIndicator.textContent = `${sliderValue}%`;
                 if (sliderValue > 0) sepiaIndicator.classList.add("has-value");
                 else sepiaIndicator.classList.remove("has-value");
             }

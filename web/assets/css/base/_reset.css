@@ -59,22 +59,15 @@ body {
   padding-bottom: calc(60px + var(--safe-bottom));
 }
 
+/* Lightweight Sepia Tint Overlay (Safari iOS Stable - Inspired by Gioibon) */
 #sepia-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 999999;
-  background-color: #8b4513; /* Primary warm brown */
-  opacity: calc(var(--sepia-val) * 0.0035); /* Slider 100 = ~0.35 opacity */
-  mix-blend-mode: multiply;
-  display: none; /* Controlled by JS ThemeManager */
-}
-
-/* Fallback for browsers that don't support multiply well */
-@supports not (mix-blend-mode: multiply) {
-  #sepia-overlay {
-    opacity: calc(var(--sepia-val) * 0.002);
-  }
+  z-index: 10000;
+  background-color: #704214; /* Warm brownish tint */
+  opacity: var(--sepia-overlay-opacity, 0);
+  display: block;
 }
 
 button {
