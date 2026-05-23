@@ -71,7 +71,20 @@ def run_release_process(
             if not ota_packager.package_lean_ota(version_tag):
                 raise Exception("OTA packaging failed.")
 
-        # ... (giữ nguyên logic ở giữa) ...
+        # 2. AltStore Source Sync/Generation
+        if sync_altstore:
+            from .logic import sync_with_github
+            if not sync_with_github():
+                logger.warning("⚠️ AltStore sync failed.")
+        elif update_altstore:
+            from .logic import update_altstore_source
+            if not update_altstore_source(version_tag):
+                logger.warning("⚠️ AltStore source generation failed, but continuing...")
+
+        # 3. Create Artifact if requested or publishing
+        if create_zip or publish_gh:
+            if not artifact_packer.create_release_artifact(version_tag):
+                raise Exception("Artifact creation failed.")
 
         if enable_git:
              if not git_automator.commit_source_changes(version_tag):
