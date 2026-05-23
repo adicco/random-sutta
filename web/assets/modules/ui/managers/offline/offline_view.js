@@ -128,11 +128,23 @@ export const OfflineView = {
     },
 
     flashVersion(versionString) {
-        if (!this.elements.btnDownload) return;
-        const v = `Version: ${versionString}`;
-        // Set title for long-press/hover
-        this.elements.btnDownload.title = v;
-        // Show quick notification
-        alert(v);
+        if (!this.elements.btnDownload || !this.elements.label) return;
+        
+        // Prevent multiple flashes
+        if (this._versionTimeout) return;
+
+        const originalText = this.elements.label.textContent;
+        const v = `v${versionString}`;
+        
+        // Show version in label
+        this.elements.label.textContent = v;
+        this.elements.btnDownload.classList.add("version-flash");
+
+        // Revert after 2 seconds
+        this._versionTimeout = setTimeout(() => {
+            this.elements.label.textContent = originalText;
+            this.elements.btnDownload.classList.remove("version-flash");
+            this._versionTimeout = null;
+        }, 2000);
     }
 };
