@@ -28,6 +28,29 @@ const packageJson = JSON.parse(fs.readFileSync(path.resolve('./package.json'), '
 const buildVersion = packageJson.version || new Date().getTime();
 
 const aliases = {};
+// Bỏ qua prefix __dirname vì ta có thể dùng path.resolve('.')
+const rootDir = path.resolve('.');
+const webDir = path.resolve(rootDir, 'web');
+const modulesDir = path.resolve(rootDir, 'web/assets/modules');
+
+getDirectories(webDir).forEach(dir => {
+    if (dir !== 'assets') { 
+        aliases[dir] = path.resolve(webDir, dir);
+    }
+});
+
+if (fs.existsSync(modulesDir)) {
+    getDirectories(modulesDir).forEach(dir => {
+        // Tương đương với importmap hiện tại: "core/": "./assets/modules/core/"
+        // Vite cho phép alias dạng 'core/' hoặc 'core'
+        aliases[`${dir}/`] = path.resolve(modulesDir, dir) + '/';
+        aliases[`${dir}`] = path.resolve(modulesDir, dir);
+    });
+}
+// -----------------------------------
+aliases['libs'] = path.resolve(webDir, 'assets/libs');
+// Map wa-sqlite cho giống importmap cũ
+aliases['wa-sqlite'] = path.resolve(webDir, 'assets/libs');
 
 export default defineConfig(({ mode }) => {
     const isProd = mode === 'production';
