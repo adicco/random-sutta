@@ -35,7 +35,7 @@ def run_release_process(
     if publish_gh: 
         enable_git = True
 
-    version_tag = release_versioning.generate_version_tag()
+    version_tag = release_versioning.generate_version_tag(PROJECT_ROOT)
     
     mode_label = "OFFICIAL (Latest)" if is_official else "PRE-RELEASE"
     if not publish_gh: mode_label = "LOCAL BUILD (No Publish)"

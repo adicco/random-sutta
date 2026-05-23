@@ -6,17 +6,6 @@ from pathlib import Path
 
 logger = logging.getLogger("Release.Versioning")
 
-def generate_version_tag() -> str:
-    """
-    Tạo version tag thống nhất cho GitHub Release.
-    Format: v2026.143.405 (v[Year].[DayOfYear].[MinuteOfDay])
-    """
-    now = datetime.now()
-    year = now.year
-    day_of_year = now.timetuple().tm_yday
-    minute_of_day = now.hour * 60 + now.minute
-    return f"v{year}.{day_of_year}.{minute_of_day}"
-
 def get_clean_version(project_root: Path = None) -> str:
     """
     Tạo version theo chuẩn SemVer Universal Hybrid.
@@ -51,6 +40,14 @@ def get_clean_version(project_root: Path = None) -> str:
             logger.warning(f"⚠️ Could not write version lock file: {e}")
 
     return version
+
+def generate_version_tag(project_root: Path = None) -> str:
+    """
+    Tạo version tag thống nhất cho GitHub Release (có tiền tố v).
+    Sử dụng lock file để khớp hoàn toàn với version nội bộ của App.
+    """
+    clean_v = get_clean_version(project_root)
+    return f"v{clean_v}"
 
 def clear_version_lock(project_root: Path):
     """Xóa lock file sau khi kết thúc quy trình release."""
