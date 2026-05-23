@@ -45,9 +45,9 @@ def run_release_process(
     logger.info(f"🚀 STARTING PROCESS: {version_tag} | Mode: {mode_label}")
 
     # [NEW] Auto-update version number across ALL platforms
-    # Format: Year.MMDD.HHMM (e.g., 2026.0523.0624)
+    # Format: Year.Day.Minute (e.g., 2026.143.400)
     if bump_version:
-        clean_version = release_versioning.get_clean_version()
+        clean_version = release_versioning.get_clean_version(PROJECT_ROOT)
         release_versioning.update_package_json(PROJECT_ROOT, clean_version)
         release_versioning.update_xcode_version(PROJECT_ROOT, clean_version)
         release_versioning.update_android_version(PROJECT_ROOT, clean_version)
@@ -94,6 +94,8 @@ def run_release_process(
                 if not github_publisher.publish_release(version_tag, is_official):
                     raise Exception("GitHub Release failed.")
     
+        # [NEW] Clear lock file when all is done
+        release_versioning.clear_version_lock(PROJECT_ROOT)
         logger.info(f"🛡️  Publish process finished.")
 
     except Exception as e:

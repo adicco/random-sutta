@@ -164,10 +164,14 @@ beta: apk ios macos alfred
 	@echo "🚀 PUBLISHING BETA..."
 	$(PYTHON) -m src.release_system --publish --altstore
 
-# Publish Official
-official: apk ios macos alfred
-	@echo "🚀 PUBLISHING OFFICIAL..."
-	$(PYTHON) -m src.release_system --official
+# [UPDATED] Publish OFFICIAL (Đã sửa luồng: Bump version trước -> Build sau)
+official:
+	@echo "🚀 STARTING OFFICIAL RELEASE PROCESS..."
+	$(PYTHON) -m src.release_system --official --git --skip-publish
+	@$(MAKE) apk ios macos alfred
+	@echo "📤 UPLOADING ARTIFACTS TO GITHUB..."
+	$(PYTHON) -m src.release_system --official --publish --skip-bump
+	@echo "🌟 OFFICIAL RELEASE COMPLETE!"
 
 # Publish + Deploy
 publish: official deploy

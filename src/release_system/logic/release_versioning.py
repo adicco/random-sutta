@@ -17,27 +17,48 @@ def generate_version_tag() -> str:
     minute_of_day = now.hour * 60 + now.minute
     return f"v{year}.{day_of_year}.{minute_of_day}"
 
-def get_clean_version() -> str:
+def get_clean_version(project_root: Path = None) -> str:
     """
     Tạo version theo chuẩn SemVer Universal Hybrid.
-    Format: [Year].[DayOfYear].[MinuteOfDay]
-    Ví dụ: Ngày 23/5/2026 lúc 06:45 sáng
-    - Year: 2026
-    - DayOfYear: 143 (ngày thứ 143 trong năm)
-    - MinuteOfDay: 405 (6*60 + 45)
-    => 2026.143.405
-    
-    Ưu điểm: 
-    - Tuyệt đối tuân thủ SemVer (không leading zeros).
-    - Luôn tăng tiến theo thời gian.
-    - Đồng nhất cho Web, iOS, Android, macOS.
+    Sử dụng cơ chế Cache (.version_lock) để đảm bảo toàn bộ các bản build 
+    trong cùng một phiên (APK, iOS, MacOS) có cùng một số version tuyệt đối.
     """
+    lock_file = (project_root / ".version_lock") if project_root else None
+
+    # Nếu đã có lock file, dùng luôn version trong đó
+    if lock_file and lock_file.exists():
+        try:
+            with open(lock_file, 'r') as f:
+                cached_version = f.read().strip()
+                if cached_version:
+                    logger.info(f"💾 Using cached version from lock file: {cached_version}")
+                    return cached_version
+        except Exception:
+            pass
+
     now = datetime.now()
     year = now.year
     day_of_year = now.timetuple().tm_yday
     minute_of_day = now.hour * 60 + now.minute
-    
-    return f"{year}.{day_of_year}.{minute_of_day}"
+    version = f"{year}.{day_of_year}.{minute_of_day}"
+
+    # Lưu vào lock file cho các bước sau dùng chung
+    if lock_file:
+        try:
+            with open(lock_file, 'w') as f:
+                f.write(version)
+        except Exception as e:
+            logger.warning(f"⚠️ Could not write version lock file: {e}")
+
+    return version
+
+def clear_version_lock(project_root: Path):
+    """Xóa lock file sau khi kết thúc quy trình release."""
+    lock_file = project_root / ".version_lock"
+    if lock_file.exists():
+        lock_file.unlink()
+        logger.info("🧹 Version lock cleared.")
+
 
 def update_package_json(project_root: Path, version: str) -> bool:
     """
