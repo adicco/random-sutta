@@ -49,6 +49,7 @@ def run_release_process(
     if bump_version:
         clean_version = release_versioning.get_clean_version()
         release_versioning.update_package_json(PROJECT_ROOT, clean_version)
+        release_versioning.update_xcode_version(PROJECT_ROOT, clean_version)
     else:
         logger.info("ℹ️  Skipping package.json version bump (Using existing).")
 

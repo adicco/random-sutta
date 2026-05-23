@@ -52,14 +52,40 @@ def update_altstore_source(version_tag: str, date_str: str = None) -> bool:
     Updates or creates the AltStore source JSON file.
     Writes to both dist/web (for PWA) and project root (for GitHub Raw).
     """
-    logger.info(f"📲 Updating AltStore Source for {version_tag}...")
+    # 0. Prepare version string
+    # IMPORTANT: The version in AltStore MUST match CFBundleShortVersionString in the IPA.
+    # We use a clean version format (Year.MMDD.HHMM) if it looks like our tag format.
+    # Otherwise we just strip 'v'.
+    
+    clean_version = version_tag.lstrip('v')
+    if "-" in clean_version:
+        # If it's 2026.05.23-02.18.36 -> 2026.0523.0218
+        parts = clean_version.split("-")
+        date_part = parts[0].replace(".", "") # 20260523
+        time_part = parts[1].replace(".", "")[:4] # 0218
+        # Try to reconstruct to a valid 3-part version: Year.MMDD.HHMM
+        year = clean_version.split(".")[0]
+        mmdd = clean_version.split(".")[1] + clean_version.split(".")[2].split("-")[0]
+        hhmm = parts[1].replace(".", "")[:4]
+        clean_version = f"{year}.{mmdd}.{hhmm}"
+
+    logger.info(f"📲 Updating AltStore Source for {version_tag} (Internal version: {clean_version})...")
+
+    # 1. Calculate Size of IPA if available
+    ipa_path = PROJECT_ROOT / "dist/ios/randomsutta.ipa"
+    ipa_size = 0
+    if ipa_path.exists():
+        ipa_size = ipa_path.stat().st_size
+        logger.info(f"   📦 Found IPA: {ipa_size} bytes")
+    else:
+        logger.warning(f"   ⚠️ IPA not found at {ipa_path}. Size will be 0.")
 
     # Paths to write to
     target_paths = [PROJECT_ROOT / ALTSTORE_FILENAME]
     if DIST_WEB_DIR.exists():
         target_paths.append(DIST_WEB_DIR / ALTSTORE_FILENAME)
     
-    # 1. Initialize or Load existing (Try root first as it's the source of truth)
+    # 2. Initialize or Load existing
     source = {
         "name": f"{APP_NAME} Source",
         "identifier": f"{BUNDLE_ID}.source",
@@ -71,7 +97,7 @@ def update_altstore_source(version_tag: str, date_str: str = None) -> bool:
         try:
             with open(root_altstore, 'r', encoding='utf-8') as f:
                 source = json.load(f)
-            logger.info("   📂 Loaded existing AltStore source from root.")
+            logger.info("   📂 Loaded existing AltStore source.")
         except Exception as e:
             logger.warning(f"   ⚠️ Could not load existing AltStore source: {e}")
 
@@ -81,11 +107,11 @@ def update_altstore_source(version_tag: str, date_str: str = None) -> bool:
         date_str = datetime.now().strftime("%Y-%m-%d")
 
     new_version = {
-        "version": version_tag.lstrip('v'),
+        "version": clean_version,
         "date": date_str,
         "downloadURL": download_url,
         "localizedDescription": f"Release {version_tag}",
-        "size": 0
+        "size": ipa_size
     }
 
     # Find if the app already exists in the source
@@ -93,7 +119,8 @@ def update_altstore_source(version_tag: str, date_str: str = None) -> bool:
 
     if app_entry:
         # Update existing app entry
-        app_entry["versions"] = [v for v in app_entry["versions"] if v["version"] != new_version["version"]]
+        # Remove version if it already exists (same string)
+        app_entry["versions"] = [v for v in app_entry["versions"] if v["version"] != clean_version]
         app_entry["versions"].insert(0, new_version)
         app_entry["iconURL"] = ICON_URL
     else:
