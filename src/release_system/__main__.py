@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--altstore", action="store_true", help="Generate AltStore Source JSON.")
     parser.add_argument("--sync", action="store_true", help="Sync AltStore with GitHub latest release.")
     parser.add_argument("--clear-lock", action="store_true", help="Manually clear the version lock file.")
+    parser.add_argument("--skip-publish", action="store_true", help="Force skip GitHub upload (even in official mode).")
     parser.add_argument("--skip-bump", action="store_false", dest="bump", help="Skip updating package.json version.")
     parser.set_defaults(bump=True)
     
@@ -41,7 +42,8 @@ def main():
             package_ota=args.ota,
             update_altstore=args.altstore,
             sync_altstore=args.sync,
-            bump_version=args.bump
+            bump_version=args.bump,
+            skip_publish=args.skip_publish
         )
     except KeyboardInterrupt:
         print("\n🛑 Stopped by user.")

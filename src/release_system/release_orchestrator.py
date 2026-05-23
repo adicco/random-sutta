@@ -24,12 +24,14 @@ def run_release_process(
     package_ota: bool = False,
     update_altstore: bool = False,
     sync_altstore: bool = False,
-    bump_version: bool = True
+    bump_version: bool = True,
+    skip_publish: bool = False
 ) -> None:
     
     if is_official:
-        logger.info("🌟 Mode: OFFICIAL RELEASE (Auto-enabling Publish & Git)")
-        publish_gh = True
+        logger.info("🌟 Mode: OFFICIAL RELEASE (Auto-enabling Git & Configs)")
+        if not skip_publish:
+            publish_gh = True
         update_altstore = True # Auto-enable for official
 
     if publish_gh: 
