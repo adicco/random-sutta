@@ -114,10 +114,12 @@ def update_android_version(project_root: Path, version: str) -> bool:
             content
         )
         
-        # versionCode Universal (Epoch Minutes since 2024)
+        # versionCode Universal (1 Billion Base + Epoch Minutes since 2024)
+        # Việc cộng 1 tỷ đảm bảo versionCode luôn cao hơn các bản build lỗi trước đó
+        # nhưng vẫn < 2.1 tỷ (Giới hạn của Android).
         epoch_base = datetime(2024, 1, 1)
         now = datetime.now()
-        version_code = int((now - epoch_base).total_seconds() / 60)
+        version_code = 1000000000 + int((now - epoch_base).total_seconds() / 60)
         
         new_content = re.sub(
             r'versionCode \d+',
