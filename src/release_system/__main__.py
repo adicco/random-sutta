@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--ota", action="store_true", help="Package Lean OTA Update (dist.zip + native_version.json)")
     parser.add_argument("--altstore", action="store_true", help="Generate AltStore Source JSON.")
     parser.add_argument("--sync", action="store_true", help="Sync AltStore with GitHub latest release.")
+    parser.add_argument("--clear-lock", action="store_true", help="Manually clear the version lock file.")
     parser.add_argument("--skip-bump", action="store_false", dest="bump", help="Skip updating package.json version.")
     parser.set_defaults(bump=True)
     
@@ -23,6 +24,11 @@ def main():
     parser.add_argument("-z", "--zip", action="store_true", help="Create ZIP artifact (default: Skip if not publishing).")
 
     args = parser.parse_args()
+
+    if args.clear_lock:
+        from .logic import release_versioning, PROJECT_ROOT
+        release_versioning.clear_version_lock(PROJECT_ROOT)
+        sys.exit(0)
 
     try:
         run_release_process(

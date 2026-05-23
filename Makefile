@@ -164,18 +164,32 @@ beta: apk ios macos alfred
 	@echo "🚀 PUBLISHING BETA..."
 	$(PYTHON) -m src.release_system --publish --altstore
 
+# [NEW] Clear version lock
+clear-lock:
+	$(PYTHON) -m src.release_system --clear-lock
+
 # [UPDATED] Publish OFFICIAL (Đã sửa luồng: Bump version trước -> Build sau)
-official:
+official: clear-lock
 	@echo "🚀 STARTING OFFICIAL RELEASE PROCESS..."
 	$(PYTHON) -m src.release_system --official --git --skip-publish
 	@$(MAKE) apk ios macos alfred
 	@echo "📤 UPLOADING ARTIFACTS TO GITHUB..."
 	$(PYTHON) -m src.release_system --official --publish --skip-bump
 	@echo "🌟 OFFICIAL RELEASE COMPLETE!"
+	@$(MAKE) clear-lock
 
 # Publish + Deploy
-publish: official deploy
+publish: 
+	@$(MAKE) official
+	@$(MAKE) deploy-sync
 	@echo "🌟 PUBLISHED AND DEPLOYED!"
+
+# [NEW] Deploy with version sync (no re-bump)
+deploy-sync:
+	@echo "🚀 Deploying Web & OTA with current version..."
+	@$(MAKE) re
+	$(PYTHON) -m src.release_system --ota --skip-bump
+	npm run deploy
 
 # [NEW] Chỉ Release các bản build hiện có trong dist/ (không build lại)
 release-only:
