@@ -223,6 +223,20 @@ noedit:
 undo:
 	@git reset --soft HEAD~1
 
+# [NEW] Tự động commit các thay đổi về version (dùng amend để tránh rác log)
+git-commit-version:
+	@status=$$(git status --porcelain package.json src-tauri/Cargo.lock src-tauri/Cargo.toml src-tauri/tauri.conf.json android/app/build.gradle altstore.json ios/App/App.xcodeproj/project.pbxproj); \
+	if [ -n "$$status" ]; then \
+		echo "📝 Automating version commit (amend)..."; \
+		git add package.json src-tauri/Cargo.lock src-tauri/Cargo.toml src-tauri/tauri.conf.json android/app/build.gradle altstore.json ios/App/App.xcodeproj/project.pbxproj; \
+		if git log -1 --pretty=%B | grep -q "bump version"; then \
+			git commit --amend --no-edit; \
+		else \
+			git commit -m "chore: bump version and sync artifacts" || true; \
+		fi; \
+		echo "✅ Version changes committed."; \
+	fi
+
 # ==============================================================================
 # 📱 ANDROID / APK COMMANDS
 # ==============================================================================
@@ -239,6 +253,7 @@ apk-build:
 	@mkdir -p dist/apk
 	@cp android/app/build/outputs/apk/debug/app-debug.apk dist/apk/randomsutta.apk
 	@echo "✅ Build hoàn tất: dist/apk/randomsutta.apk"
+	@$(MAKE) git-commit-version
 
 # Build và Copy vào thư mục Download
 apk: apk-build apk-copy
@@ -347,6 +362,7 @@ macos:
 	@echo "✅ XONG! Ứng dụng MacOS của bạn nằm tại:"
 	@echo "📍 dist/macos/Random Sutta.app"
 	@echo "📍 dist/macos/"
+	@$(MAKE) git-commit-version
 
 # [NEW] Biên dịch ứng dụng MacOS chế độ DEBUG (Nhanh hơn để test)
 macos-debug:
@@ -356,6 +372,7 @@ macos-debug:
 	@mkdir -p dist/macos-debug
 	@cp -R "src-tauri/target/debug/bundle/macos/Random Sutta.app" dist/macos-debug/
 	@echo "✅ XONG! Bản Debug nằm tại: dist/macos-debug/Random Sutta.app"
+	@$(MAKE) git-commit-version
 
 # Cài đặt ứng dụng vào /Applications và cập nhật Launch Services
 app: macos
