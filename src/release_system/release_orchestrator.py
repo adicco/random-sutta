@@ -44,14 +44,16 @@ def run_release_process(
 
     logger.info(f"🚀 STARTING PROCESS: {version_tag} | Mode: {mode_label}")
 
-    # [NEW] Auto-update package.json version to match current date
-    # This ensures IPA internal version matches AltStore source.
+    # [NEW] Auto-update version number across ALL platforms
+    # Format: Year.MMDD.HHMM (e.g., 2026.0523.0624)
     if bump_version:
         clean_version = release_versioning.get_clean_version()
         release_versioning.update_package_json(PROJECT_ROOT, clean_version)
         release_versioning.update_xcode_version(PROJECT_ROOT, clean_version)
+        release_versioning.update_android_version(PROJECT_ROOT, clean_version)
+        release_versioning.update_tauri_version(PROJECT_ROOT, clean_version)
     else:
-        logger.info("ℹ️  Skipping package.json version bump (Using existing).")
+        logger.info("ℹ️  Skipping version bump (Using existing versions).")
 
     if not asset_validator.check_critical_assets(CRITICAL_ASSETS):
         sys.exit(1)

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Random Sutta",
-  "version": "0.1.0",
+  "version": "2026.0523.0626",
   "identifier": "com.randomsutta.mac",
   "build": {
     "frontendDist": "../dist/web",
