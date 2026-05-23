@@ -9,22 +9,35 @@ logger = logging.getLogger("Release.Versioning")
 def generate_version_tag() -> str:
     """
     Tạo version tag thống nhất cho GitHub Release.
-    Format: v2026.0523.0624
+    Format: v2026.143.405 (v[Year].[DayOfYear].[MinuteOfDay])
     """
     now = datetime.now()
-    return f"v{now.strftime('%Y.%m%d.%H%M')}"
+    year = now.year
+    day_of_year = now.timetuple().tm_yday
+    minute_of_day = now.hour * 60 + now.minute
+    return f"v{year}.{day_of_year}.{minute_of_day}"
 
 def get_clean_version() -> str:
     """
-    Tạo số version chuẩn (3 thành phần: Year.MMDD.HHMM)
-    Lưu ý: Để tương thích với SemVer (Tauri/Rust), các thành phần không được có leading zero.
-    Ví dụ: 2026.0523.0624 -> 2026.523.624
+    Tạo version theo chuẩn SemVer Universal Hybrid.
+    Format: [Year].[DayOfYear].[MinuteOfDay]
+    Ví dụ: Ngày 23/5/2026 lúc 06:45 sáng
+    - Year: 2026
+    - DayOfYear: 143 (ngày thứ 143 trong năm)
+    - MinuteOfDay: 405 (6*60 + 45)
+    => 2026.143.405
+    
+    Ưu điểm: 
+    - Tuyệt đối tuân thủ SemVer (không leading zeros).
+    - Luôn tăng tiến theo thời gian.
+    - Đồng nhất cho Web, iOS, Android, macOS.
     """
     now = datetime.now()
-    year = now.strftime("%Y")
-    mmdd = int(now.strftime("%m%d")) # Chuyển sang int để xóa leading zero
-    hhmm = int(now.strftime("%H%M")) # Chuyển sang int để xóa leading zero
-    return f"{year}.{mmdd}.{hhmm}"
+    year = now.year
+    day_of_year = now.timetuple().tm_yday
+    minute_of_day = now.hour * 60 + now.minute
+    
+    return f"{year}.{day_of_year}.{minute_of_day}"
 
 def update_package_json(project_root: Path, version: str) -> bool:
     """
@@ -81,7 +94,8 @@ def update_xcode_version(project_root: Path, version: str) -> bool:
 
 def update_android_version(project_root: Path, version: str) -> bool:
     """
-    Cập nhật versionName trong file build.gradle của Android.
+    Cập nhật versionName và versionCode trong build.gradle.
+    versionCode = số phút trôi qua kể từ 01/01/2024.
     """
     gradle_path = project_root / "android/app/build.gradle"
     if not gradle_path.exists():
@@ -93,20 +107,17 @@ def update_android_version(project_root: Path, version: str) -> bool:
         with open(gradle_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Update versionName "1.0"
+        # Update versionName
         new_content = re.sub(
             r'versionName "[^"]+"',
             f'versionName "{version}"',
             content
         )
         
-        # Đồng thời tăng versionCode (dùng timestamp rút gọn để đảm bảo luôn tăng)
-        # Max INT của Android là 2,147,483,647. 
-        # Sử dụng (Year-2024)*100,000,000 + MMDDHHMM
-        # Ví dụ: 2026.0523.0626 -> (26-24)*100,000,000 + 05230626 = 205,230,626 (Hợp lệ)
+        # versionCode Universal (Epoch Minutes since 2024)
+        epoch_base = datetime(2024, 1, 1)
         now = datetime.now()
-        year_short = int(now.strftime("%y"))
-        version_code = (year_short - 24) * 100000000 + int(now.strftime("%m%d%H%M"))
+        version_code = int((now - epoch_base).total_seconds() / 60)
         
         new_content = re.sub(
             r'versionCode \d+',
