@@ -17,12 +17,13 @@ def generate_version_tag() -> str:
 def get_clean_version() -> str:
     """
     Tạo số version chuẩn (3 thành phần: Year.MMDD.HHMM)
-    Ví dụ: 2026.0523.0624
+    Lưu ý: Để tương thích với SemVer (Tauri/Rust), các thành phần không được có leading zero.
+    Ví dụ: 2026.0523.0624 -> 2026.523.624
     """
     now = datetime.now()
     year = now.strftime("%Y")
-    mmdd = now.strftime("%m%d")
-    hhmm = now.strftime("%H%M")
+    mmdd = int(now.strftime("%m%d")) # Chuyển sang int để xóa leading zero
+    hhmm = int(now.strftime("%H%M")) # Chuyển sang int để xóa leading zero
     return f"{year}.{mmdd}.{hhmm}"
 
 def update_package_json(project_root: Path, version: str) -> bool:
