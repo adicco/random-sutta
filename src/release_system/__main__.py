@@ -26,7 +26,8 @@ def main():
     args = parser.parse_args()
 
     if args.clear_lock:
-        from .logic import release_versioning, PROJECT_ROOT
+        from .release_config import PROJECT_ROOT
+        from .logic import release_versioning
         release_versioning.clear_version_lock(PROJECT_ROOT)
         sys.exit(0)
 
