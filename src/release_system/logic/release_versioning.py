@@ -100,7 +100,13 @@ def update_android_version(project_root: Path, version: str) -> bool:
         )
         
         # Đồng thời tăng versionCode (dùng timestamp rút gọn để đảm bảo luôn tăng)
-        version_code = int(datetime.now().strftime("%y%m%d%H%M"))
+        # Max INT của Android là 2,147,483,647. 
+        # Sử dụng (Year-2024)*100,000,000 + MMDDHHMM
+        # Ví dụ: 2026.0523.0626 -> (26-24)*100,000,000 + 05230626 = 205,230,626 (Hợp lệ)
+        now = datetime.now()
+        year_short = int(now.strftime("%y"))
+        version_code = (year_short - 24) * 100000000 + int(now.strftime("%m%d%H%M"))
+        
         new_content = re.sub(
             r'versionCode \d+',
             f'versionCode {version_code}',
